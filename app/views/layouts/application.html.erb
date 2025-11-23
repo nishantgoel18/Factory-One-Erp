@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Factory One Erp" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Factory One Erp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <link rel="shortcut icon" href="/assets/images/logo1.jpg">
+
+    <!-- page css -->
+
+    <!-- Core css -->
+    <link href="/assets/vendors/datatables/dataTables.bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/vendors/select2/select2.css" rel="stylesheet">
+    <!-- page css -->
+    <link href="/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css" rel="stylesheet">
+
+    <!-- page js -->
+
+
+    <link href="/assets/css/app.min.css" rel="stylesheet">
+
+    <style type="text/css">
+        #editor-output pre{
+            background: #efefef;
+            padding: 10px;
+        }
+        #editor-output li{
+            margin-left: 40px;
+        }
+
+        .form-control{
+            padding: 2px;
+        }
+
+    </style>
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%#= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%#= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <div class="app is-folded">
+      <div class="layout">
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+        {% if request.user.is_authenticated %}
+          {%  include 'shared/header.html'%}
+        {% endif %}
+
+        <!-- Header END -->
+
+        <!-- Side Nav START -->
+        {% if request.user.is_authenticated %}
+            <%= render partial: 'layouts/sidebar' %>
+        {% endif %}
+      
+        <!-- Side Nav END -->
+
+        <!-- Page Container START -->
+        <%# <div class="{% if request.user.is_authenticated %} page-container {% endif %}"> %>
+        <div class="page-container">
+          <div class="notification-toast top-right" id="notification-toast"></div>
+                              
+          <!-- Content Wrapper START -->
+          
+          <%= yield %>
+
+          <!-- Content Wrapper END -->
+
+          <!-- Footer START -->
+          <%# {% if request.user.is_authenticated  %}
+              {%  include 'shared/footer.html'%}
+          {% endif %} %>
+          <!-- Footer END -->
+
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="/assets/js/vendors.min.js"></script>
+  <script src="/assets/vendors/chartist/chartist.min.js"></script>
+  
+  <script src="/assets/vendors/datatables/jquery.dataTables.min.js"></script>
+  <script src="/assets/vendors/datatables/dataTables.bootstrap.min.js"></script>
+  <script src="/assets/js/pages/datatables.js"></script>
+  <script src="/assets/vendors/select2/select2.min.js"></script>
+  <script src="/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
+
+  <script src="/assets/vendors/chartjs/Chart.min.js"></script>
+
+  <% if request.path == '/' or request.path == '/home' %>
+    <script src="/assets/js/pages/dashboard-default.js"></script>
+  <% elsif request.path == '/departments/operations/home' %>
+    <script src="/assets/js/pages/dashboard-project.js"></script>
+  <% elsif request.path == '/departments/marketing/home' %>
+    <script src="/assets/js/pages/dashboard-e-commerce.js"></script>
+  <% elsif request.path == '/departments/sales/home' %>
+    <script src="/assets/js/pages/dashboard-e-commerce.js"></script>
+  <% elsif request.path == '/departments/operations/projects' %>
+    <script src="/assets/js/pages/project-list.js"></script>
+  <% end -%>            
+
+  <script src="/assets/js/app.min.js"></script>
+</html>

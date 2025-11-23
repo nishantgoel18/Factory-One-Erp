@@ -1,0 +1,398 @@
+<div class="side-nav">
+    <div class="side-nav-inner">
+        <ul class="side-nav-menu scrollable">
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-dashboard"></i>
+                    </span>
+                    <span class="title">Dashboard</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li class="{% if section_active == 'home' %} {{'active'}} {% endif %}">
+                        <a href="/home"><i class="anticon anticon-home"></i> Home</a>
+                    </li>
+                </ul>
+            </li>
+
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-user"></i>
+                    </span>
+                    <span class="title">Administration</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+               
+                <ul class="dropdown-menu">
+
+                    
+
+                    <li class="{% if section_active == 'roles' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'roles_list' %}">Roles Mangment</a>
+                    </li>
+                
+
+               
+                    <li class="{% if section_active == 'users' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'users_list' %}">Users</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'organizations' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'organizations_list' %}">Settings</a>
+                    </li>
+               
+
+               
+                    <li class="{% if section_active == 'unitofmeasures' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'unitofmeasures_list' %}">Unit Of Measures</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'categories' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'categories_list' %}">Product Categories</a>
+                    </li>
+                
+
+               
+                    <li class="{% if section_active == 'products' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'products_list' %}">Products</a>
+                    </li>
+              
+                    <li class="{% if section_active == 'customers' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'customers_list' %}">Customers</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'suppliers' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'suppliers_list' %}">Suppliers</a>
+                    </li>
+              
+                    <li class="{% if section_active == 'warehouses' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'warehouses_list' %}">Warehouse</a>
+                    </li>
+              
+                    <li class="{% if section_active == 'locations' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'locations_list' %}">Location</a>
+                    </li>
+                </ul>
+            </li>
+
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-setting"></i>
+                    </span>
+                    <span class="title">Core Manufacturing</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+                <ul class="dropdown-menu">
+
+                    <li class="{% if section_active == 'core_manufacturing' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'core_manufacturing' %}"> Home</a>
+                    </li>
+
+                    <li class="{% if section_active == 'boms' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'boms_list' %}">Bill of Materials</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'routings' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'routings_list' %}">Routing</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'works' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'works_list' %}">Work Center</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'workorders' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'workorders_list' %}">Work Orders</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'workordersissues' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'workordersissues_list' %}">Work Orders Issue </a>
+                    </li>
+               
+                    <li class="{% if section_active == 'workorderreceipts' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'workordersreceipts_list' %}">Work Order Receipt </a>
+                    </li>
+              
+                    <li class="{% if section_active == 'workorderscraps' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'workorderscraps_list' %}">WorkOrder Scraps</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'timelogs' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'timelogs_list' %}">Time logs</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'mrp_runs' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'mrpruns_list' %}">MRP Runs</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'planningparameters' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'planningparameters_list' %}">Planning Parameters</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'mrpprojectedbalances' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'mrpprojectedbalances_list' %}">MRP Projected Balances</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'mrpexceptions' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'mrpexceptions_list' %}">MRP Exception</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'mrpplannedorders' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'mrpplannedorder_list' %}">MRP Planned Order</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'operations' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'operations_list' %}">Operation</a>
+                    </li>
+                </ul>
+            </li>
+
+            
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-calculator"></i>
+                    </span>
+                    <span class="title">Inventory & Warehouse</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                <ul class="dropdown-menu">
+
+                     <li class="{% if section_active == 'inventory_warehouse' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'inventory_warehouse' %}"> Home</a>
+                    </li>
+
+                    <li class="{% if section_active == 'stockbatches' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'stockbatches_list' %}">Stock Batches</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'stocklevels' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'stocklevels_list' %}">Stock Levels</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'stocktransactions' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'stocktransactions_list' %}">Stock Transactions</a>
+                    </li>
+              
+                    <li class="{% if section_active == 'stocktranfers' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'stocktranfers_list' %}">StockTransfer</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'cyclecounts' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'cyclecounts_list' %}">CycleCounts</a>
+                    </li>
+                </ul> 
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-inbox"></i>
+                    </span>
+                    <span class="title">Procurement</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                <ul class="dropdown-menu">
+
+                    <li class="{% if section_active == 'procurement' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'procurement' %}"> Home</a>
+                    </li>
+
+                    <li class="{% if section_active == 'purchaseorders' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'purchaseorders_list' %}">Purchase Orders</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'grns' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'grns_list' %}">Goods Receipt</a>
+                    </li>
+                </ul>
+
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-car"></i>
+                    </span>
+                    <span class="title">Sales & Dispatch</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                <ul class="dropdown-menu">
+
+                    <li class="{% if section_active == 'sales' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'sales' %}"> Home</a>
+                    </li>
+
+                    <li class="{% if section_active == 'salesorders' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'salesorder_list' %}">Sales Orders</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'shipments' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'shipments_list' %}">Shipments</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'receivables' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'receivables_list' %}">Receivable</a>
+                    </li>
+                </ul> 
+
+            </li>
+
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="fas fa-vial"></i>
+                    </span>
+                    <span class="title">Quality Management</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                 <ul class="dropdown-menu">
+
+                    <li class="{% if section_active == 'quality' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'quality' %}"> Home</a>
+                    </li>
+
+                    <li class="{% if section_active == 'qualityinspection' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'qualityinspection_list' %}">Quality Inspection</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'nonconformancereports' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'nonconformancereports_list' %}">Non Conformance Reports</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'capas' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'capas_list' %}">CAPA (Corrective and Preventive Action)</a>
+                    </li>
+                </ul> 
+
+            </li>
+
+
+             <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-tool"></i>
+                    </span>
+                    <span class="title">Maintenance & Machine</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                
+
+                <ul class="dropdown-menu">
+
+                    <li class="{% if section_active == 'maintenance_machine' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'maintenance_machine' %}"> Home</a>
+                    </li>
+
+                    <li class="{% if section_active == 'machines' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'machines_list' %}">Machines</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'maintenancetasks' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'maintenancetasks_list' %}">MaintenanceTask</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'maintenance_checklist' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'templates_list' %}">Maintenance Checklist</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'maintenancechecklistlines' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'maintenancechecklistlines_list' %}">Maintenance Checklist Line</a>
+                    </li>
+              
+                    <li class="{% if section_active == 'breakdownlogs' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'breakdownlogs_list' %}">BreakdownLogs</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'oee' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'oee_list' %}">OEE (Overall Equipment Effectiveness) Calculation</a>
+                    </li>
+                </ul> 
+
+            </li>
+
+
+             <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-dollar"></i>
+                    </span>
+                    <span class="title">Finance & Job Costing</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                
+
+              
+                 <ul class="dropdown-menu">
+
+                    <li class="{% if section_active == 'finance' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'finance' %}"> Home</a>
+                    </li>
+                    <li class="{% if section_active == 'accounts' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'accounts_list' %}">Account</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'journal' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'journal_list' %}">Journal Entry</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'jobcostrecords' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'jobcostrecords_list' %}">JobCostRecord</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'overheadrates' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'overheadrates_list' %}">OverheadRate</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'payables' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'payables_list' %}">Payable</a>
+                    </li>
+               
+                    <li class="{% if section_active == 'laborrates' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'laborrates_list' %}">LaborRate</a>
+                    </li>
+                
+                    <li class="{% if section_active == 'productcostsheets' %} {{'active'}} {% endif %}">
+                        <a href="{% url 'productcostsheets_list' %}">Product Cost Sheet</a>
+                    </li>
+                </ul> 
+
+
+            </li>
+
+
+            
+        </ul>
+    </div>
+</div>

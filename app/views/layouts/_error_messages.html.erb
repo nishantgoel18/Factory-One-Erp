@@ -1,0 +1,21 @@
+<% if object.errors.any? %>
+  <div class="alert alert-danger alert-dismissible col-12" role="alert" style="padding: 15px;">
+    <h3>Following errors prevented your submission from getting saved:</h3>
+
+    <p>
+      <ul>
+        <% object.errors.each do |attribute, message| %>
+          <% if attribute != :base %>
+            <li style="margin-left: 20px;">
+              <b><%= object.class.human_attribute_name(attribute) %></b>: <%= message %>
+            </li>
+          <% end %>
+        <% end %>
+
+        <% object.errors[:base].each do |msg| %>
+          <li style="margin-left: 20px;"><b><%= msg %></b></li>
+        <% end %>
+      </ul>
+    </p>
+  </div>
+<% end %>

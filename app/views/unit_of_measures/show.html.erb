@@ -1,0 +1,78 @@
+<%# app/views/unit_of_measures/show.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">View Unit of Measure</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item">
+                    <i class="anticon anticon-home m-r-5"></i>Home
+                </a>
+                <a class="breadcrumb-item" href="#">Masters</a>
+                <a class="breadcrumb-item" href="<%= unit_of_measures_path %>">Unit of Measure</a>
+                <span class="breadcrumb-item active">View Unit of Measure</span>
+            </nav>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-12">
+
+            <div class="card">
+                <div class="card-body">
+
+                    <div class="m-t-10">
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered">
+                                <tbody>
+
+                                    <tr>
+                                        <th width="25%">Name</th>
+                                        <td><%= @unit_of_measure.name %></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <td><%= @unit_of_measure.symbol %></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Decimals Allowed?</th>
+                                        <td><%= @unit_of_measure.is_decimal ? "Yes" : "No" %></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Created At</th>
+                                        <td><%= @unit_of_measure.created_at.strftime("%b %d, %Y") %></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Action</th>
+                                        <td>
+                                            <%= link_to "Edit", edit_unit_of_measure_path(@unit_of_measure) %> |
+                                            <%= link_to "Delete",
+                                                unit_of_measure_path(@unit_of_measure),
+                                                method: :delete,
+                                                data: { confirm: "Are you sure?" },
+                                                class: "confirm-delete"
+                                            %>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
