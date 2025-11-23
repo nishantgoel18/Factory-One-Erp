@@ -1,0 +1,31 @@
+<!-- app/views/warehouses/edit.html.erb -->
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Edit Warehouse</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Administration</a>
+        <a class="breadcrumb-item" href="<%= warehouses_path %>">Warehouse</a>
+        <span class="breadcrumb-item active">Edit Warehouse</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+
+          <%= form_with(model: @warehouse, url: warehouse_path(@warehouse), method: :patch, local: true) do |f| %>
+            <%= render 'form', f: f %>
+          <% end %>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

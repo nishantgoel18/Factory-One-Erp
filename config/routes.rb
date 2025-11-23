@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  resources :warehouses
+  resources :products
   resources :product_categories
   resources :unit_of_measures
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

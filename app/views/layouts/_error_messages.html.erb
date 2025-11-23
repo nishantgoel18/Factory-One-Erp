@@ -4,16 +4,10 @@
 
     <p>
       <ul>
-        <% object.errors.each do |attribute, message| %>
-          <% if attribute != :base %>
+        <% object.errors.full_messages.each do |message| %>
             <li style="margin-left: 20px;">
-              <b><%= object.class.human_attribute_name(attribute) %></b>: <%= message %>
+              <%= message %>
             </li>
-          <% end %>
-        <% end %>
-
-        <% object.errors[:base].each do |msg| %>
-          <li style="margin-left: 20px;"><b><%= msg %></b></li>
         <% end %>
       </ul>
     </p>

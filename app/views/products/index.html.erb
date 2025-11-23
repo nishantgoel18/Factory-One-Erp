@@ -1,0 +1,107 @@
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Products</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="#">Masters</a>
+                <span class="breadcrumb-item active">Products</span>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="m-t-10">
+
+                        <div class="table-responsive">
+                            <%= link_to "New Product", new_product_path, class: "btn btn-primary btn-sm" %>
+                            <br><br>
+
+                            <table class="table admins_table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>SKU</th>
+                                        <th>Category</th>
+                                        <th>UoM</th>
+                                        <th>Product Type</th>
+                                        <th>Standard Cost</th>
+                                        <th>Reorder Point</th>
+                                        <th>Active?</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                  <% @products.each do |p| %>
+                                    <tr>
+                                      <td><%= p.id %></td>
+
+                                      <!-- NAME (clickable to product show) -->
+                                      <td>
+                                        <%= link_to p.name, product_path(p), style: "text-decoration:none; color:#007bff;" %>
+                                      </td>
+
+                                      <td><%= p.sku %></td>
+
+                                      <!-- CATEGORY (clickable to category show) -->
+                                      <td>
+                                        <% if p.product_category %>
+                                          <%= link_to p.product_category.name,
+                                                      product_category_path(p.product_category),
+                                                      style: "text-decoration:none; color:#007bff;" %>
+                                        <% else %>
+                                          Not Available
+                                        <% end %>
+                                      </td>
+
+                                      <!-- UNIT OF MEASURE (clickable to UoM show) -->
+                                      <td>
+                                        <% if p.unit_of_measure %>
+                                          <%= link_to p.unit_of_measure.symbol,
+                                                      unit_of_measure_path(p.unit_of_measure),
+                                                      style: "text-decoration:none; color:#007bff;" %>
+                                        <% else %>
+                                          Not Available
+                                        <% end %>
+                                      </td>
+                                      <td><%= p.product_type %></td>
+
+                                        <td>
+                                          <% if p.requires_standard_cost? %>
+                                            <%= number_to_currency(p.standard_cost) %>
+                                          <% else %>
+                                            N/A
+                                          <% end %>
+                                        </td>
+
+                                      <td><%= p.reorder_point %></td>
+                                      <td><%= p.is_active ? "Yes" : "No" %></td>
+
+                                      <td>
+                                        <%= link_to "View", product_path(p) %> |
+                                        <%= link_to "Edit", edit_product_path(p) %> |
+                                        <%= link_to "Delete", product_path(p),
+                                                     method: :delete,
+                                                     data: { confirm: "Are you sure?" } %>
+                                      </td>
+                                    </tr>
+                                  <% end %>
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

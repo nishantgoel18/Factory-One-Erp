@@ -10,9 +10,13 @@
         <!-- Parent -->
         <div class="col-lg-6">
             <label class="font-weight-semibold">Parent Category:</label>
-            <%= f.collection_select :parent_id, ProductCategory.all, :id, :name,
+            <%= f.collection_select :parent_id,
+                ProductCategory.where.not(id: f.object.id),
+                :id,
+                :name,
                 { include_blank: "No Parent" },
-                class: "form-control" %>
+                class: "form-control" 
+            %>
         </div>
 
     </div>

@@ -1,0 +1,113 @@
+<div class="form-group">
+    <div class="row">
+
+        <!-- Name -->
+        <div class="col-lg-12">
+            <label class="font-weight-semibold">Name:</label>
+            <%= f.text_field :name, class: "form-control", placeholder: "Product Name" %>
+        </div>
+    </div>
+</div>
+
+
+<div class="form-group">
+    <div class="row">
+
+        <!-- SKU -->
+        <div class="col-lg-3">
+            <label class="font-weight-semibold">SKU:</label>
+            <%= f.text_field :sku, class: "form-control", placeholder: "Unique SKU Code" %>
+        </div>
+
+        <!-- Category -->
+        <div class="col-lg-3">
+            <label class="font-weight-semibold">Category:</label>
+            <%= f.collection_select :product_category_id,
+                ProductCategory.all, :id, :name,
+                { include_blank: "Select Category" },
+                class: "form-control" %>
+        </div>
+
+        <!-- UoM -->
+        <div class="col-lg-3">
+            <label class="font-weight-semibold">Unit of Measure:</label>
+            <%= f.collection_select :unit_of_measure_id,
+                UnitOfMeasure.all, :id, :symbol,
+                { include_blank: "Select Unit" },
+                class: "form-control" %>
+        </div>
+
+        <div class="col-lg-3">
+            <label class="font-weight-semibold">Product Type:</label>
+            <%= f.select :product_type,
+                  Product::PRODUCT_TYPE_CHOICES,
+                  { prompt: "Select Product Type" },
+                  class: "form-control",
+                  id: "product_type_select" %>
+          </div>
+
+    </div>
+</div>
+
+
+<div class="form-group">
+    <div class="row">
+
+        <!-- Reorder Point -->
+        <div class="col-lg-3">
+            <label class="font-weight-semibold">Reorder Point:</label>
+            <%= f.number_field :reorder_point, class: "form-control", step: "0.01", placeholder: "Reorder Level" %>
+        </div>
+
+        <!-- Active -->
+        <div class="col-lg-2">
+            <label class="font-weight-semibold">Active?</label>
+            <%= f.select :is_active, [["Yes", true], ["No", false]], {}, class: "form-control" %>
+        </div>
+
+        <div class="col-lg-2">
+            <label class="font-weight-semibold">Batch Tracked?</label>
+            <%= f.select :is_batch_tracked, [["Yes", true], ["No", false]], {}, class: "form-control" %>
+        </div>
+
+        <!-- Serial Tracked -->
+        <div class="col-lg-2">
+            <label class="font-weight-semibold">Serial Tracked?</label>
+            <%= f.select :is_serial_tracked, [["Yes", true], ["No", false]], {}, class: "form-control" %>
+        </div>
+
+        <div class="col-lg-3" id="standard_cost_wrapper"
+           style="<%= @product.requires_standard_cost? ? '' : 'display:none;' %>">
+        <label class="font-weight-semibold">Standard Cost:</label>
+        <%= f.number_field :standard_cost,
+              step: 0.01,
+              class: "form-control",
+              placeholder: "Standard Cost" %>
+      </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const typeSelect = document.getElementById("product_type_select");
+    const costWrapper = document.getElementById("standard_cost_wrapper");
+
+    function toggleCost() {
+        const selectedType = typeSelect.value;
+        const typesRequiringCost = ["Raw Material", "Service", "Consumable"];
+
+        if (typesRequiringCost.includes(selectedType)) {
+            costWrapper.style.display = "block";
+        } else {
+            costWrapper.style.display = "none";
+        }
+    }
+
+    typeSelect.addEventListener("change", toggleCost);
+    toggleCost();
+});
+</script>
+
+<div class="form-group">
+    <%= f.submit "Submit", class: "btn btn-success btn-sm" %>
+</div>

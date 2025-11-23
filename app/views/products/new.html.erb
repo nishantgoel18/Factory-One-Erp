@@ -1,0 +1,34 @@
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">New Product</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="#">Masters</a>
+                <a class="breadcrumb-item" href="<%= products_path %>">Products</a>
+                <span class="breadcrumb-item active">New Product</span>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+
+            <div class="card">
+                <div class="card-body">
+
+                    <div class="m-t-10">
+                        <%= form_with model: @product, url: products_path, local: true do |f| %>
+                            <%= render 'layouts/error_messages', object: @product %>
+                            <%= render 'products/form', f: f %>
+                        <% end %>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
