@@ -54,7 +54,7 @@
     <div class="row">
 
         <!-- Reorder Point -->
-        <div class="col-lg-3">
+        <div class="col-lg-4">
             <label class="font-weight-semibold">Reorder Point:</label>
             <%= f.number_field :reorder_point, class: "form-control", step: "0.01", placeholder: "Reorder Level" %>
         </div>
@@ -76,14 +76,20 @@
             <%= f.select :is_serial_tracked, [["Yes", true], ["No", false]], {}, class: "form-control" %>
         </div>
 
+        <div class="col-lg-2">
+            <label class="font-weight-semibold">Is Stocked?</label>
+            <%= f.select :is_stocked, [["Yes", true], ["No", false]], {}, class: "form-control" %>
+        </div>
+
         <div class="col-lg-3" id="standard_cost_wrapper"
            style="<%= @product.requires_standard_cost? ? '' : 'display:none;' %>">
-        <label class="font-weight-semibold">Standard Cost:</label>
-        <%= f.number_field :standard_cost,
-              step: 0.01,
-              class: "form-control",
-              placeholder: "Standard Cost" %>
-      </div>
+            <br />
+            <label class="font-weight-semibold">Standard Cost:</label>
+            <%= f.number_field :standard_cost,
+                step: 0.01,
+                class: "form-control",
+                placeholder: "Standard Cost" %>
+        </div>
     </div>
 </div>
 

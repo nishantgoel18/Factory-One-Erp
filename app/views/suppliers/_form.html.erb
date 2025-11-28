@@ -1,0 +1,43 @@
+<%= simple_form_for @supplier do |f| %>
+  <%= render 'layouts/error_messages', object: f.object %>
+  <div class="row">
+    <div class="col-md-3">
+      <%= f.input :code, required: true, label: "Code" %>
+    </div>
+
+    <div class="col-md-9">
+      <%= f.input :name, required: true, label: "Name" %>
+    </div>
+
+    <div class="col-md-6">
+      <%= f.input :email, label: "Email" %>
+    </div>
+
+    <div class="col-md-6">
+      <%= f.input :phone, label: "Phone" %>
+    </div>
+
+    <div class="col-md-12">
+      <%= f.input :billing_address, as: :text, required: true, label: "Billing Address" %>
+    </div>
+
+    <div class="col-md-12">
+      <%= f.input :shipping_address, as: :text, label: "Shipping Address" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.input :lead_time_days, label: "Lead Time (Days)" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.input :on_time_delivery_rate, label: "On-Time Delivery (%)" %>
+    </div>
+
+    <div class="col-md-4">
+      <%= f.input :is_active, as: :boolean, label: "Active?" %>
+    </div>
+    <div class="col-md-12">
+      <%= f.submit class: "btn btn-success btn-sm" %>
+    </div>
+  </div>
+<% end %>

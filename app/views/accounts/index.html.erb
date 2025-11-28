@@ -1,0 +1,112 @@
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Chart Of Accounts</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="#">Financial Management</a>
+                <span class="breadcrumb-item active">Chart Of Accounts</span>
+            </nav>
+        </div>
+    </div>
+
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-book me-2"></i> Chart of Accounts</h2>
+        <div>
+            <span style="color: white;" class="badge bg-success me-2">Assets: $<%= total_assets.round(2) %></span>
+            <span style="color: white;" class="badge bg-warning me-2">Liabilities: $<%= total_liabilities.round(2) %></span>
+            <span style="color: white;" class="badge bg-info">Equity: $<%= total_equity.round(2) %></span>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Accounts List</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleInactive()">
+                                <i class="fas fa-eye-slash"></i> Toggle Inactive
+                            </button>
+                            <a href="/accounts/new" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus"></i> New Account
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <div class="m-t-10">
+
+                        <div class="table-responsive">
+                            
+                            <table class="table admins_table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Sub Type</th>
+                                        <th>Active?</th>
+                                        <th>Current Balance</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <% @accounts.each do |account| %>
+                                        <tr class="<% if not account.is_active? %> inactive-account <% end %>">
+                                            <td><%= account.id %></td>
+                                            <td>
+                                                <%= account.code %>
+                                                <% if account.is_cash_flow_account? %>
+                                                    <i class="fas fa-money-bill-wave text-info" title="Cash Flow Account"></i>
+                                                <% end %>    
+                                            </td>
+                                            <td><%= account.name %></td>
+                                            <td><span style="color: white;" class="badge <%= badge_color_on_account_type(account) %>"><%= account.account_type %></span></td>
+                                            <td><%= account.sub_type %></td>
+                                            <td><%= account.is_active ? "Yes" : "No" %></td>
+                                            <td class="text-end">
+                                                <span style="color: white;" class="badge <% if account.current_balance.to_f >= 0 %>bg-success<% else %>bg-danger<% end %>">
+                                                    $<%= account.current_balance.to_f.round(2) %>
+                                                </span>
+                                            </td>
+                                            <td><%= account.created_at.strftime("%b %d, %Y") %></td>
+
+                                            <td>
+                                                <%= link_to "View", account_path(account) %> |
+                                                <%= link_to "Edit", edit_account_path(account) %> |
+                                                <%= link_to "Delete", delete_account_path(account), method: :delete, data: {confirm: "Are you sure?"}, class: "confirm-delete" %>
+                                            </td>
+                                        </tr>
+                                    <% end %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleInactive() {
+    const inactiveRows = document.querySelectorAll('.inactive-account');
+    inactiveRows.forEach(row => {
+        row.style.display = row.style.display === 'none' ? '' : 'none';
+    });
+}
+
+// Initially hide inactive accounts
+document.addEventListener('DOMContentLoaded', function() {
+    toggleInactive();
+});
+</script>

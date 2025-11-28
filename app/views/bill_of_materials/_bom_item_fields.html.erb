@@ -1,0 +1,39 @@
+<div class="nested-fields">
+    <br />
+    <div class="row">
+        <div class="col-md-3">
+            <%= f.input :component_id,
+                collection: Product.bom_item_components,
+                label: "Component",
+                include_blank: "Select Component" %>
+        </div>
+
+        <div class="col-md-2">
+             <%= f.input :quantity, input_html: { step: 0.01 } %>
+        </div>
+
+        <div class="col-md-3">
+            <%= f.input :uom_id,
+                collection: UnitOfMeasure.all,
+                label: "UoM",
+                include_blank: "Select UoM" %>
+        </div>
+
+        <div class="col-md-3">
+            <%= f.input :scrap_percent, label: "Scrap %", input_html: { step: 0.01 } %>
+        </div>
+
+        <div class="col-md-1 d-flex align-items-center">
+            <%= link_to "Remove", "#",
+                class: "btn btn-danger btn-sm remove-item" %>
+            <%= f.input :_destroy, as: :hidden %>
+        </div>
+
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <%= f.input :line_note, label: "Notes", input_html: { rows: 2 } %>
+        </div>
+    </div>
+</div>

@@ -13,6 +13,57 @@
     </div>
 
     <div class="row">
+          <!-- Production Output -->
+        <div class="col-md-4 col-lg-4 ">
+            <div class="card">
+              <div class="card-body">
+                <div class="media align-items-center">
+                  <div class="avatar avatar-icon avatar-lg avatar-blue">
+                    <i class="anticon anticon-dashboard"></i>
+                  </div>
+                  <div class="m-l-15">
+                    <h2 class="m-b-0"><%= @products.bom_products.count %></h2>
+                    <p class="m-b-0 text-muted">Active Products <span class="text-success">+<%= @products.bom_products.where('created_at >= ?', Date.today.beginning_of_month).count %> New This Month</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-4 ">
+            <div class="card">
+              <div class="card-body">
+                <div class="media align-items-center">
+                  <div class="avatar avatar-icon avatar-lg avatar-blue">
+                    <i class="anticon anticon-dollar"></i>
+                  </div>
+                  <div class="m-l-15">
+                    <h2 class="m-b-0">32.8%</h2>
+                    <p class="m-b-0 text-muted">Avg Margin <span class="text-success">+1.2%</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+
+          <!-- OEE -->
+          <div class="col-md-4 col-lg-4">
+            <div class="card">
+              <div class="card-body">
+                <div class="media align-items-center">
+                  <div class="avatar avatar-icon avatar-lg avatar-green">
+                    <i class="anticon anticon-pie-chart"></i>
+                  </div>
+                  <div class="m-l-15">
+                    <h2 class="m-b-0"><%= @products.bom_products.select{|p| p.bill_of_materials.blank?}.count %></h2>
+                    <p class="m-b-0 text-muted">Draft Items - Missing BOMs</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    <div class="row">
         <div class="col-lg-12">
 
             <div class="card">
@@ -88,9 +139,10 @@
                                       <td>
                                         <%= link_to "View", product_path(p) %> |
                                         <%= link_to "Edit", edit_product_path(p) %> |
-                                        <%= link_to "Delete", product_path(p),
+                                        <%= link_to "Delete", delete_product_path(p),
                                                      method: :delete,
-                                                     data: { confirm: "Are you sure?" } %>
+                                                     data: { confirm: "Are you sure?" },
+                                                     class: "confirm-delete" %>
                                       </td>
                                     </tr>
                                   <% end %>

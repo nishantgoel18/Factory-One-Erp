@@ -15,84 +15,202 @@
 
     <div class="row">
         <div class="col-lg-12">
-
-            <div class="card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-box me-2"></i> <%= @product.name %> (SKU: <%= @product.sku %>)
+                    <small class="text-muted"><%= @product.product_category.name %></small>
+                </h2>
+                
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">General Info</h5>
+                </div>
                 <div class="card-body">
-                    <div class="m-t-10">
-                        <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Uom:</th>
+                            <td><%= link_to @product.unit_of_measure.name, @product.unit_of_measure %></td>
+                        </tr>
+                        <tr>
+                            <th>Product Type:</th>
+                            <td><%= @product.product_type %></td>
+                        </tr>
+                        <tr>
+                            <th>Active?</th>
+                            <td><%= @product.is_active ? "Yes" : "No" %></td>
+                        </tr>
+                        
+                    </table>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Costing</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Standard Cost:</th>
+                            <td><%= @product.standard_cost ? "$#{@product.standard_cost}" : 'Not Available'  %></td>
+                        </tr>
+                        <tr>
+                            <th>Labor Cost:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th>Material Cost:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th>Overhead Cost:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th>Selling Price:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th>Margin:</th>
+                            <td>To be developed</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            
 
-                            <table class="table table-bordered">
-                                <tbody>
+        </div>
 
-                                    <tr>
-                                        <th width="25%">Name</th>
-                                        <td><%= @product.name %></td>
-                                    </tr>
+        <!-- Financial Information -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="card-title mb-0">Inventory</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">On Hand:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th width="40%">Allocated:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th width="40%">Available:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th width="40%">Procured:</th>
+                            <td>To be developed</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Planning</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Lead Time:</th>
+                            <td>To be developed</td>
+                        </tr>
+                        <tr>
+                            <th>Safety Stock:</th>
+                            <td><%= @product.reorder_point %></td>
+                        </tr>
+                        <tr>
+                            <th>Min:</th>
+                            <td>To be developed</td>
+                        </tr>
 
-                                    <tr>
-                                        <th>SKU</th>
-                                        <td><%= @product.sku %></td>
-                                    </tr>
+                        <tr>
+                            <th>Batch Tracked?</th>
+                            <td><%= @product.is_batch_tracked ? "Yes" : "No" %></td>
+                        </tr>
 
-                                    <tr>
-                                        <th>Category</th>
-                                        <td><%= @product.product_category.name %></td>
-                                    </tr>
+                        <tr>
+                            <th>Serial Tracked?</th>
+                            <td><%= @product.is_serial_tracked ? "Yes" : "No" %></td>
+                        </tr>
+                        
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% if @product.can_have_bom? %>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Bill of Materials</h5>
+                    </div>
+                    <div class="card-body">
+                        <%= link_to "New Bill of Materials", new_product_bill_of_material_url(@product), class: "btn btn-primary btn-sm" %>
+                        <br><br>
+                        <% if @product.bill_of_materials.present? %>
+                            <div class="table-responsive">
+                                
 
-                                    <tr>
-                                        <th>Unit of Measure</th>
-                                        <td><%= @product.unit_of_measure.symbol %></td>
-                                    </tr>
-
-                                    <tr>
-                                      <th>Product Type</th>
-                                      <td><%= @product.product_type %></td>
-                                    </tr>
-
-                                    <% if @product.requires_standard_cost? %>
+                                <table class="table admins_table">
+                                    <thead>
                                         <tr>
-                                          <th>Standard Cost</th>
-                                          <td><%= number_to_currency(@product.standard_cost) %></td>
+                                            <th>#</th>
+                                            <th>Product</th>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Revision</th>
+                                            <th>Status</th>
+                                            <th>Default</th>
+                                            <th>Created At</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    <% end %>
-                                    <tr>
-                                        <th>Reorder Point</th>
-                                        <td><%= @product.reorder_point %></td>
-                                    </tr>
+                                    </thead>
 
-                                    <tr>
-                                        <th>Batch Tracked?</th>
-                                        <td><%= @product.is_batch_tracked ? "Yes" : "No" %></td>
-                                    </tr>
+                                    <tbody>
+                                        <% @product.bill_of_materials.non_deleted.each do |bom| %>
+                                            <tr>
+                                                <td><%= bom.id %></td>
+                                                <td><%= link_to bom.product.name, bom.product %></td>
+                                                <td><%= bom.code %></td>
+                                                <td><%= bom.name %></td>
+                                                <td><%= bom.revision %></td>
+                                                <td><%= bom.status %></td>
+                                                <td><%= bom.is_default ? "Yes" : "No" %></td>
+                                                <td><%= bom.created_at.strftime("%b %d, %Y") %></td>
 
-                                    <tr>
-                                        <th>Serial Tracked?</th>
-                                        <td><%= @product.is_serial_tracked ? "Yes" : "No" %></td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Active?</th>
-                                        <td><%= @product.is_active ? "Yes" : "No" %></td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Actions</th>
-                                        <td>
-                                            <%= link_to "Edit", edit_product_path(@product) %> |
-                                            <%= link_to "Delete", product_path(@product),
-                                                 method: :delete,
-                                                 data: { confirm: "Are you sure?" } %>
-                                        </td>
-                                    </tr>
-
-                                </tbody>
-                            </table>
-
-                        </div>
+                                                <td>
+                                                    <% if bom.can_be_activated? %>
+                                                        <%= link_to "Activate", activate_product_bill_of_material_url(@product, bom) %> |
+                                                    <% end -%>
+                                                    <%= link_to "View", product_bill_of_material_url(@product, bom) %> |
+                                                    <%= link_to "Edit", edit_product_bill_of_material_url(@product, bom) %> |
+                                                    <%= link_to "Delete", delete_product_bill_of_material_url(@product, bom), 
+                                                            method: :delete,
+                                                            data: { confirm: "Are you sure?" },
+                                                            class: "confirm-delete" %>
+                                                </td>
+                                            </tr>
+                                        <% end %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% else %>
+                        <p class="text-muted text-center py-3">No BOM in use for this product.</p>
+                        <% end %>
                     </div>
                 </div>
             </div>
-
         </div>
-    </div>
+    <% end -%>
 </div>

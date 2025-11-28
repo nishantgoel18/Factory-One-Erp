@@ -1,0 +1,195 @@
+<%# app/views/customers/show.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Customer Details</h2>
+
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <%= link_to raw('<i class="anticon anticon-home m-r-5"></i>Home'), root_path, class: "breadcrumb-item" %>
+        <%= link_to "Sales", "#", class: "breadcrumb-item" %>
+        <%= link_to "Customers", customers_path, class: "breadcrumb-item" %>
+        <span class="breadcrumb-item active">Customer Details</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <tbody>
+
+                <tr>
+                  <th width="25%">Customer Code</th>
+                  <td><%= @customer.code %></td>
+                </tr>
+
+                <tr>
+                  <th>Name</th>
+                  <td><%= @customer.display_name %></td>
+                </tr>
+
+                <tr>
+                  <th>Legal Name</th>
+                  <td><%= @customer.legal_name.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Customer Type</th>
+                  <td><%= Customer::CUSTOMER_TYPES[@customer.customer_type] || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>DBA Name</th>
+                  <td><%= @customer.dba_name.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Email</th>
+                  <td><%= @customer.email.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Phone</th>
+                  <td><%= @customer.phone_number.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Mobile</th>
+                  <td><%= @customer.mobile.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Website</th>
+                  <td><%= @customer.website.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Billing Address</th>
+                  <td>
+                    <%= @customer.billing_street %><br>
+                    <%= @customer.billing_city %>, <%= @customer.billing_state %> <%= @customer.billing_postal_code %><br>
+                    <%= @customer.billing_country %>
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Shipping Address</th>
+                  <td>
+                    <%= @customer.shipping_street %><br>
+                    <%= @customer.shipping_city %>, <%= @customer.shipping_state %> <%= @customer.shipping_postal_code %><br>
+                    <%= @customer.shipping_country %>
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Tax Exempt</th>
+                  <td><%= @customer.tax_exempt ? "Yes" : "No" %></td>
+                </tr>
+
+                <tr>
+                  <th>Tax Exempt Number</th>
+                  <td><%= @customer.tax_exempt_number.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Default Tax Code</th>
+                  <td><%= @customer.default_tax_code&.name || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>EIN (US)</th>
+                  <td><%= @customer.ein_number.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Business Number (CA)</th>
+                  <td><%= @customer.business_number.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Credit Limit</th>
+                  <td><%= number_to_currency(@customer.credit_limit) %></td>
+                </tr>
+
+                <tr>
+                  <th>Payment Terms</th>
+                  <td><%= Customer::PAYMENT_TERMS[@customer.payment_terms] || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Currency</th>
+                  <td><%= Customer::CURRENCIES[@customer.default_currency] %></td>
+                </tr>
+
+                <tr>
+                  <th>Primary Contact</th>
+                  <td>
+                    <%= @customer.primary_contact_name.presence || "-" %><br>
+                    <%= @customer.primary_contact_email.presence || "-" %><br>
+                    <%= @customer.primary_contact_phone.presence || "-" %>
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Secondary Contact</th>
+                  <td>
+                    <%= @customer.secondary_contact_name.presence || "-" %><br>
+                    <%= @customer.secondary_contact_email.presence || "-" %><br>
+                    <%= @customer.secondary_contact_phone.presence || "-" %>
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Freight Terms</th>
+                  <td><%= Customer::FREIGHT_TERMS[@customer.freight_terms] || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Shipping Method</th>
+                  <td><%= @customer.shipping_method.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Default Warehouse</th>
+                  <td><%= @customer.default_warehouse&.name || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Internal Notes</th>
+                  <td><%= @customer.internal_notes.presence || "-" %></td>
+                </tr>
+
+                <tr>
+                  <th>Created At</th>
+                  <td><%= @customer.created_at.strftime("%b %d, %Y") %></td>
+                </tr>
+
+                <tr>
+                  <th>Actions</th>
+                  <td>
+                    <%= link_to "Edit", edit_customer_path(@customer) %> |
+                    <%= link_to "Delete",
+                        delete_customer_path(@customer),
+                        method: :delete,
+                        class: "confirm-delete",
+                        data: { confirm: "Are you sure?" }, class: "confirm-delete"  %>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

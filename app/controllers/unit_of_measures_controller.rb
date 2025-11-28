@@ -1,4 +1,5 @@
 class UnitOfMeasuresController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_unit_of_measure, only: %i[ show edit update destroy ]
 
   # GET /unit_of_measures or /unit_of_measures.json

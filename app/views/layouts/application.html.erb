@@ -18,20 +18,20 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <link rel="shortcut icon" href="/assets/images/logo1.jpg">
+    <link rel="shortcut icon" href="/theme_assets/images/logo/logo1.jpg">
 
     <!-- page css -->
 
     <!-- Core css -->
-    <link href="/assets/vendors/datatables/dataTables.bootstrap.min.css" rel="stylesheet">
-    <link href="/assets/vendors/select2/select2.css" rel="stylesheet">
+    <link href="/theme_assets/vendors/datatables/dataTables.bootstrap.min.css" rel="stylesheet">
+    <link href="/theme_assets/vendors/select2/select2.css" rel="stylesheet">
     <!-- page css -->
-    <link href="/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css" rel="stylesheet">
+    <link href="/theme_assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css" rel="stylesheet">
 
     <!-- page js -->
 
 
-    <link href="/assets/css/app.min.css" rel="stylesheet">
+    <link href="/theme_assets/css/app.min.css" rel="stylesheet">
 
     <style type="text/css">
         #editor-output pre{
@@ -48,71 +48,77 @@
 
     </style>
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%# Includes all stylesheet files in app/theme_assets/stylesheets %>
     <%#= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%#= javascript_importmap_tags %>
   </head>
 
   <body>
-    <div class="app is-folded">
+    <div class="app">
       <div class="layout">
         <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
-        {% if request.user.is_authenticated %}
+        <% if user_signed_in? %>
           <%= render 'layouts/header' %>
-        {% endif %}
+        <% end %>
 
         <!-- Header END -->
 
         <!-- Side Nav START -->
-        {% if request.user.is_authenticated %}
+        <% if user_signed_in? %>
             <%= render partial: 'layouts/sidebar' %>
-        {% endif %}
+        <% end %>
       
         <!-- Side Nav END -->
 
         <!-- Page Container START -->
-        <%# <div class="{% if request.user.is_authenticated %} page-container {% endif %}"> %>
-        <div class="page-container">
+        <div class="<% if user_signed_in? %> page-container <% end %>">
           <div class="notification-toast top-right" id="notification-toast"></div>
                               
-          <!-- Content Wrapper START -->
+            <!-- Content Wrapper START -->
           
-          <%= yield %>
+            <%= yield %>
 
-          <!-- Content Wrapper END -->
+            <!-- Content Wrapper END -->
 
-          <!-- Footer START -->
-          {% if request.user.is_authenticated  %}
+            <!-- Footer START -->
+            <% if user_signed_in? %>
               <%= render 'layouts/footer' %>
-          {% endif %} 
-          <!-- Footer END -->
+            <% end %> 
+            <!-- Footer END -->
 
+          </div>
         </div>
-      </div>
     </div>
   </body>
-  <script src="/assets/js/vendors.min.js"></script>
-  <script src="/assets/vendors/chartist/chartist.min.js"></script>
+  <script src="/theme_assets/js/vendors.min.js"></script>
+  <script src="/theme_assets/vendors/chartist/chartist.min.js"></script>
   
-  <script src="/assets/vendors/datatables/jquery.dataTables.min.js"></script>
-  <script src="/assets/vendors/datatables/dataTables.bootstrap.min.js"></script>
-  <script src="/assets/js/pages/datatables.js"></script>
-  <script src="/assets/vendors/select2/select2.min.js"></script>
-  <script src="/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
+  <script src="/theme_assets/vendors/datatables/jquery.dataTables.min.js"></script>
+  <script src="/theme_assets/vendors/datatables/dataTables.bootstrap.min.js"></script>
+  <script src="/theme_assets/js/pages/datatables.js"></script>
+  <script src="/theme_assets/vendors/select2/select2.min.js"></script>
+  <script src="/theme_assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.js"></script>
 
-  <script src="/assets/vendors/chartjs/Chart.min.js"></script>
+  <script src="/theme_assets/vendors/chartjs/Chart.min.js"></script>
 
   <% if request.path == '/' or request.path == '/home' %>
-    <script src="/assets/js/pages/dashboard-default.js"></script>
+    <script src="/theme_assets/js/pages/dashboard-default.js"></script>
   <% elsif request.path == '/departments/operations/home' %>
-    <script src="/assets/js/pages/dashboard-project.js"></script>
+    <script src="/theme_assets/js/pages/dashboard-project.js"></script>
   <% elsif request.path == '/departments/marketing/home' %>
-    <script src="/assets/js/pages/dashboard-e-commerce.js"></script>
+    <script src="/theme_assets/js/pages/dashboard-e-commerce.js"></script>
   <% elsif request.path == '/departments/sales/home' %>
-    <script src="/assets/js/pages/dashboard-e-commerce.js"></script>
+    <script src="/theme_assets/js/pages/dashboard-e-commerce.js"></script>
   <% elsif request.path == '/departments/operations/projects' %>
-    <script src="/assets/js/pages/project-list.js"></script>
+    <script src="/theme_assets/js/pages/project-list.js"></script>
   <% end -%>            
 
-  <script src="/assets/js/app.min.js"></script>
+  <script src="/theme_assets/js/app.min.js"></script>
+  <script type="text/javascript">
+      $('.select2').select2();
+      $('table.admins_table').DataTable()
+      $(document).on('click', '.confirm-delete', function(){
+          return confirm('Are you sure you want to do this?');
+      })
+  </script>
 </html>

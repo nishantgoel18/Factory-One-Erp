@@ -1,0 +1,68 @@
+<%# app/views/customers/show.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">TaxCode Details</h2>
+
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <%= link_to raw('<i class="anticon anticon-home m-r-5"></i>Home'), root_path, class: "breadcrumb-item" %>
+        <%= link_to "Masters", "#", class: "breadcrumb-item" %>
+        <%= link_to "Tax Codes", tax_codes_path, class: "breadcrumb-item" %>
+        <span class="breadcrumb-item active">TaxCode Details</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <tbody>
+                <tr><th>Code</th><td><%= @tax_code.code %></td></tr>
+                <tr><th>Name</th><td><%= @tax_code.name %></td></tr>
+                <tr><th>Jurisdiction</th><td><%= TaxCode::JURISDICTIONS[@tax_code.jurisdiction] %></td></tr>
+                <tr><th>Tax Type</th><td><%= TaxCode::TAX_TYPES[@tax_code.tax_type] %></td></tr>
+                <tr><th>Rate</th><td><%= "#{(@tax_code.rate.to_f * 100).round(2)}%" %></td></tr>
+
+                <tr><th>Country</th><td><%= @tax_code.country %></td></tr>
+                <tr><th>State</th><td><%= @tax_code.state_province.presence || "-" %></td></tr>
+                <tr><th>County</th><td><%= @tax_code.county.presence || "-" %></td></tr>
+                <tr><th>City</th><td><%= @tax_code.city.presence || "-" %></td></tr>
+
+                <tr><th>Compound?</th><td><%= @tax_code.is_compound ? "Yes" : "No" %></td></tr>
+                <tr><th>Compounds On</th><td><%= @tax_code.compounds_on.presence || "-" %></td></tr>
+
+                <tr><th>Effective From</th><td><%= @tax_code.effective_from %></td></tr>
+                <tr><th>Effective To</th><td><%= @tax_code.effective_to.presence || "-" %></td></tr>
+
+                <tr><th>Tax Authority ID</th><td><%= @tax_code.tax_authority_id.presence || "-" %></td></tr>
+                <tr><th>Filing Frequency</th><td><%= TaxCode::FILING_FREQUENCIES[@tax_code.filing_frequency] %></td></tr>
+
+                <tr><th>Created At</th><td><%= @tax_code.created_at.strftime("%b %d, %Y") %></td></tr>
+
+                <tr>
+                  <th>Actions</th>
+                  <td>
+                    <%= link_to "Edit", edit_tax_code_path(@tax_code) %> |
+                    <%= link_to "Delete",
+                          delete_tax_code_path(@tax_code),
+                          method: :delete,
+                          data: { confirm: "Are you sure?" }, class: "confirm-delete"  %>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

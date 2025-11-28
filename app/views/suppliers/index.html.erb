@@ -1,0 +1,69 @@
+<%# app/views/customers/index.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Suppliers</h2>
+
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <%= link_to raw('<i class="anticon anticon-home m-r-5"></i>Home'), root_path, class: "breadcrumb-item" %>
+        <%= link_to "Masters", "#", class: "breadcrumb-item" %>
+        <span class="breadcrumb-item active">Suppliers</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-body">
+
+          <div class="m-t-10">
+            <%= link_to "New Supplier", new_supplier_path, class: "btn btn-primary btn-sm" %>
+            <br><br>
+
+            <div class="table-responsive">
+              <table class="table  admins_table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Lead Time</th>
+                    <th>Active</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <% @suppliers.each do |s| %>
+                    <tr>
+                      <td><%= s.id %></td>
+                      <td><%= s.code %></td>
+                      <td><%= s.name %></td>
+                      <td><%= s.email %></td>
+                      <td><%= s.phone %></td>
+                      <td><%= s.lead_time_days %> days</td>
+                      <td><%= s.is_active ? "Yes" : "No" %></td>
+                      <td>
+                        <%= link_to "View", supplier_path(s) %> |
+                        <%= link_to "Edit", edit_supplier_path(s) %> |
+                        <%= link_to "Delete", delete_supplier_path(s), method: :delete, data: { confirm: "Are you sure?" }, class: "confirm-delete"  %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

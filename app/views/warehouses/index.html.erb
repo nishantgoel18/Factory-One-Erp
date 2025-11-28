@@ -52,9 +52,9 @@
                       <td>
                         <%= link_to "View", warehouse_path(w) %> |
                         <%= link_to "Edit", edit_warehouse_path(w) %> |
-                        <%= link_to "Delete", warehouse_path(w),
+                        <%= link_to "Delete", delete_warehouse_path(w),
                                   method: :delete,
-                                  data: { confirm: "Are you sure?" } %>
+                                  data: { confirm: "Are you sure?" }, class: "confirm-delete"  %>
                       </td>
                     </tr>
                   <% end %>

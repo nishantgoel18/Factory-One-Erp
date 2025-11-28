@@ -1,0 +1,105 @@
+<%= simple_form_for @journal_entry do |f| %>
+  <%= render 'layouts/error_messages', object: @journal_entry %>
+  <div class="row">
+    <div class="col-md-3">
+      <%= f.input :entry_date, as: :date, label: "Entry Date", input_html: {class: 'form-control'} %>
+    </div>
+
+    <div class="col-md-3">
+      <%= f.input :accounting_period, label: "Accounting Period",
+        placeholder: "e.g. 2025-01" %>
+    </div>
+
+    <div class="col-md-3">
+      <%= f.input :reference_type,
+        collection: JournalEntry::REF_TYPE_CHOICES.map { |k, v| [v, k] },
+        include_blank: "Select Reference Type",
+        label: "Reference Type",
+        input_html: {class: 'form-control'} %>
+    </div>
+
+    <div class="col-md-3">
+      <%= f.input :reference_id,
+        label: "Reference ID",
+        placeholder: "PO/GRN/SO/WO ID" %>
+    </div>
+  </div>
+
+
+  <%= f.input :description, label: "Description" %>
+
+  <h4>Lines</h4>
+  <div id="lines">
+    <%= f.simple_fields_for :journal_lines do |line| %>
+      <% next if line.object.deleted? %>
+      <%= render 'line_fields', f: line %>
+    <% end %>
+  </div>
+
+
+  <a type="button" href="#" id="add-line" class="btn btn-secondary">Add Line</a>
+  <br><br>
+
+  <%= f.submit "Save", class: "btn btn-primary" %>
+<% end %>
+
+<script>
+    var addBOMItem = function () {
+      var newItemNumber = $('#lines').children('.nested-fields').length + 1;
+      newItemNumber = newItemNumber > 0 ? newItemNumber - 1 : 0;
+      $('#lines').append(`
+        <div class="nested-fields row mb-2">
+          <div class="col-md-4">
+            <div class="mb-3 select required journal_entry_journal_lines_account_id">
+              <label class="form-label select required" for="journal_entry_journal_lines_attributes_${newItemNumber}_account_id">Account <abbr title="required">*</abbr></label>
+              <select class="form-select is-valid select required form-control" name="journal_entry[journal_lines_attributes][${newItemNumber}][account_id]" id="journal_entry_journal_lines_attributes_0_account_id">
+                <option value="" label=" "></option>
+                <% Account.non_deleted.each do |acc| %>
+                  <option value="<%= acc.id %>"><%= acc.name %></option>
+                <% end -%>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="mb-3 decimal optional journal_entry_journal_lines_debit">
+              <label class="form-label decimal optional" for="journal_entry_journal_lines_attributes_0_debit">Debit Amount</label>
+              <input class="form-control is-valid numeric decimal optional" type="number" step="any" value="0.0" name="journal_entry[journal_lines_attributes][${newItemNumber}][debit]" id="journal_entry_journal_lines_attributes_${newItemNumber}_debit">
+            </div>
+          </div>
+          <div class="col-md-2">
+            <div class="mb-3 decimal optional journal_entry_journal_lines_credit">
+              <label class="form-label decimal optional" for="journal_entry_journal_lines_attributes_${newItemNumber}_credit">Credit Amount</label>
+              <input class="form-control is-valid numeric decimal optional" type="number" step="any" value="0.0" name="journal_entry[journal_lines_attributes][${newItemNumber}][credit]" id="journal_entry_journal_lines_attributes_${newItemNumber}_credit">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-3 text optional journal_entry_journal_lines_description">
+              <label class="form-label text optional" for="journal_entry_journal_lines_attributes_${newItemNumber}_description">Description</label>
+              <textarea class="form-control text optional" name="journal_entry[journal_lines_attributes][${newItemNumber}][description]" id="journal_entry_journal_lines_attributes_${newItemNumber}_description"></textarea>
+            </div>
+          </div>
+          <div class="col-md-1">
+            <br /><br />
+            <a class="remove-line btn btn-danger btn-sm" href="#">X</a>
+            <input class="form-control hidden" type="hidden" value="false" name="journal_entry[journal_lines_attributes][${newItemNumber}][_destroy]" id="journal_entry_journal_lines_attributes_${newItemNumber}__destroy">
+          </div>
+        </div>
+      `);
+    };
+
+    $('#add-line').click(function (e) {
+      e.preventDefault();
+      addBOMItem();
+    });
+
+    document.addEventListener("click", function(e) {
+      if (e.target.classList.contains("remove-line")) {
+          e.preventDefault();
+
+          let field = e.target.closest(".nested-fields");
+          field.querySelector("input[name*='_destroy']").value = "1";
+          field.style.display = "none";
+      }
+    });
+    
+</script>

@@ -1,0 +1,184 @@
+<%= simple_form_for @customer do |f| %>
+  <%= render 'layouts/error_messages', object: @customer %>
+  <div class="row">
+    <!-- Identity -->
+    <div class="col-lg-3">
+      <%= f.input :code, label: "Customer Code", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :full_name, label: "Display Name", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :legal_name, label: "Legal Name", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :dba_name, label: "DBA (Doing Business As)", input_html: {class: 'form-control'} %>
+    </div>
+
+    <div class="col-lg-3">
+      <%= f.input :customer_type,
+                  collection: Customer::CUSTOMER_TYPES.map { |k, v| [v, k] },
+                  include_blank: "Select Type", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :is_active, label: "Active?" %>
+    </div>
+
+    <!-- Contact -->
+    <div class="col-lg-3">
+      <%= f.input :email, input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :phone_number, label: "Phone", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :mobile, label: "Mobile", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :website, input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :fax, input_html: {class: 'form-control'} %>
+    </div>
+
+    <!-- Billing Address -->
+    <div class="col-lg-12"><hr><h5>Billing Address</h5></div>
+    <div class="col-lg-6">
+      <%= f.input :billing_street, label: "Street", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :billing_city, label: "City", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :billing_state, label: "State/Province", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :billing_postal_code, label: "Postal Code", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :billing_country, label: "Country", input_html: { value: f.object.billing_country || "US" }, input_html: {class: 'form-control'} %>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="col-lg-12"><hr><h5>Shipping Address</h5></div>
+    <div class="col-lg-6">
+      <%= f.input :shipping_street, label: "Street", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :shipping_city, label: "City", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :shipping_state, label: "State/Province", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :shipping_postal_code, label: "Postal Code", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :shipping_country, label: "Country", input_html: { value: f.object.shipping_country || "US" }, input_html: {class: 'form-control'} %>
+    </div>
+
+    <!-- Tax & Compliance -->
+    <div class="col-lg-12"><hr><h5>Tax & Compliance</h5></div>
+    <div class="col-lg-3">
+      <%= f.input :tax_exempt, label: "Tax Exempt?" %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :tax_exempt_number, input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :customer_tax_region, label: "Tax Region", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :default_tax_code_id,
+                  collection: TaxCode.where(is_active: true),
+                  label_method: :name,
+                  value_method: :id,
+                  label: "Default Tax Code",
+                  include_blank: "Select Tax Code", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :ein_number, label: "EIN (US)", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :business_number, label: "Business Number (CA)", input_html: {class: 'form-control'} %>
+    </div>
+
+    <!-- Finance -->
+    <div class="col-lg-12"><hr><h5>Finance & Credit</h5></div>
+    <div class="col-lg-3">
+      <%= f.input :credit_limit, label: "Credit Limit", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :payment_terms,
+                  collection: Customer::PAYMENT_TERMS.map { |k, v| [v, k] },
+                  include_blank: "Select Terms", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :default_currency,
+                  collection: Customer::CURRENCIES.map { |k, v| [v, k] }, input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :default_ar_account_id,
+                  collection: Account.where(account_type: "ASSET"),
+                  label_method: :name,
+                  value_method: :id,
+                  include_blank: "Select AR Account",
+                  label: "A/R Account", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-3">
+      <%= f.input :allow_backorders, label: "Allow Backorders?" %>
+    </div>
+
+    <!-- Contacts -->
+    <div class="col-lg-12"><hr><h5>Primary Contact</h5></div>
+    <div class="col-lg-4">
+      <%= f.input :primary_contact_name, label: "Name", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-4">
+      <%= f.input :primary_contact_email, label: "Email", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-4">
+      <%= f.input :primary_contact_phone, label: "Phone", input_html: {class: 'form-control'} %>
+    </div>
+
+    <div class="col-lg-12"><hr><h5>Secondary Contact</h5></div>
+    <div class="col-lg-4">
+      <%= f.input :secondary_contact_name, label: "Name", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-4">
+      <%= f.input :secondary_contact_email, label: "Email", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-4">
+      <%= f.input :secondary_contact_phone, label: "Phone", input_html: {class: 'form-control'} %>
+    </div>
+
+    <!-- Logistics -->
+    <div class="col-lg-12"><hr><h5>Logistics</h5></div>
+    <div class="col-lg-4">
+      <%= f.input :freight_terms,
+                  collection: Customer::FREIGHT_TERMS.map { |k, v| [v, k] },
+                  include_blank: "Select Freight Terms", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-4">
+      <%= f.input :shipping_method, label: "Preferred Shipping Method", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-4">
+      <%= f.input :default_warehouse_id,
+                  collection: Warehouse.where(is_active: true),
+                  label_method: :name,
+                  value_method: :id,
+                  include_blank: "Select Warehouse",
+                  label: "Default Warehouse", input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-lg-12">
+      <%= f.input :delivery_instructions, as: :text, input_html: {class: 'form-control'} %>
+    </div>
+
+    <!-- Notes -->
+    <div class="col-lg-12">
+      <%= f.input :internal_notes, as: :text, input_html: {class: 'form-control'} %>
+    </div>
+  </div>
+
+  <%= f.submit "Save", class: "btn btn-success btn-sm" %>
+<% end %>

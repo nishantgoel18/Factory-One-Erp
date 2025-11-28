@@ -1,0 +1,60 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Journal Entries</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Financial Management</a>
+        <span class="breadcrumb-item active">Journal Entries</span>
+      </nav>
+    </div>
+  </div>
+
+  <%= link_to "New Journal Entry", new_journal_entry_path, class: "btn btn-primary btn-sm" %>
+  <br><br>
+
+  <div class="card">
+    <div class="card-body">
+
+      <div class="table-responsive">
+        <table class="table admins_table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Entry Date</th>
+              <th>Entry Number</th>
+              <th>Reference</th>
+              <th>Description</th>
+              <th>Accounting Period</th>
+              <th>Total Debit</th>
+              <th>Total Credit</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% @journal_entries.each do |l| %>
+              <tr>
+                <td><%= l.id %></td>
+                <td><%= l.entry_date.strftime("%b %d, %Y") %></td>
+                <td><%= l.entry_number %></td>
+                <td><%= "#{l.reference_id}  -  #{l.reference_type}"  %></td>
+                <td><%= l.description || '-' %></td>
+                <td><%= l.accounting_period %></td>
+                <td><%= l.total_debit ? "$#{l.total_debit}" : 'Not Available' %></td>
+                <td><%= l.total_credit ? "$#{l.total_credit}" : 'Not Available' %></td>
+                <td>
+                  <%= render 'actions', je: l %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>

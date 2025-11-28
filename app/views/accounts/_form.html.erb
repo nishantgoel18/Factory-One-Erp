@@ -1,0 +1,39 @@
+<%= simple_form_for(account) do |f| %>
+
+    <%= render 'layouts/error_messages', object: account %>
+
+    <div class="row">
+        <div class="col-md-12">
+            <%= f.input :name, label: "Name", placeholder: "Account Name" %>
+        </div>
+        <div class="col-md-4">
+            <%= f.input :code, label: "Account Code", placeholder: "e.g. 1000" %>
+        </div>
+
+        <div class="col-md-4">
+            <%= f.input :account_type, label: "Account Type",
+                collection: Account::ACCOUNT_TYPE_CHOICES.map { |k,v| [v,k] },
+                include_blank: "Select Type", input_html: { class: 'form-control' }
+            %>
+        </div>
+
+        <div class="col-md-4">
+            <%= f.input :sub_type, label: "Sub Type",
+                collection: Account::SUB_TYPE_CHOICES.map { |k,v| [v,k] },
+                include_blank: "Select Sub Type", input_html: { class: 'form-control' }
+            %>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <%= f.input :is_cash_flow_account, label: "Is Cash Flow Account?" %>
+        </div>
+        <div class="col-md-6">
+            <%= f.input :is_active, label: "Is Active?" %>
+        </div>
+    </div>
+
+    <%= f.submit "Save", class: "btn btn-success btn-sm" %>
+
+<% end %>

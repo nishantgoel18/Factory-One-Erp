@@ -1,0 +1,25 @@
+<% actions = [] %>
+<% if request.path == journal_entries_path %>
+  <% actions << link_to("View", journal_entry_path(je)) %> 
+<% end -%>
+<% if je.posted_at.nil? && !je.reversed? && !je.is_reversal? %>
+   <% actions << link_to("Edit", edit_journal_entry_path(je)) %> 
+<% end -%>
+<% if !je.posted_at? %>
+  <% actions << link_to("Post Entry", post_journal_entry_path(je),
+      method: :post,
+      data: { confirm: "Are you sure you want to post this entry?" }) %>
+<% end %>
+<% if je.posted_at.present? && !je.reversed? && !je.is_reversal? %>
+  <% actions << link_to("Reverse Entry",
+      reverse_journal_entry_path(je),
+      method: :post,
+      data: { confirm: "Are you sure you want to reverse this entry?" }) %>
+<% end %>
+<% unless je.posted_at.present? %>
+  <% actions << link_to("Delete",
+      journal_entry_path(je),
+      method: :delete,
+      data: { confirm: "Are you sure?" }) %>
+<% end -%>
+<%= actions.join(' | ').html_safe %>

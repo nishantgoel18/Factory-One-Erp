@@ -1,0 +1,19 @@
+<div class="nested-fields row mb-2">
+  <div class="col-md-4">
+    <%= f.input :account_id, collection: Account.non_deleted, label: 'Account', input_html: {class: 'form-control'} %>
+  </div>
+  <div class="col-md-2">
+    <%= f.input :debit, label: 'Debit Amount' %>
+  </div>
+  <div class="col-md-2">
+    <%= f.input :credit, label: 'Credit Amount' %>
+  </div>
+  <div class="col-md-3">
+    <%= f.input :description, label: 'Description'  %>
+  </div>
+  <div class="col-md-1">
+    <br /><br />
+    <%= link_to "X", "#", class: "remove-line btn btn-danger btn-sm" %>
+    <%= f.input :_destroy, as: :hidden, value: 0  %>
+  </div>
+</div>

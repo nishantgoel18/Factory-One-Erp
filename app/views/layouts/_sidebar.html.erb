@@ -12,7 +12,7 @@
                     </span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li class="{% if section_active == 'home' %} {{'active'}} {% endif %}">
+                    <li class="<%= 'active' if request.path == '/home' %>">
                         <a href="/home"><i class="anticon anticon-home"></i> Home</a>
                     </li>
                 </ul>
@@ -35,53 +35,118 @@
 
                     
 
-                    <li class="{% if section_active == 'roles' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'roles_list' %}">Roles Mangment</a>
+                    <li class="<%= 'active' if request.path == '' %>">
+                        <a href="<%= 'roles_list' %>">Roles Mangment</a>
                     </li>
                 
 
                
-                    <li class="{% if section_active == 'users' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'users_list' %}">Users</a>
+                    <li class="<%= 'active' if request.path == '' %>">
+                        <a href="<%= 'users_list' %>">Users</a>
                     </li>
                 
-                    <li class="{% if section_active == 'organizations' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'organizations_list' %}">Settings</a>
-                    </li>
-               
+                    <li class="<%= 'active' if request.path == '' %>">
+                        <a href="<%= 'organizations_list' %>">Settings</a>
+                    </li>               
+
+                </ul>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="fas fa-box"></i>
+                    </span>
+                    <span class="title">Masters</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
 
                
-                    <li class="{% if section_active == 'unitofmeasures' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'unitofmeasures_list' %}">Unit Of Measures</a>
+                <ul class="dropdown-menu">
+
+                    <li class="<%= 'active' if request.path == unit_of_measures_path %>">
+                        <a href="<%= unit_of_measures_path %>">Unit of Measures</a>
                     </li>
-               
-                    <li class="{% if section_active == 'categories' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'categories_list' %}">Product Categories</a>
+                
+                    <li class="<%= 'active' if request.path == product_categories_path %>">
+                        <a href="<%= product_categories_path %>">Product Categories</a>
                     </li>
                 
 
-               
-                    <li class="{% if section_active == 'products' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'products_list' %}">Products</a>
-                    </li>
-              
-                    <li class="{% if section_active == 'customers' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'customers_list' %}">Customers</a>
+                    <li class="<%= 'active' if request.path == products_path %>">
+                        <a href="<%= products_path %>">Products</a>
                     </li>
                
-                    <li class="{% if section_active == 'suppliers' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'suppliers_list' %}">Suppliers</a>
+                    <li class="<%= 'active' if request.path == '' %>">
+                        <a href="<%= 'customers_list' %>">Customers</a>
+                    </li>
+               
+                    <li class="suppliers' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'suppliers_list' %>">Suppliers</a>
                     </li>
               
-                    <li class="{% if section_active == 'warehouses' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'warehouses_list' %}">Warehouse</a>
+                    <li class="<%= 'active' if request.path == warehouses_path %>">
+                        <a href="<%= warehouses_path %>">Warehouses</a>
                     </li>
-              
-                    <li class="{% if section_active == 'locations' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'locations_list' %}">Location</a>
+
+                    <li class="<%= 'active' if request.path == locations_path %>">
+                        <a href="<%= locations_path %>">Locations</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path == tax_codes_path %>">
+                        <a href="<%= tax_codes_path %>">Tax Codes</a>
                     </li>
                 </ul>
             </li>
+
+            <li class="nav-item dropdown">
+                <a class="dropdown-toggle" href="javascript:void(0);">
+                    <span class="icon-holder">
+                        <i class="anticon anticon-dollar"></i>
+                    </span>
+                    <span class="title">Financial Management</span>
+                    <span class="arrow">
+                        <i class="arrow-icon"></i>
+                    </span>
+                </a>
+
+                <ul class="dropdown-menu">
+
+                    <li class="finance' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'finance' %>"> Home</a>
+                    </li>
+                    <li class="accounts' %> <%= 'active' if request.path == accounts_path %>">
+                        <a href="<%= accounts_path %>">Chart of Accounts</a>
+                    </li>
+               
+                    <li class="journal' %> <%= 'active' if request.path == journal_entries_path %>">
+                        <a href="<%= journal_entries_path %>">Journal Entries</a>
+                    </li>
+                
+                    <li class="jobcostrecords' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'jobcostrecords_list' %>">JobCostRecord</a>
+                    </li>
+               
+                    <li class="overheadrates' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'overheadrates_list' %>">OverheadRate</a>
+                    </li>
+               
+                    <li class="payables' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'payables_list' %>">Payable</a>
+                    </li>
+               
+                    <li class="laborrates' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'laborrates_list' %>">LaborRate</a>
+                    </li>
+                
+                    <li class="productcostsheets' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'productcostsheets_list' %>">Product Cost Sheet</a>
+                    </li>
+                </ul> 
+            </li>
+
 
 
             <li class="nav-item dropdown">
@@ -96,64 +161,60 @@
                 </a>
                 <ul class="dropdown-menu">
 
-                    <li class="{% if section_active == 'core_manufacturing' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'core_manufacturing' %}"> Home</a>
-                    </li>
-
-                    <li class="{% if section_active == 'boms' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'boms_list' %}">Bill of Materials</a>
+                    <li class="core_manufacturing' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'core_manufacturing' %>"> Home</a>
                     </li>
                
-                    <li class="{% if section_active == 'routings' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'routings_list' %}">Routing</a>
+                    <li class="routings' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'routings_list' %>">Routing</a>
                     </li>
                
-                    <li class="{% if section_active == 'works' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'works_list' %}">Work Center</a>
+                    <li class="works' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'works_list' %>">Work Center</a>
                     </li>
                 
-                    <li class="{% if section_active == 'workorders' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'workorders_list' %}">Work Orders</a>
+                    <li class="workorders' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'workorders_list' %>">Work Orders</a>
                     </li>
                
-                    <li class="{% if section_active == 'workordersissues' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'workordersissues_list' %}">Work Orders Issue </a>
+                    <li class="workordersissues' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'workordersissues_list' %>">Work Orders Issue </a>
                     </li>
                
-                    <li class="{% if section_active == 'workorderreceipts' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'workordersreceipts_list' %}">Work Order Receipt </a>
+                    <li class="workorderreceipts' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'workordersreceipts_list' %>">Work Order Receipt </a>
                     </li>
               
-                    <li class="{% if section_active == 'workorderscraps' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'workorderscraps_list' %}">WorkOrder Scraps</a>
+                    <li class="workorderscraps' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'workorderscraps_list' %>">WorkOrder Scraps</a>
                     </li>
                
-                    <li class="{% if section_active == 'timelogs' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'timelogs_list' %}">Time logs</a>
+                    <li class="timelogs' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'timelogs_list' %>">Time logs</a>
                     </li>
                 
-                    <li class="{% if section_active == 'mrp_runs' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'mrpruns_list' %}">MRP Runs</a>
+                    <li class="mrp_runs' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'mrpruns_list' %>">MRP Runs</a>
                     </li>
                
-                    <li class="{% if section_active == 'planningparameters' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'planningparameters_list' %}">Planning Parameters</a>
+                    <li class="planningparameters' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'planningparameters_list' %>">Planning Parameters</a>
                     </li>
                 
-                    <li class="{% if section_active == 'mrpprojectedbalances' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'mrpprojectedbalances_list' %}">MRP Projected Balances</a>
+                    <li class="mrpprojectedbalances' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'mrpprojectedbalances_list' %>">MRP Projected Balances</a>
                     </li>
                
-                    <li class="{% if section_active == 'mrpexceptions' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'mrpexceptions_list' %}">MRP Exception</a>
+                    <li class="mrpexceptions' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'mrpexceptions_list' %>">MRP Exception</a>
                     </li>
                
-                    <li class="{% if section_active == 'mrpplannedorders' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'mrpplannedorder_list' %}">MRP Planned Order</a>
+                    <li class="mrpplannedorders' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'mrpplannedorder_list' %>">MRP Planned Order</a>
                     </li>
                
-                    <li class="{% if section_active == 'operations' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'operations_list' %}">Operation</a>
+                    <li class="operations' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'operations_list' %>">Operation</a>
                     </li>
                 </ul>
             </li>
@@ -173,28 +234,28 @@
 
                 <ul class="dropdown-menu">
 
-                     <li class="{% if section_active == 'inventory_warehouse' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'inventory_warehouse' %}"> Home</a>
+                     <li class="inventory_warehouse' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'inventory_warehouse' %>"> Home</a>
                     </li>
 
-                    <li class="{% if section_active == 'stockbatches' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'stockbatches_list' %}">Stock Batches</a>
+                    <li class="stockbatches' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'stockbatches_list' %>">Stock Batches</a>
                     </li>
                
-                    <li class="{% if section_active == 'stocklevels' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'stocklevels_list' %}">Stock Levels</a>
+                    <li class="stocklevels' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'stocklevels_list' %>">Stock Levels</a>
                     </li>
                
-                    <li class="{% if section_active == 'stocktransactions' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'stocktransactions_list' %}">Stock Transactions</a>
+                    <li class="stocktransactions' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'stocktransactions_list' %>">Stock Transactions</a>
                     </li>
               
-                    <li class="{% if section_active == 'stocktranfers' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'stocktranfers_list' %}">StockTransfer</a>
+                    <li class="stocktranfers' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'stocktranfers_list' %>">StockTransfer</a>
                     </li>
                
-                    <li class="{% if section_active == 'cyclecounts' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'cyclecounts_list' %}">CycleCounts</a>
+                    <li class="cyclecounts' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'cyclecounts_list' %>">CycleCounts</a>
                     </li>
                 </ul> 
             </li>
@@ -212,16 +273,16 @@
 
                 <ul class="dropdown-menu">
 
-                    <li class="{% if section_active == 'procurement' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'procurement' %}"> Home</a>
+                    <li class="procurement' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'procurement' %>"> Home</a>
                     </li>
 
-                    <li class="{% if section_active == 'purchaseorders' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'purchaseorders_list' %}">Purchase Orders</a>
+                    <li class="purchaseorders' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'purchaseorders_list' %>">Purchase Orders</a>
                     </li>
                
-                    <li class="{% if section_active == 'grns' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'grns_list' %}">Goods Receipt</a>
+                    <li class="grns' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'grns_list' %>">Goods Receipt</a>
                     </li>
                 </ul>
 
@@ -232,7 +293,7 @@
                     <span class="icon-holder">
                         <i class="anticon anticon-car"></i>
                     </span>
-                    <span class="title">Sales & Dispatch</span>
+                    <span class="title">Sales</span>
                     <span class="arrow">
                         <i class="arrow-icon"></i>
                     </span>
@@ -240,20 +301,22 @@
 
                 <ul class="dropdown-menu">
 
-                    <li class="{% if section_active == 'sales' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'sales' %}"> Home</a>
+                    <li class="sales' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'sales' %>"> Home</a>
                     </li>
-
-                    <li class="{% if section_active == 'salesorders' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'salesorder_list' %}">Sales Orders</a>
+                    <li class="<%= 'active' if request.path == customers_path %>">
+                        <a href="<%= customers_path %>">Customers</a>
                     </li>
-               
-                    <li class="{% if section_active == 'shipments' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'shipments_list' %}">Shipments</a>
+                    <li class="salesorders' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'salesorder_list' %>">Sales Orders</a>
                     </li>
                
-                    <li class="{% if section_active == 'receivables' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'receivables_list' %}">Receivable</a>
+                    <li class="shipments' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'shipments_list' %>">Shipments</a>
+                    </li>
+               
+                    <li class="receivables' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'receivables_list' %>">Receivable</a>
                     </li>
                 </ul> 
 
@@ -273,20 +336,20 @@
 
                  <ul class="dropdown-menu">
 
-                    <li class="{% if section_active == 'quality' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'quality' %}"> Home</a>
+                    <li class="quality' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'quality' %>"> Home</a>
                     </li>
 
-                    <li class="{% if section_active == 'qualityinspection' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'qualityinspection_list' %}">Quality Inspection</a>
+                    <li class="qualityinspection' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'qualityinspection_list' %>">Quality Inspection</a>
                     </li>
                
-                    <li class="{% if section_active == 'nonconformancereports' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'nonconformancereports_list' %}">Non Conformance Reports</a>
+                    <li class="nonconformancereports' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'nonconformancereports_list' %>">Non Conformance Reports</a>
                     </li>
                
-                    <li class="{% if section_active == 'capas' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'capas_list' %}">CAPA (Corrective and Preventive Action)</a>
+                    <li class="capas' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'capas_list' %>">CAPA (Corrective and Preventive Action)</a>
                     </li>
                 </ul> 
 
@@ -308,88 +371,39 @@
 
                 <ul class="dropdown-menu">
 
-                    <li class="{% if section_active == 'maintenance_machine' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'maintenance_machine' %}"> Home</a>
+                    <li class="maintenance_machine' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'maintenance_machine' %>"> Home</a>
                     </li>
 
-                    <li class="{% if section_active == 'machines' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'machines_list' %}">Machines</a>
+                    <li class="machines' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'machines_list' %>">Machines</a>
                     </li>
                 
-                    <li class="{% if section_active == 'maintenancetasks' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'maintenancetasks_list' %}">MaintenanceTask</a>
+                    <li class="maintenancetasks' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'maintenancetasks_list' %>">MaintenanceTask</a>
                     </li>
                
-                    <li class="{% if section_active == 'maintenance_checklist' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'templates_list' %}">Maintenance Checklist</a>
+                    <li class="maintenance_checklist' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'templates_list' %>">Maintenance Checklist</a>
                     </li>
                
-                    <li class="{% if section_active == 'maintenancechecklistlines' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'maintenancechecklistlines_list' %}">Maintenance Checklist Line</a>
+                    <li class="maintenancechecklistlines' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'maintenancechecklistlines_list' %>">Maintenance Checklist Line</a>
                     </li>
               
-                    <li class="{% if section_active == 'breakdownlogs' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'breakdownlogs_list' %}">BreakdownLogs</a>
+                    <li class="breakdownlogs' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'breakdownlogs_list' %>">BreakdownLogs</a>
                     </li>
                
-                    <li class="{% if section_active == 'oee' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'oee_list' %}">OEE (Overall Equipment Effectiveness) Calculation</a>
+                    <li class="oee' %> <%= 'active' if request.path == '' %>">
+                        <a href="<%= 'oee_list' %>">OEE (Overall Equipment Effectiveness) Calculation</a>
                     </li>
                 </ul> 
 
             </li>
 
 
-             <li class="nav-item dropdown">
-                <a class="dropdown-toggle" href="javascript:void(0);">
-                    <span class="icon-holder">
-                        <i class="anticon anticon-dollar"></i>
-                    </span>
-                    <span class="title">Finance & Job Costing</span>
-                    <span class="arrow">
-                        <i class="arrow-icon"></i>
-                    </span>
-                </a>
-
-                
-
-              
-                 <ul class="dropdown-menu">
-
-                    <li class="{% if section_active == 'finance' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'finance' %}"> Home</a>
-                    </li>
-                    <li class="{% if section_active == 'accounts' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'accounts_list' %}">Account</a>
-                    </li>
-               
-                    <li class="{% if section_active == 'journal' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'journal_list' %}">Journal Entry</a>
-                    </li>
-                
-                    <li class="{% if section_active == 'jobcostrecords' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'jobcostrecords_list' %}">JobCostRecord</a>
-                    </li>
-               
-                    <li class="{% if section_active == 'overheadrates' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'overheadrates_list' %}">OverheadRate</a>
-                    </li>
-               
-                    <li class="{% if section_active == 'payables' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'payables_list' %}">Payable</a>
-                    </li>
-               
-                    <li class="{% if section_active == 'laborrates' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'laborrates_list' %}">LaborRate</a>
-                    </li>
-                
-                    <li class="{% if section_active == 'productcostsheets' %} {{'active'}} {% endif %}">
-                        <a href="{% url 'productcostsheets_list' %}">Product Cost Sheet</a>
-                    </li>
-                </ul> 
-
-
-            </li>
+            
 
 
             
