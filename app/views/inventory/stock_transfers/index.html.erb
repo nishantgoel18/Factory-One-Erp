@@ -1,0 +1,208 @@
+<%# app/views/inventory/stock_transfers/index.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Stock Transfers</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="/inventory/dashboard">Inventory Management</a>
+                <span class="breadcrumb-item active">Stock Transfers</span>
+            </nav>
+        </div>
+    </div>
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-0">
+          <i class="bi bi-box-seam me-2"></i>
+          Stock Transfers
+        </h2>
+      </div>
+      <div class="btn-group">
+        <%= link_to new_inventory_stock_transfer_path, class: 'btn btn-primary' do %>
+          <i class="bi bi-plus-circle me-1"></i>
+          New Stock Transfer
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <%= form_with url: inventory_stock_transfers_path, method: :get, class: 'row g-3' do |f| %>
+          <div class="col-md-4">
+            <%= f.label :search, 'Search', class: 'form-label' %>
+            <%= f.text_field :search, 
+                value: params[:search], 
+                class: 'form-control', 
+                placeholder: 'Stock Transfer Number...' %>
+          </div>
+
+          <div class="col-md-3">
+            <%= f.label :status, 'Status', class: 'form-label' %>
+            <%= f.select :status,
+                options_for_select(StockTransfer::STATUSES.map{|s| [s.titleize, s]}, params[:status]),
+                { include_blank: 'All Statuses' },
+                { class: 'form-control' } %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :from_date, 'From Date', class: 'form-label' %>
+            <%= f.date_field :from_date, value: params[:from_date], class: 'form-control' %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :to_date, 'To Date', class: 'form-label' %>
+            <%= f.date_field :to_date, value: params[:to_date], class: 'form-control' %>
+          </div>
+
+          <div class="col-md-1 d-flex align-items-end">
+            <%= f.submit 'Filter', class: 'btn btn-secondary w-100' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <%= link_to inventory_stock_transfers_path(status: 'DRAFT'), class: 'text-decoration-none' do %>
+          <div class="card border-warning">
+            <div class="card-body">
+              <h5 class="card-title text-warning">
+                <i class="bi bi-file-earmark-text"></i> Draft Transfers
+              </h5>
+              <h3 class="mb-0"><%= StockTransfer.draft.count %></h3>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card border-success">
+          <div class="card-body">
+            <h5 class="card-title text-success">
+              <i class="bi bi-check-circle"></i> Requested Today
+            </h5>
+            <h3 class="mb-0">
+              <%= StockTransfer.posted
+                    .where('created_at >= ?', Date.current.beginning_of_day)
+                    .count %>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card border-info">
+          <div class="card-body">
+            <h5 class="card-title text-info">
+              <i class="bi bi-calendar-week"></i> This Month
+            </h5>
+            <h3 class="mb-0">
+              <%= StockTransfer.active
+                    .where('created_at >= ?', Date.current.beginning_of_month)
+                    .count %>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRN Table -->
+    <div class="card">
+      <div class="card-body">
+        <% if @stock_transfers.any? %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Transfer Number</th>
+                  <th>From Warehouse</th>
+                  <th>To Warehouse</th>
+                  <th>Status</th>
+                  <th>Requested By</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <% @stock_transfers.each do |transfer| %>
+                  <tr>
+                    <td><%= transfer.id %></td>
+                    <td><%= transfer.transfer_number %></td>
+                    <td><%= transfer.from_warehouse.name %></td>
+                    <td><%= transfer.to_warehouse.name %></td>
+                    <td><%= transfer.status %></td>
+                    <td><%= transfer.requested_by&.full_name || "-" %></td>
+                    <td><%= transfer.created_at.strftime("%b %d, %Y") %></td>
+                    <td>
+                      <div class="btn-group ms-2">
+                        <%= link_to inventory_stock_transfer_path(transfer), 
+                            class: 'btn btn-sm btn-outline-primary' do %>
+                           View
+                        <% end %>
+                        <% if transfer.can_edit? %>
+                          <%= link_to edit_inventory_stock_transfer_path(transfer), 
+                              class: 'btn btn-sm btn-outline-primary' do %>
+                             Edit
+                          <% end %>
+                        <% end %>
+
+                        <% if transfer.can_post? %>
+                          <%= link_to post_transfer_inventory_stock_transfer_path(transfer), 
+                              method: :get,
+                              data: { confirm: 'Post this Stock Transfer? Stock levels will be updated.' },
+                              class: 'btn btn-sm btn-outline-success' do %>
+                            <i class="bi bi-check-circle me-2"></i>Post Transfer
+                          <% end %>
+                        <% end %>
+                            
+                        <%= link_to print_inventory_stock_transfer_path(transfer, format: :pdf), 
+                            target: '_blank',
+                            class: 'btn btn-sm btn-outline' do %>
+                          <i class="bi bi-printer me-2"></i>Print Stock Transfer
+                        <% end %>
+                            
+                        <% if transfer.can_edit? %>
+                          <%= link_to inventory_stock_transfer_path(transfer), 
+                              method: :delete,
+                              data: { confirm: 'Delete this Stock Transfer?' },
+                              class: 'btn btn-sm btn-outline-danger' do %>
+                            <i class="bi bi-trash me-2"></i>Delete
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+              Showing <%= @stock_transfers.offset_value + 1 %> to 
+              <%= [@stock_transfers.offset_value + @stock_transfers.length, @stock_transfers.total_count].min %> 
+              of <%= @stock_transfers.total_count %> receipts
+            </div>
+            <%= paginate @stock_transfers %>
+          </div>
+        <% else %>
+          <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No stock issues found found</h5>
+            <%= link_to 'Create Stock Transfer', new_inventory_stock_transfer_path, 
+                class: 'btn btn-primary mt-2' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+</div>

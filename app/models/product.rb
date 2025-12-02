@@ -2,6 +2,7 @@ class Product < ApplicationRecord
   belongs_to :product_category
   belongs_to :unit_of_measure
   has_many :bill_of_materials
+  has_many :stock_issue_lines
 
   validates :name, presence: true
   validates :sku, presence: true, uniqueness: true
@@ -45,7 +46,7 @@ class Product < ApplicationRecord
   def in_use_bill_of_material
     self.bill_of_materials.find_by(is_default: true, status: 'ACTIVE')
   end
-  
+
   # show standard cost only for specific types
   def requires_standard_cost?
     ['Raw Material', 'Service', 'Consumable'].include?(self.product_type)
@@ -54,6 +55,4 @@ class Product < ApplicationRecord
   def can_have_bom?
     ['Finished Goods', 'Semi-Finished Goods'].include?(self.product_type)
   end
-
-
 end

@@ -226,7 +226,7 @@
                     <span class="icon-holder">
                         <i class="anticon anticon-calculator"></i>
                     </span>
-                    <span class="title">Inventory & Warehouse</span>
+                    <span class="title">Procurement & Inventory</span>
                     <span class="arrow">
                         <i class="arrow-icon"></i>
                     </span>
@@ -234,29 +234,38 @@
 
                 <ul class="dropdown-menu">
 
-                     <li class="inventory_warehouse' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'inventory_warehouse' %>"> Home</a>
+                     <li class="<%= 'active' if request.path == inventory_dashboard_path %>">
+                        <a href="<%= inventory_dashboard_path %>"> Home</a>
                     </li>
 
-                    <li class="stockbatches' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'stockbatches_list' %>">Stock Batches</a>
+                    <li class="<%= 'active' if request.path.include? inventory_purchase_orders_path %>">
+                        <a href="<%= inventory_purchase_orders_path %>">Purchase Orders</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? inventory_goods_receipts_path %>">
+                        <a href="<%= inventory_goods_receipts_path %>">Goods Receipts</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? inventory_stock_batches_path %>">
+                        <a href="<%= inventory_stock_batches_path %>">Stock Batches</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? inventory_stock_issues_path %>">
+                        <a href="<%= inventory_stock_issues_path %>">Stock Issues</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? inventory_stock_transfers_path %>">
+                        <a href="<%= inventory_stock_transfers_path %>">Stock Transfers</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? inventory_stock_adjustments_path %>">
+                        <a href="<%= inventory_stock_adjustments_path %>">Stock Adjustments</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? inventory_cycle_counts_path %>">
+                        <a href="<%= inventory_cycle_counts_path %>">Cycle Counts</a>
                     </li>
                
-                    <li class="stocklevels' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'stocklevels_list' %>">Stock Levels</a>
-                    </li>
-               
-                    <li class="stocktransactions' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'stocktransactions_list' %>">Stock Transactions</a>
-                    </li>
-              
-                    <li class="stocktranfers' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'stocktranfers_list' %>">StockTransfer</a>
-                    </li>
-               
-                    <li class="cyclecounts' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'cyclecounts_list' %>">CycleCounts</a>
-                    </li>
                 </ul> 
             </li>
 
@@ -277,13 +286,9 @@
                         <a href="<%= 'procurement' %>"> Home</a>
                     </li>
 
-                    <li class="purchaseorders' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'purchaseorders_list' %>">Purchase Orders</a>
-                    </li>
+                    
                
-                    <li class="grns' %> <%= 'active' if request.path == '' %>">
-                        <a href="<%= 'grns_list' %>">Goods Receipt</a>
-                    </li>
+                    
                 </ul>
 
             </li>

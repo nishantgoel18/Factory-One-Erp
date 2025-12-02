@@ -92,3 +92,8 @@ gem "fog-aws"
 gem "devise"
 gem 'simple_form'
 gem 'country_select'
+
+gem 'kaminari'
+
+gem 'wicked_pdf'         # PDF (optional)
+gem 'wkhtmltopdf-binary'

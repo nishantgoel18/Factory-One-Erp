@@ -1,0 +1,26 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">New Purchase Orders</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="/inventory/dashboard">Inventory Management</a>
+        <a class="breadcrumb-item" href="/inventory/purchase_orders">Purchase Orders</a>
+        <span class="breadcrumb-item active">New Purchase Orders</span>
+      </nav>
+    </div>
+  </div>
+  <div class="mb-4">
+    <h2>
+      <i class="bi bi-plus-circle me-2"></i>
+      Create New Purchase Order
+    </h2>
+    <p class="text-muted">Create a new purchase order to order materials from suppliers</p>
+  </div>
+
+  <%= render 'form' %>
+</div>
+
+

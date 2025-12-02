@@ -1,0 +1,209 @@
+<%# app/views/inventory/stock_adjustments/index.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Stock Adjustments</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="/inventory/dashboard">Inventory Management</a>
+                <span class="breadcrumb-item active">Stock Adjustments</span>
+            </nav>
+        </div>
+    </div>
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-0">
+          <i class="bi bi-box-seam me-2"></i>
+          Stock Adjustments
+        </h2>
+      </div>
+      <div class="btn-group">
+        <%= link_to new_inventory_stock_adjustment_path, class: 'btn btn-primary' do %>
+          <i class="bi bi-plus-circle me-1"></i>
+          New Stock Adjustment
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <%= form_with url: inventory_stock_adjustments_path, method: :get, class: 'row g-3' do |f| %>
+          <div class="col-md-4">
+            <%= f.label :search, 'Search', class: 'form-label' %>
+            <%= f.text_field :search, 
+                value: params[:search], 
+                class: 'form-control', 
+                placeholder: 'Reference Number...' %>
+          </div>
+
+          <div class="col-md-3">
+            <%= f.label :status, 'Status', class: 'form-label' %>
+            <%= f.select :status,
+                options_for_select(StockAdjustment::STATUSES.map{|s| [s.titleize, s]}, params[:status]),
+                { include_blank: 'All Statuses' },
+                { class: 'form-control' } %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :from_date, 'From Date', class: 'form-label' %>
+            <%= f.date_field :from_date, value: params[:from_date], class: 'form-control' %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :to_date, 'To Date', class: 'form-label' %>
+            <%= f.date_field :to_date, value: params[:to_date], class: 'form-control' %>
+          </div>
+
+          <div class="col-md-1 d-flex align-items-end">
+            <%= f.submit 'Filter', class: 'btn btn-secondary w-100' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <%= link_to inventory_stock_adjustments_path(status: 'DRAFT'), class: 'text-decoration-none' do %>
+          <div class="card border-warning">
+            <div class="card-body">
+              <h5 class="card-title text-warning">
+                <i class="bi bi-file-earmark-text"></i> Draft Adjustments
+              </h5>
+              <h3 class="mb-0"><%= StockAdjustment.draft.count %></h3>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card border-success">
+          <div class="card-body">
+            <h5 class="card-title text-success">
+              <i class="bi bi-check-circle"></i> Posted Today
+            </h5>
+            <h3 class="mb-0">
+              <%= StockAdjustment.posted
+                    .where('created_at >= ?', Date.current.beginning_of_day)
+                    .count %>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card border-info">
+          <div class="card-body">
+            <h5 class="card-title text-info">
+              <i class="bi bi-calendar-week"></i> This Month
+            </h5>
+            <h3 class="mb-0">
+              <%= StockAdjustment.active
+                    .where('created_at >= ?', Date.current.beginning_of_month)
+                    .count %>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRN Table -->
+    <div class="card">
+      <div class="card-body">
+        <% if @stock_adjustments.any? %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Reference No</th>
+                  <th>Date</th>
+                  <th>Warehouse</th>
+                  <th>Status</th>
+                  <th>Posted At</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <% @stock_adjustments.each do |adjustment| %>
+                  <tr>
+                    <td><%= adjustment.id %></td>
+                    <td><%= adjustment.reference_no %></td>
+                    <td><%= adjustment.adjustment_date %></td>
+                    <td><%= adjustment.warehouse.name %></td>
+                    <td><%= adjustment.status %></td>
+                    <td><%= adjustment.posted_at&.strftime("%b %d, %Y %I:%M %p") || "-" %></td>
+
+                    <td><%= adjustment.created_at.strftime("%b %d, %Y") %></td>
+                    <td>
+                      <div class="btn-group ms-2">
+                        <%= link_to edit_inventory_stock_adjustment_path(adjustment), 
+                            class: 'btn btn-sm btn-outline-primary' do %>
+                            View
+                        <% end %>
+                        <% if adjustment.can_edit? %>
+                          <%= link_to edit_inventory_stock_adjustment_path(adjustment), 
+                              class: 'btn btn-sm btn-outline-primary' do %>
+                             Edit
+                          <% end %>
+                        <% end %>
+
+                        <% if adjustment.can_post? %>
+                          <%= link_to post_adjustment_inventory_stock_adjustment_path(adjustment), 
+                              method: :get,
+                              data: { confirm: 'Post this Stock Adjustment? Stock levels will be updated.' },
+                              class: 'btn btn-sm btn-outline-success' do %>
+                            <i class="bi bi-check-circle me-2"></i>Post Adjustment
+                          <% end %>
+                        <% end %>
+                            
+                        <%= link_to print_inventory_stock_adjustment_path(adjustment, format: :pdf), 
+                            target: '_blank',
+                            class: 'btn btn-sm btn-outline' do %>
+                          <i class="bi bi-printer me-2"></i>Print Stock Adjustment
+                        <% end %>
+                            
+                        <% if adjustment.can_edit? %>
+                          <%= link_to inventory_stock_adjustment_path(adjustment), 
+                              method: :delete,
+                              data: { confirm: 'Delete this Stock Adjustment?' },
+                              class: 'btn btn-sm btn-outline-danger' do %>
+                            <i class="bi bi-trash me-2"></i>Delete
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+              Showing <%= @stock_adjustments.offset_value + 1 %> to 
+              <%= [@stock_adjustments.offset_value + @stock_adjustments.length, @stock_adjustments.total_count].min %> 
+              of <%= @stock_adjustments.total_count %> receipts
+            </div>
+            <%= paginate @stock_adjustments %>
+          </div>
+        <% else %>
+          <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No stock issues found found</h5>
+            <%= link_to 'Create Stock Adjustment', new_inventory_stock_adjustment_path, 
+                class: 'btn btn-primary mt-2' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+</div>

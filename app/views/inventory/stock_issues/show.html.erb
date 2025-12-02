@@ -1,0 +1,259 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Stock Issues</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="/inventory/dashboard">Inventory Management</a>
+        <a class="breadcrumb-item" href="/inventory/stock_issues">Stock Issues</a>
+
+        <span class="breadcrumb-item active">View Stock Issue</span>
+      </nav>
+    </div>
+  </div>
+  <div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+      <h2 class="mb-2">
+        <i class="bi bi-box-seam me-2"></i>
+        <%= @stock_issue.reference_no %>
+      </h2>
+      <p class="text-muted mb-0">
+        Created on <%= @stock_issue.created_at.strftime('%B %d, %Y at %I:%M %p') %>
+        <% if @stock_issue.created_by %>
+          by <%= @stock_issue.created_by.full_name %>
+        <% end %>
+      </p>
+    </div>
+
+    <div class="text-end">
+      <%= render 'shared/status_badge', status: @stock_issue.status %>
+      
+      <% if @stock_issue.status == 'POSTED' %>
+        <span class="badge bg-success ms-2">
+          <i class="bi bi-check-circle me-1"></i>
+          Posted on <%= @stock_issue.posted_at.strftime('%b %d, %Y') %>
+        </span>
+      <% end %>
+      
+      <!-- Actions -->
+      <div class="btn-group ms-2">
+        <% if @stock_issue.can_edit? %>
+          <%= link_to edit_inventory_stock_issue_path(@stock_issue), 
+              class: 'btn btn-sm btn-outline-primary' do %>
+             Edit
+          <% end %>
+        <% end %>
+
+        <% if @stock_issue.can_post? %>
+          <%= link_to post_issue_inventory_stock_issue_path(@stock_issue), 
+              method: :get,
+              data: { confirm: 'Post this Stock Issue? Stock levels will be updated.' },
+              class: 'btn btn-sm btn-outline-success' do %>
+            <i class="bi bi-check-circle me-2"></i>Post Receipt
+          <% end %>
+        <% end %>
+            
+        <%= link_to print_inventory_stock_issue_path(@stock_issue, format: :pdf), 
+            target: '_blank',
+            class: 'btn btn-sm btn-outline' do %>
+          <i class="bi bi-printer me-2"></i>Print Stock Issue
+        <% end %>
+            
+        <% if @stock_issue.can_edit? %>
+          <%= link_to inventory_stock_issue_path(@stock_issue), 
+              method: :delete,
+              data: { confirm: 'Delete this Stock Issue?' },
+              class: 'btn btn-sm btn-outline-danger' do %>
+            <i class="bi bi-trash me-2"></i>Delete
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-md-8">
+      <!-- Stock Issue Information -->
+      <div class="card mb-4">
+        <div class="card-header bg-info d-flex align-items-center">
+          <h5 class="mb-0">Receipt Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <dl class="row mb-0">
+                <dt class="col-sm-5">Warehouse:</dt>
+                <dd class="col-sm-7">
+                  <i class="bi bi-building me-1"></i>
+                  <strong><%= @stock_issue.warehouse.name %></strong>
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Received Items -->
+      <div class="card mb-4">
+        <div class="card-header bg-info d-flex align-items-center">
+          <h5 class="mb-0">Received Items</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>From Location</th>
+                  <th>Batch</th>
+                  <th class="text-end">Quantity</th>
+                  <% if @stock_issue.status == 'POSTED' %>
+                    <th class="text-center">Stock Updated</th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% @lines.each_with_index do |line, index| %>
+                  <tr>
+                    <td><%= index + 1 %></td>
+                    <td>
+                      <strong><%= line.product.sku %></strong><br>
+                      <small class="text-muted"><%= line.product.name %></small>
+                      
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary">
+                        <%= line.from_location.code %>
+                      </span>
+                      <br><small class="text-muted"><%= line.from_location.name %></small>
+                    </td>
+                    <td>
+                      <% if line.stock_batch %>
+                        <span class="badge bg-info">
+                          <%= line.stock_batch.batch_number %>
+                        </span>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                    <td class="text-end">
+                      <strong class="text-success"><%= line.quantity.to_i %></strong> <%= line.product.unit_of_measure.symbol %>
+                    </td>
+                    <% if @stock_issue.status == 'POSTED' %>
+                      <td class="text-center">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock Transactions (if posted) -->
+      <% if @stock_issue.status == 'POSTED' %>
+        <div class="card">
+          <div class="card-header bg-info d-flex align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-arrow-repeat me-2"></i>
+              Stock Transactions Created
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Transaction Type</th>
+                    <th>Product</th>
+                    <th>Location</th>
+                    <th>Quantity</th>
+                    <th>Created At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% StockTransaction.where(
+                        reference_type: 'STOCK_ISSUE', 
+                        reference_id: @stock_issue.id.to_s,
+                        deleted: false
+                      ).includes(:product, :from_location).each do |txn| %>
+                    <tr>
+                      <td>
+                        <span class="badge bg-success">
+                          <%= txn.txn_type %>
+                        </span>
+                      </td>
+                      <td><%= txn.product.sku %></td>
+                      <td><%= txn.from_location&.code %></td>
+                      <td><strong>+<%= txn.quantity.to_i %></strong></td>
+                      <td><%= txn.created_at.strftime('%b %d, %Y %I:%M %p') %></td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Right Column: Summary -->
+    <div class="col-md-4">
+      <!-- Status Info -->
+      <div class="card mb-4">
+        <div class="card-header bg-info d-flex align-items-center">
+          <h6 class="mb-0">Status Information</h6>
+        </div>
+        <div class="card-body">
+          <% if @stock_issue.status == 'DRAFT' %>
+            <div class="alert alert-warning mb-3">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>Draft Status</strong><br>
+              <small>This receipt has not been posted yet. Stock levels are not updated.</small>
+            </div>
+            
+            <% if @stock_issue.can_post? %>
+              <%= link_to post_issue_inventory_stock_issue_path(@stock_issue), 
+                  method: :get,
+                  data: { confirm: 'Post this Stock Issue? Stock levels will be updated immediately.' },
+                  class: 'btn btn-success w-100' do %>
+                <i class="bi bi-check-circle me-1"></i> Post Receipt Now
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="alert alert-success mb-0">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <strong>Posted Successfully</strong><br>
+              <small>Stock levels have been updated.</small>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @stock_issue.warehouse %>
+        <div class="card mt-4">
+          <div class="card-header bg-info d-flex align-items-center">
+            <h6 class="mb-0">Warehouse Info</h6>
+          </div>
+          <div class="card-body">
+            <h6 class="text-primary mb-2">
+              <i class="bi bi-building"></i>
+              <%= @stock_issue.warehouse.name %>
+            </h6>
+            <% if @stock_issue.warehouse.address.present? %>
+              <p class="text-muted small mb-0">
+                <%= simple_format(@stock_issue.warehouse.address) %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

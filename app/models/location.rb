@@ -1,6 +1,7 @@
 class Location < ApplicationRecord
   belongs_to :warehouse
-
+  has_many :stock_issue_lines, foreign_key: :from_location_id
+  
   # Soft delete flag
   scope :active, -> { where(deleted: false) }
 

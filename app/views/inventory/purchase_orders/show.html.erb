@@ -1,0 +1,406 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Purchase Orders</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="/inventory/dashboard">Inventory Management</a>
+        <a class="breadcrumb-item" href="/inventory/purchase_orders">Purchase Orders</a>
+
+        <span class="breadcrumb-item active">View Purchase Order</span>
+      </nav>
+    </div>
+  </div>
+  <div class="d-flex align-items-start justify-content-between mb-1">
+    <div>
+      <h2 class="mb-2">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        <%= @purchase_order.po_number %>
+      </h2>
+      <p class="text-muted mb-0">
+        Created on <%= @purchase_order.created_at.strftime('%B %d, %Y at %I:%M %p') %>
+        <% if @purchase_order.created_by %>
+          by <%= @purchase_order.created_by.full_name %>
+        <% end %>
+      </p>
+    </div>
+    <div class="text-end">
+      <%= render 'shared/status_badge', status: @purchase_order.status %>
+      
+      <!-- Actions Dropdown -->
+      <% po = @purchase_order %>
+      <div class="btn-group ms-2">
+        <% if po.can_edit? %>
+          <%= link_to edit_inventory_purchase_order_path(po), 
+              title: 'Edit', class: 'btn btn-sm btn-outline-primary' do %>
+            Edit
+          <% end %>
+        <% end %>
+        <% if po.can_confirm? %>
+          <%= link_to confirm_inventory_purchase_order_path(po), 
+              method: :post,
+              data: { confirm: 'Confirm this Purchase Order? It will be sent to the supplier.' },
+              class: 'btn btn-sm btn-outline-primary' do %>
+             Confirm PO
+          <% end %>
+        <% end %>
+
+        <% if po.can_receive? %>
+          <%= link_to from_po_inventory_goods_receipts_path(po_id: po.id), 
+              class: 'btn btn-sm btn-outline-primary' do %>
+             Receive Goods (GRN)
+          <% end %>
+        <% end %>
+
+        <%= link_to print_inventory_purchase_order_path(po, format: :pdf), 
+            target: '_blank',
+            class: 'btn btn-sm btn-outline-primary' do %>
+          <i class="bi bi-printer me-2"></i> Print / Download PDF
+        <% end %>
+
+        <% if po.can_close? %>
+          <%= link_to close_inventory_purchase_order_path(po), 
+              method: :post,
+              data: { confirm: 'Close this PO? All items are received.' },
+              class: 'btn btn-sm btn-outline-primary' do %>
+            <i class="bi bi-lock me-2"></i> Close PO
+          <% end %>
+        <% end %>
+
+        <% if po.can_cancel? %>
+          <%= link_to cancel_inventory_purchase_order_path(po), 
+              method: :post,
+              data: { confirm: 'Cancel this PO? This action cannot be undone.' },
+              class: 'btn-sm btn btn-outline-danger' do %>
+            Cancel PO
+          <% end %>
+        <% end %>
+      
+        <% if po.can_delete? %>
+          <%= link_to inventory_purchase_order_path(po), 
+              method: :delete,
+              data: { confirm: 'Delete this PO? This cannot be undone.' },
+              class: 'btn-sm btn btn-outline-danger' do %>
+            Delete
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Left Column: PO Details -->
+    <div class="col-md-8">
+      <!-- PO Information -->
+      <div class="card mb-4">
+        <div class="card-header bg-info d-flex align-items-center">
+          <h5 class="mb-0">Purchase Order Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <dl class="row mb-0">
+                <dt class="col-sm-5">Supplier:</dt>
+                <dd class="col-sm-7">
+                  <i class="bi bi-building me-1"></i>
+                  <strong><%= @purchase_order.supplier.name %></strong>
+                </dd>
+
+                <dt class="col-sm-5">Warehouse:</dt>
+                <dd class="col-sm-7">
+                  <%= @purchase_order.warehouse&.name || 'Not specified' %>
+                </dd>
+
+                <dt class="col-sm-5">Order Date:</dt>
+                <dd class="col-sm-7">
+                  <%= @purchase_order.order_date.strftime('%B %d, %Y') %>
+                </dd>
+
+                <dt class="col-sm-5">Expected Date:</dt>
+                <dd class="col-sm-7">
+                  <% if @purchase_order.expected_date %>
+                    <%= @purchase_order.expected_date.strftime('%B %d, %Y') %>
+                    <% if @purchase_order.expected_date < Date.current && 
+                          ['CONFIRMED', 'PARTIALLY_RECEIVED'].include?(@purchase_order.status) %>
+                      <span class="badge bg-danger ms-1">Overdue</span>
+                    <% end %>
+                  <% else %>
+                    <span class="text-muted">Not set</span>
+                  <% end %>
+                </dd>
+              </dl>
+            </div>
+
+            <div class="col-md-6">
+              <dl class="row mb-0">
+                <dt class="col-sm-5">Currency:</dt>
+                <dd class="col-sm-7"><%= @purchase_order.currency %></dd>
+
+                <dt class="col-sm-5">Payment Terms:</dt>
+                <dd class="col-sm-7">
+                  <%= PurchaseOrder::PAYMENT_TERMS[@purchase_order.payment_terms] || 'Not specified' %>
+                </dd>
+
+                <dt class="col-sm-5">Shipping Method:</dt>
+                <dd class="col-sm-7">
+                  <%= @purchase_order.shipping_method || 'Not specified' %>
+                </dd>
+
+                <% if @purchase_order.confirmed_at %>
+                  <dt class="col-sm-5">Confirmed:</dt>
+                  <dd class="col-sm-7">
+                    <%= @purchase_order.confirmed_at.strftime('%B %d, %Y') %>
+                    <% if @purchase_order.confirmed_by %>
+                      <br><small class="text-muted">by <%= @purchase_order.confirmed_by.full_name %></small>
+                    <% end %>
+                  </dd>
+                <% end %>
+              </dl>
+            </div>
+
+            <% if @purchase_order.notes.present? %>
+              <div class="col-12 mt-3">
+                <dt>Notes:</dt>
+                <dd class="border-start border-3 border-primary ps-3 mb-0">
+                  <%= simple_format(@purchase_order.notes) %>
+                </dd>
+              </div>
+            <% end %>
+
+            <% if @purchase_order.internal_notes.present? %>
+              <div class="col-12 mt-3">
+                <dt>Internal Notes:</dt>
+                <dd class="border-start border-3 border-warning ps-3 mb-0 bg-warning bg-opacity-10 py-2">
+                  <%= simple_format(@purchase_order.internal_notes) %>
+                </dd>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="card mb-4">
+        <div class="card-header bg-info d-flex align-items-center">
+          <h5 class="mb-0">Line Items</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th class="text-center">Ordered</th>
+                  <th class="text-center">Received</th>
+                  <th class="text-end">Unit Price</th>
+                  <th class="text-end">Total</th>
+                  <th class="text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @lines.each_with_index do |line, index| %>
+                  <tr>
+                    <td><%= index + 1 %></td>
+                    <td>
+                      <strong><%= line.product.sku %></strong><br>
+                      <small class="text-muted"><%= line.product.name %></small>
+                      <% if line.line_note.present? %>
+                        <br><small class="text-info">
+                          <i class="bi bi-info-circle"></i> <%= line.line_note %>
+                        </small>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <%= line.ordered_qty.to_i %> <%= line.uom.symbol %>
+                    </td>
+                    <td class="text-center">
+                      <% if line.received_qty > 0 %>
+                        <strong class="text-success"><%= line.received_qty.to_i %></strong> <%= line.uom.symbol %>
+                        <br><small class="text-muted"><%= line.receiving_percentage.round(0) %>%</small>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                    <td class="text-end">
+                      <%= number_to_currency(line.unit_price, 
+                          unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
+                    </td>
+                    <td class="text-end">
+                      <strong>
+                        <%= number_to_currency(line.line_total, 
+                            unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
+                      </strong>
+                    </td>
+                    <td class="text-center">
+                      <%= render 'shared/status_badge', status: line.line_status %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Totals Footer -->
+        <div class="card-footer bg-light">
+          <div class="row">
+            <div class="col-md-8"></div>
+            <div class="col-md-4">
+              <dl class="row mb-0">
+                <dt class="col-6">Subtotal:</dt>
+                <dd class="col-6 text-end">
+                  <%= number_to_currency(@purchase_order.subtotal, 
+                      unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
+                </dd>
+
+                <% if @purchase_order.tax_amount > 0 %>
+                  <dt class="col-6">Tax:</dt>
+                  <dd class="col-6 text-end">
+                    <%= number_to_currency(@purchase_order.tax_amount, 
+                        unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
+                  </dd>
+                <% end %>
+
+                <% if @purchase_order.shipping_cost.to_f > 0 %>
+                  <dt class="col-6">Shipping:</dt>
+                  <dd class="col-6 text-end">
+                    <%= number_to_currency(@purchase_order.shipping_cost, 
+                        unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
+                  </dd>
+                <% end %>
+
+                <dt class="col-6 border-top pt-2"><strong>Total:</strong></dt>
+                <dd class="col-6 text-end border-top pt-2">
+                  <strong class="h5 text-primary mb-0">
+                    <%= number_to_currency(@purchase_order.total_amount, 
+                        unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
+                  </strong>
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Related Goods Receipts -->
+      <% if @purchase_order.goods_receipts.any? %>
+        <div class="card">
+          <div class="card-header bg-info d-flex align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-box-seam me-2"></i>
+              Goods Receipts (GRNs)
+            </h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>GRN Number</th>
+                    <th>Receipt Date</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @purchase_order.goods_receipts.each do |grn| %>
+                    <tr>
+                      <td><%= grn.reference_no %></td>
+                      <td><%= grn.receipt_date.strftime('%b %d, %Y') %></td>
+                      <td><%= render 'shared/status_badge', status: grn.status %></td>
+                      <td class="text-end">
+                        <%= link_to 'View', inventory_goods_receipt_path(grn), 
+                            class: 'btn btn-sm btn-outline-primary' %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Right Column: Summary & Stats -->
+    <div class="col-md-4">
+      <!-- Receiving Progress -->
+      <% if ['CONFIRMED', 'PARTIALLY_RECEIVED', 'RECEIVED'].include?(@purchase_order.status) %>
+        <div class="card mb-4">
+          <div class="card-header bg-info d-flex align-items-center">
+            <h6 class="mb-0">Receiving Progress</h6>
+          </div>
+          <div class="card-body">
+            <div class="progress mb-3" style="height: 30px; border-radius: 5px;">
+              <div class="progress-bar <%= @purchase_order.receiving_percentage == 100 ? 'bg-success' : 'bg-primary' %>" 
+                   role="progressbar" 
+                   style="width: <%= @purchase_order.receiving_percentage %>%">
+                <strong><%= @purchase_order.receiving_percentage.round(0) %>%</strong>
+              </div>
+            </div>
+
+            <dl class="row mb-0">
+              <dt class="col-6">Total Ordered:</dt>
+              <dd class="col-6 text-end"><%= @purchase_order.total_ordered_qty.to_i %></dd>
+
+              <dt class="col-6">Total Received:</dt>
+              <dd class="col-6 text-end text-success">
+                <strong><%= @purchase_order.total_received_qty.to_i %></strong>
+              </dd>
+
+              <dt class="col-6 border-top pt-2">Outstanding:</dt>
+              <dd class="col-6 text-end border-top pt-2 text-danger">
+                <strong><%= @purchase_order.outstanding_qty.to_i %></strong>
+              </dd>
+            </dl>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Supplier Info -->
+      <div class="card">
+        <div class="card-header bg-info d-flex align-items-center">
+          <h6 class="mb-0">Supplier Information</h6>
+        </div>
+        <div class="card-body">
+          <h6 class="text-primary mb-2">
+            <i class="bi bi-building"></i>
+            <%= @purchase_order.supplier.name %>
+          </h6>
+
+          <% if @purchase_order.supplier.email.present? %>
+            <p class="mb-1">
+              <i class="bi bi-envelope me-1"></i>
+              <%= mail_to @purchase_order.supplier.email, @purchase_order.supplier.email, 
+                  class: 'text-decoration-none' %>
+            </p>
+          <% end %>
+
+          <% if @purchase_order.supplier.phone.present? %>
+            <p class="mb-1">
+              <i class="bi bi-telephone me-1"></i>
+              <%= @purchase_order.supplier.phone %>
+            </p>
+          <% end %>
+
+          <hr>
+
+          <dl class="row mb-0 small">
+            <dt class="col-7">Lead Time:</dt>
+            <dd class="col-5 text-end"><%= @purchase_order.supplier.lead_time_days %> days</dd>
+
+            <dt class="col-7">On-Time Delivery:</dt>
+            <dd class="col-5 text-end">
+              <span class="badge <%= @purchase_order.supplier.on_time_delivery_rate >= 95 ? 'bg-success' : 'bg-warning' %>">
+                <%= @purchase_order.supplier.on_time_delivery_rate.round(0) %>%
+              </span>
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

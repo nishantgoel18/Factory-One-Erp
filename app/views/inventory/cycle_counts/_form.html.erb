@@ -1,0 +1,95 @@
+<%# app/views/inventory/stock_counts/_form.html.erb %>
+
+      
+<%= simple_form_for [:inventory, @cycle_count] do |f| %>
+  <%= render 'layouts/error_messages', object: @cycle_count %>
+
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <h5 class="mb-0">Count Information</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <%= f.association :warehouse,
+              collection: Warehouse.where(deleted: false, is_active: true).order(:name),
+              prompt: 'Select Warehouse',
+              input_html: { class: 'form-control' } %>
+        </div>
+        
+        <div class="col-md-7">
+          <%= f.input :scheduled_at,
+              as: :datetime,
+              input_html: { class: 'form-control' } %>
+        </div>
+        
+        <div class="col-md-2">
+          <%= f.input :count_type,
+              collection: CycleCount::COUNT_TYPES.keys.map{|c| [c.titleize, c]},
+              include_blank: 'Select Count Type',
+              input_html: { class: 'form-control' } %>
+        </div>
+        
+        <div class="col-md-12 mt-3">
+          <%= f.input :notes,
+              as: :text,
+              input_html: { class: 'form-control', rows: 2 } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Items to Count</h5>
+      <button type="button" class="btn btn-sm btn-light" id="add-count-line">
+        <i class="bi bi-plus-circle"></i> Add Item
+      </button>
+    </div>
+    <div class="card-body">
+      <div id="count-lines-container">
+        <%= f.simple_fields_for :lines do |line_form| %>
+          <%= render 'line_fields', f: line_form %>
+        <% end %>
+      </div>
+      <template id="count-line-template">
+        <%= f.simple_fields_for :lines, CycleCountLine.new, child_index: 'NEW_RECORD' do |line_form| %>
+          <%= render 'line_fields', f: line_form %>
+        <% end %>
+      </template>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between">
+    <%= link_to 'Cancel', inventory_cycle_counts_path, class: 'btn btn-secondary' %>
+    <%= f.submit 'Schedule Count', class: 'btn btn-primary' %>
+  </div>
+<% end %>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add new line item
+  document.getElementById('add-count-line').addEventListener('click', function() {
+    const template = document.getElementById('count-line-template');
+    const content = template.content.cloneNode(true);
+    const html = content.firstElementChild.outerHTML.replace(/NEW_RECORD/g, new Date().getTime());
+    document.getElementById('count-lines-container').insertAdjacentHTML('beforeend', html);
+  });
+  
+  // Remove line item
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-count-line')) {
+      const lineItem = e.target.closest('.count-line-row');
+      const destroyInput = lineItem.querySelector('input[name*="_destroy"]');
+      
+      if (destroyInput) {
+        destroyInput.value = '1';
+        lineItem.style.display = 'none';
+      } else {
+        lineItem.remove();
+      }
+    }
+  });
+});
+</script>

@@ -1,0 +1,61 @@
+<div class="adjustment-line-row border rounded p-3 mb-3">
+  <div class="row">
+    <div class="col-md-3">
+      <%= f.association :product,
+          collection: Product.non_deleted.where(is_stocked: true).order(:name),
+          label_method: lambda { |p| "#{p.sku} - #{p.name}" },
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+    
+    <div class="col-md-2">
+      <%= f.association :location,
+          collection: Location.active.order(:name),
+          label_method: lambda { |l| "#{l.code} - #{l.name}" },
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+    
+    <div class="col-md-2">
+      <%= f.input :qty_delta,
+          label: 'Adjustment Qty',
+          input_html: { 
+            class: 'form-control form-control', 
+            placeholder: '+10 or -5',
+            step: 0.01
+          },
+          hint: '+ to increase, - to decrease' %>
+    </div>
+    
+    <div class="col-md-1">
+      <%= f.association :uom,
+          collection: UnitOfMeasure.non_deleted.order(:name),
+          label_method: :symbol,
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+
+    <div class="col-md-3">
+      <%= f.association :batch,
+          collection: StockBatch.non_deleted,
+          label_method: :batch_number,
+          value_method: :id,
+          label: 'Batch (if tracked)',
+          include_blank: 'No Batch',
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+
+    <div class="col-md-1">
+      <label>&nbsp;</label>
+      <button type="button" class="btn btn-xs btn-outline-danger remove-adjustment-line w-100">
+        X
+      </button>
+      <%= f.input :_destroy, as: :hidden %>
+    </div>
+    
+    <div class="col-md-12">
+      <%= f.input :line_reason,
+          label: 'Reason',
+          input_html: { class: 'form-control form-control', placeholder: 'Why adjust?' } %>
+    </div>
+    
+    
+  </div>
+</div>

@@ -1,0 +1,259 @@
+<%# app/views/inventory/cycle_counts/index.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Cycle Counts</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="/inventory/dashboard">Inventory Management</a>
+                <span class="breadcrumb-item active">Cycle Counts</span>
+            </nav>
+        </div>
+    </div>
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-0">
+          <i class="bi bi-box-seam me-2"></i>
+          Cycle Counts
+        </h2>
+      </div>
+      <div class="btn-group">
+        <%= link_to new_inventory_cycle_count_path, class: 'btn btn-primary' do %>
+          <i class="bi bi-plus-circle me-1"></i>
+          New Cycle Count
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-2">
+      <div class="card-body">
+        <%= form_with url: inventory_cycle_counts_path, method: :get, class: 'row g-3' do |f| %>
+          <div class="col-md-3">
+            <%= f.label :search, 'Search', class: 'form-label' %>
+            <%= f.text_field :search, 
+                value: params[:search], 
+                class: 'form-control', 
+                placeholder: 'Reference Number...' %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :status, 'Status', class: 'form-label' %>
+            <%= f.select :status,
+                options_for_select(CycleCount::STATUSES.map{|s| [s.titleize, s]}, params[:status]),
+                { include_blank: 'All Statuses' },
+                { class: 'form-control' } %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :warehouse_id, 'Warehouse', class: 'form-label' %>
+            <%= f.select :warehouse_id, 
+                options_from_collection_for_select(
+                  Warehouse.where(deleted: false, is_active: true).order(:name), 
+                  :id, :name, params[:warehouse_id]
+                ),
+                { include_blank: 'All Warehouses' },
+                { class: 'form-control' } %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :from_date, 'From Date', class: 'form-label' %>
+            <%= f.date_field :from_date, value: params[:from_date], class: 'form-control' %>
+          </div>
+
+          <div class="col-md-2">
+            <%= f.label :to_date, 'To Date', class: 'form-label' %>
+            <%= f.date_field :to_date, value: params[:to_date], class: 'form-control' %>
+          </div>
+
+          <div class="col-md-1 d-flex align-items-end">
+            <%= f.submit 'Filter', class: 'btn btn-secondary w-100' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <%= link_to inventory_cycle_counts_path(status: 'SCHEDULED'), class: 'text-decoration-none' do %>
+          <div class="card border-warning">
+            <div class="card-body">
+              <h5 class="card-title text-warning">
+                <i class="bi bi-file-earmark-text"></i> Scheduled Cycle Counts
+              </h5>
+              <h3 class="mb-0"><%= CycleCount.scheduled.count %></h3>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-md-3">
+        <%= link_to inventory_cycle_counts_path(status: 'IN_PROGRESS'), class: 'text-decoration-none' do %>
+          <div class="card border-primary">
+            <div class="card-body">
+              <h5 class="card-title text-primary">
+                <i class="bi bi-file-earmark-text"></i> In Progress Cycle Counts
+              </h5>
+              <h3 class="mb-0"><%= CycleCount.in_progress.count %></h3>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-md-3">
+        <%= link_to inventory_cycle_counts_path(status: 'COMPLETED'), class: 'text-decoration-none' do %>
+          <div class="card border-success">
+            <div class="card-body">
+              <h5 class="card-title text-success">
+                <i class="bi bi-file-earmark-text"></i> Completed Cycle Counts
+              </h5>
+              <h3 class="mb-0"><%= CycleCount.completed.count %></h3>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-md-3">
+        <%= link_to inventory_cycle_counts_path(status: 'CANCELLED'), class: 'text-decoration-none' do %>
+          <div class="card border-danger">
+            <div class="card-body">
+              <h5 class="card-title text-danger">
+                <i class="bi bi-file-earmark-text"></i> Cancelled Cycle Counts
+              </h5>
+              <h3 class="mb-0"><%= CycleCount.cancelled.count %></h3>
+            </div>
+          </div>
+        <% end %>
+        
+      </div>
+
+      <div class="col-md-6">
+        <div class="card border-info">
+          <div class="card-body">
+            <h5 class="card-title text-info">
+              <i class="bi bi-check-circle"></i> Posted Today
+            </h5>
+            <h3 class="mb-0">
+              <%= CycleCount.posted
+                    .where('created_at >= ?', Date.current.beginning_of_day)
+                    .count %>
+            </h3>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card border-dark">
+          <div class="card-body">
+            <h5 class="card-title text-dark">
+              <i class="bi bi-calendar-week"></i> This Month
+            </h5>
+            <h3 class="mb-0">
+              <%= CycleCount.active
+                    .where('created_at >= ?', Date.current.beginning_of_month)
+                    .count %>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRN Table -->
+    <div class="card">
+      <div class="card-body">
+        <% if @cycle_counts.any? %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Reference No</th>
+                  <th>Warehouse</th>
+                  <th>Status</th>
+                  <th>Scheduled At</th>
+                  <th>Completed</th>
+                  <th>Variance Lines</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <% @cycle_counts.each do |cc| %>
+                  <tr>
+                    <td><%= cc.id %></td>
+                    <td><%= cc.reference_no %></td>
+                    <td><%= cc.warehouse.name %></td>
+                    <td><%= cc.status %></td>
+                    <td><%= cc.scheduled_at.strftime("%b %d, %Y") %></td>
+                    <td><%= cc.count_completed_at ? cc.count_completed_at.strftime("%b %d, %Y") : "-" %></td>
+                    <td><%= cc.lines_with_variance_count %></td>
+                    <td>
+                      <div class="btn-group ms-2">
+                        <%= link_to inventory_cycle_count_path(cc), 
+                            class: 'btn btn-sm btn-outline-primary' do %>
+                            View
+                        <% end %>
+                        <% if cc.can_edit? %>
+                          <%= link_to edit_inventory_cycle_count_path(cc), 
+                              class: 'btn btn-sm btn-outline-primary' do %>
+                             Edit
+                          <% end %>
+                        <% end %>
+
+                        <% if cc.can_post? %>
+                          <%= link_to post_count_inventory_cycle_count_path(cc), 
+                              method: :get,
+                              data: { confirm: 'Post this Cycle Count? Stock levels will be updated.' },
+                              class: 'btn btn-sm btn-outline-success' do %>
+                            <i class="bi bi-check-circle me-2"></i>Post Cycle Count
+                          <% end %>
+                        <% end %>
+                            
+                        <%= link_to print_inventory_cycle_count_path(cc, format: :pdf), 
+                            target: '_blank',
+                            class: 'btn btn-sm btn-outline' do %>
+                          <i class="bi bi-printer me-2"></i>Print Cycle Count
+                        <% end %>
+                            
+                        <% if cc.can_edit? %>
+                          <%= link_to inventory_cycle_count_path(cc), 
+                              method: :delete,
+                              data: { confirm: 'Delete this Cycle Count?' },
+                              class: 'btn btn-sm btn-outline-danger' do %>
+                            <i class="bi bi-trash me-2"></i>Delete
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+              Showing <%= @cycle_counts.offset_value + 1 %> to 
+              <%= [@cycle_counts.offset_value + @cycle_counts.length, @cycle_counts.total_count].min %> 
+              of <%= @cycle_counts.total_count %> receipts
+            </div>
+            <%= paginate @cycle_counts %>
+          </div>
+        <% else %>
+          <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No stock issues found found</h5>
+            <%= link_to 'Create Cycle Count', new_inventory_cycle_count_path, 
+                class: 'btn btn-primary mt-2' %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+</div>

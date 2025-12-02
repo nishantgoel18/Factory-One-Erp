@@ -1,0 +1,263 @@
+<%= simple_form_for [:inventory, @purchase_order], 
+    html: { class: 'needs-validation', novalidate: true } do |f| %>
+  
+  <!-- Error Messages -->
+  <%= render 'layouts/error_messages', object: @purchase_order %>
+
+  <!-- Header Information -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-info-circle me-2"></i>
+        Purchase Order Information
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <!-- Supplier -->
+        <div class="col-md-6">
+          <%= f.association :supplier,
+              collection: Supplier.active.order(:name),
+              label_method: :name,
+              value_method: :id,
+              include_blank: 'Select Supplier',
+              input_html: { class: 'form-control' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Warehouse -->
+        <div class="col-md-6">
+          <%= f.association :warehouse,
+              collection: Warehouse.where(deleted: false, is_active: true).order(:name),
+              label_method: :name,
+              value_method: :id,
+              include_blank: 'Select Warehouse (Optional)',
+              input_html: { class: 'form-control' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Order Date -->
+        <div class="col-md-4">
+          <%= f.input :order_date,
+              as: :date,
+              input_html: { class: 'form-control', value: @purchase_order.order_date || Date.current },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Expected Date -->
+        <div class="col-md-4">
+          <%= f.input :expected_date,
+              as: :date,
+              input_html: { class: 'form-control' },
+              hint: 'Leave blank to auto-calculate from supplier lead time',
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Currency -->
+        <div class="col-md-4">
+          <%= f.input :currency,
+              collection: PurchaseOrder::CURRENCIES.keys,
+              include_blank: false,
+              input_html: { class: 'form-control' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Payment Terms -->
+        <div class="col-md-6">
+          <%= f.input :payment_terms,
+              collection: PurchaseOrder::PAYMENT_TERMS.keys,
+              include_blank: 'Select Payment Terms',
+              input_html: { class: 'form-control' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Shipping Method -->
+        <div class="col-md-6">
+          <%= f.input :shipping_method,
+              input_html: { class: 'form-control', placeholder: 'e.g., FedEx Ground, UPS Express' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Shipping Address -->
+        <div class="col-md-8">
+          <%= f.input :shipping_address,
+              as: :text,
+              input_html: { class: 'form-control', rows: 3 },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Shipping Cost -->
+        <div class="col-md-4">
+          <%= f.input :shipping_cost,
+              as: :decimal,
+              input_html: { class: 'form-control', min: 0, step: 0.01 },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Notes -->
+        <div class="col-md-6">
+          <%= f.input :notes,
+              as: :text,
+              input_html: { class: 'form-control', rows: 3 },
+              hint: 'Visible to supplier',
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Internal Notes -->
+        <div class="col-md-6">
+          <%= f.input :internal_notes,
+              as: :text,
+              input_html: { class: 'form-control', rows: 3 },
+              hint: 'Internal use only',
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-list-ul me-2"></i>
+        Line Items
+      </h5>
+      <button type="button" class="btn btn-sm btn-light" id="add-line-item">
+        <i class="bi bi-plus-circle me-1"></i>
+        Add Line
+      </button>
+    </div>
+    <div class="card-body">
+      <div id="line-items-container">
+        <%= f.simple_fields_for :lines do |line_form| %>
+          <%= render 'line_fields', f: line_form %>
+        <% end %>
+      </div>
+
+      <!-- Line Item Template (hidden, for JS cloning) -->
+      <template id="line-item-template">
+        <%= f.simple_fields_for :lines, PurchaseOrderLine.new, child_index: 'NEW_RECORD' do |line_form| %>
+          <%= render 'line_fields', f: line_form %>
+        <% end %>
+      </template>
+    </div>
+
+    <!-- Totals -->
+    <div class="card-footer bg-light">
+      <div class="row">
+        <div class="col-md-8"></div>
+        <div class="col-md-4">
+          <table class="table table-sm mb-0">
+            <tr>
+              <th>Subtotal:</th>
+              <td class="text-end" id="subtotal-display">$0.00</td>
+            </tr>
+            <tr>
+              <th>Tax:</th>
+              <td class="text-end" id="tax-display">$0.00</td>
+            </tr>
+            <tr>
+              <th>Shipping:</th>
+              <td class="text-end" id="shipping-display">$0.00</td>
+            </tr>
+            <tr class="table-active">
+              <th>Total:</th>
+              <th class="text-end" id="total-display">$0.00</th>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex justify-content-between">
+    <%= link_to 'Cancel', inventory_purchase_orders_path, class: 'btn btn-secondary' %>
+    
+    <div>
+      <%= f.submit 'Save as Draft', class: 'btn btn-outline-primary me-2' %>
+      <% if @purchase_order.persisted? && @purchase_order.can_confirm? %>
+        <%= link_to 'Save & Confirm', confirm_inventory_purchase_order_path(@purchase_order), 
+            method: :post,
+            data: { confirm: 'Confirm this Purchase Order after saving?' },
+            class: 'btn btn-success' %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- JavaScript for Dynamic Line Items -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  let lineItemIndex = <%= @purchase_order.lines.count %>;
+  
+  // Add new line item
+  document.getElementById('add-line-item').addEventListener('click', function() {
+    const template = document.getElementById('line-item-template');
+    const content = template.content.cloneNode(true);
+    
+    // Replace NEW_RECORD with actual index
+    const html = content.firstElementChild.outerHTML.replace(/NEW_RECORD/g, new Date().getTime());
+    
+    document.getElementById('line-items-container').insertAdjacentHTML('beforeend', html);
+    lineItemIndex++;
+    
+    // Recalculate totals
+    calculateTotals();
+  });
+  
+  // Remove line item
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-line-item')) {
+      const lineItem = e.target.closest('.line-item-row');
+      const destroyInput = lineItem.querySelector('input[name*="_destroy"]');
+      
+      if (destroyInput) {
+        destroyInput.value = '1';
+        lineItem.style.display = 'none';
+      } else {
+        lineItem.remove();
+      }
+      
+      calculateTotals();
+    }
+  });
+  
+  // Calculate totals when quantities or prices change
+  document.addEventListener('input', function(e) {
+    if (e.target.matches('[name*="[ordered_qty]"], [name*="[unit_price]"], [name="purchase_order[shipping_cost]"]')) {
+      calculateTotals();
+    }
+  });
+  
+  function calculateTotals() {
+    let subtotal = 0;
+    let tax = 0;
+    
+    document.querySelectorAll('.line-item-row:not([style*="display: none"])').forEach(function(row) {
+      const qty = parseFloat(row.querySelector('[name*="[ordered_qty]"]').value) || 0;
+      const price = parseFloat(row.querySelector('[name*="[unit_price]"]').value) || 0;
+      const lineTotal = qty * price;
+      
+      subtotal += lineTotal;
+      
+      // Update line total display
+      const lineTotalDisplay = row.querySelector('.line-total-display');
+      if (lineTotalDisplay) {
+        lineTotalDisplay.textContent = '$' + lineTotal.toFixed(2);
+      }
+    });
+    
+    const shipping = parseFloat(document.querySelector('[name="purchase_order[shipping_cost]"]').value) || 0;
+    const total = subtotal + tax + shipping;
+    
+    document.getElementById('subtotal-display').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('tax-display').textContent = '$' + tax.toFixed(2);
+    document.getElementById('shipping-display').textContent = '$' + shipping.toFixed(2);
+    document.getElementById('total-display').textContent = '$' + total.toFixed(2);
+  }
+  
+  // Initial calculation
+  calculateTotals();
+});
+</script>

@@ -1,0 +1,41 @@
+<div class="issue-line-row border rounded p-3 mb-3">
+  <div class="row">
+    <div class="col-md-3">
+      <%= f.association :product,
+          collection: Product.where(deleted: false, is_stocked: true).order(:name),
+          label_method: lambda { |p| "#{p.sku} - #{p.name}" },
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+    
+    <div class="col-md-3">
+      <%= f.association :from_location,
+          collection: Location.active.where(is_pickable: true).order(:name),
+          label: 'From Location (Pickable)',
+          label_method: lambda { |l| "#{l.code} - #{l.name}" },
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+    
+    <div class="col-md-2">
+      <%= f.input :quantity,
+          input_html: { class: 'form-control form-control', min: 0 } %>
+    </div>
+    
+    <div class="col-md-3">
+      <%= f.association :stock_batch,
+          collection: StockBatch.non_deleted,
+          label_method: :batch_number,
+          value_method: :id,
+          label: 'Batch (if tracked)',
+          include_blank: 'No Batch',
+          input_html: { class: 'form-control form-control' } %>
+    </div>
+    
+    <div class="col-md-1">
+      <label>&nbsp;</label>
+      <button type="button" class="btn btn-xs btn-outline-danger remove-issue-line w-100">
+        X
+      </button>
+      <%= f.input :_destroy, as: :hidden %>
+    </div>
+  </div>
+</div>

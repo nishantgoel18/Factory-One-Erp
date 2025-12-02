@@ -1,0 +1,168 @@
+<%# app/views/inventory/goods_receipts/_form.html.erb %>
+
+<%= simple_form_for [:inventory, @goods_receipt], 
+    html: { class: 'needs-validation', novalidate: true } do |f| %>
+  
+  <!-- Error Messages -->
+  <%= render 'layouts/error_messages', object: @goods_receipt %>
+
+  <!-- Header Information -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-info-circle me-2"></i>
+        Receipt Information
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <!-- Warehouse -->
+        <div class="col-md-4">
+          <%= f.association :warehouse,
+              collection: Warehouse.where(deleted: false, is_active: true).order(:name),
+              label_method: :name,
+              value_method: :id,
+              include_blank: 'Select Warehouse',
+              input_html: { class: 'form-control', id: 'grn_warehouse_id' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Supplier (optional) -->
+        <div class="col-md-4">
+          <%= f.association :supplier,
+              collection: Supplier.active.order(:name),
+              label_method: :name,
+              value_method: :id,
+              include_blank: 'Select Supplier (Optional)',
+              input_html: { class: 'form-control' },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Purchase Order (optional) -->
+        <div class="col-md-4">
+          <%= f.association :purchase_order,
+              collection: PurchaseOrder.open_pos.order(po_number: :desc),
+              label_method: :po_number,
+              value_method: :id,
+              include_blank: 'No PO (Direct Receipt)',
+              input_html: { class: 'form-control' },
+              hint: 'Link to existing Purchase Order',
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Receipt Date -->
+        <div class="col-md-4">
+          <%= f.input :receipt_date,
+              as: :date,
+              input_html: { class: 'form-control', value: @goods_receipt.receipt_date || Date.current },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+
+        <!-- Notes -->
+        <div class="col-md-8">
+          <%= f.input :notes,
+              as: :text,
+              input_html: { class: 'form-control', rows: 2 },
+              wrapper_html: { class: 'mb-3' } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="card mb-4">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-list-ul me-2"></i>
+        Items to Receive
+      </h5>
+      <button type="button" class="btn btn-sm btn-light" id="add-grn-line">
+        <i class="bi bi-plus-circle me-1"></i>
+        Add Item
+      </button>
+    </div>
+    <div class="card-body">
+      <div id="grn-lines-container">
+        <%= f.simple_fields_for :lines do |line_form| %>
+          <%= render 'line_fields', f: line_form %>
+        <% end %>
+      </div>
+
+      <!-- Line Item Template -->
+      <template id="grn-line-template">
+        <%= f.simple_fields_for :lines, GoodsReceiptLine.new, child_index: 'NEW_RECORD' do |line_form| %>
+          <%= render 'line_fields', f: line_form %>
+        <% end %>
+      </template>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="d-flex justify-content-between">
+    <%= link_to 'Cancel', inventory_goods_receipts_path, class: 'btn btn-secondary' %>
+    
+    <div>
+      <%= f.submit 'Save as Draft', class: 'btn btn-outline-primary me-2' %>
+      <% if @goods_receipt.persisted? && @goods_receipt.can_post? %>
+        <%= link_to 'Save & Post', post_receipt_inventory_goods_receipt_path(@goods_receipt), 
+            method: :post,
+            data: { confirm: 'Post this GRN? Stock levels will be updated immediately.' },
+            class: 'btn btn-success' %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add new line item
+  document.getElementById('add-grn-line').addEventListener('click', function() {
+    const template = document.getElementById('grn-line-template');
+    const content = template.content.cloneNode(true);
+    const html = content.firstElementChild.outerHTML.replace(/NEW_RECORD/g, new Date().getTime());
+    document.getElementById('grn-lines-container').insertAdjacentHTML('beforeend', html);
+  });
+  
+  // Remove line item
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-grn-line')) {
+      const lineItem = e.target.closest('.grn-line-row');
+      const destroyInput = lineItem.querySelector('input[name*="_destroy"]');
+      
+      if (destroyInput) {
+        destroyInput.value = '1';
+        lineItem.style.display = 'none';
+      } else {
+        lineItem.remove();
+      }
+    }
+  });
+  
+  // Filter locations by warehouse
+  const warehouseSelect = document.getElementById('grn_warehouse_id');
+  if (warehouseSelect) {
+    warehouseSelect.addEventListener('change', function() {
+      const warehouseId = this.value;
+      
+      // Update all location dropdowns
+      document.querySelectorAll('.location-select').forEach(function(select) {
+        if (warehouseId) {
+          // AJAX call to fetch locations
+          fetch(`/inventory/ajax/locations/for_warehouse?warehouse_id=${warehouseId}`)
+            .then(response => response.json())
+            .then(data => {
+              select.innerHTML = '<option value="">Select Location</option>';
+              data.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc.id;
+                option.textContent = `${loc.code} - ${loc.name}`;
+                select.appendChild(option);
+              });
+            });
+        }
+      });
+    });
+  }
+});
+</script>

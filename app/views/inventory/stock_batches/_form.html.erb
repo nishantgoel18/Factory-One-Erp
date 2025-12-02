@@ -1,0 +1,248 @@
+<!-- app/views/stock_batches/_form.html.erb -->
+
+<%= simple_form_for [:inventory, @stock_batch], html: { class: 'needs-validation' } do |f| %>
+  
+  <!-- Error Messages -->
+  <%= render 'layouts/error_messages', object: @stock_batch %>
+
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            Basic Information
+          </h5>
+        </div>
+        <div class="card-body">
+          
+          <!-- Product Selection -->
+          <%= f.association :product,
+              collection: @products,
+              label_method: ->(p) { "#{p.sku} - #{p.name}" },
+              include_blank: 'Select Product',
+              input_html: { 
+                class: 'select2',
+                data: { 
+                  placeholder: 'Search and select product...',
+                  allow_clear: true 
+                }
+              },
+              wrapper_html: { class: 'mb-3' },
+              label: 'Product *',
+              hint: 'Only batch-tracked products are shown' %>
+
+          <!-- Batch Number -->
+          <%= f.input :batch_number,
+              label: 'Batch Number *',
+              placeholder: 'e.g., LOT-2025-001, BATCH-DEC-2025',
+              input_html: { 
+                class: 'form-control text-uppercase',
+                maxlength: 50,
+                autofocus: @stock_batch.new_record?
+              },
+              hint: 'Enter the batch/lot number from supplier packaging',
+              wrapper_html: { class: 'mb-3' } %>
+
+          <!-- Supplier Batch Reference -->
+          <%= f.input :supplier_batch_ref,
+              label: 'Supplier Batch Reference',
+              placeholder: 'Supplier\'s batch/lot number',
+              input_html: { maxlength: 50 },
+              hint: 'Original batch number from supplier (if different)',
+              wrapper_html: { class: 'mb-3' } %>
+
+          <!-- Supplier Lot Number -->
+          <%= f.input :supplier_lot_number,
+              label: 'Supplier Lot Number',
+              placeholder: 'Supplier lot reference',
+              input_html: { maxlength: 50 },
+              wrapper_html: { class: 'mb-3' } %>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-md-6">
+      
+      <!-- Dates Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-info text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>
+            Dates
+          </h5>
+        </div>
+        <div class="card-body">
+          
+          <!-- Manufacture Date -->
+          <%= f.input :manufacture_date,
+              label: 'Manufacture Date',
+              as: :date,
+              html5: true,
+              input_html: { 
+                class: 'form-control',
+                max: Date.today
+              },
+              hint: 'Date when the batch was manufactured',
+              wrapper_html: { class: 'mb-3' } %>
+
+          <!-- Expiry Date -->
+          <%= f.input :expiry_date,
+              label: 'Expiry Date',
+              as: :date,
+              html5: true,
+              input_html: { 
+                class: 'form-control',
+                min: Date.today
+              },
+              hint: 'Date when the batch expires (leave blank if no expiry)',
+              wrapper_html: { class: 'mb-3' } %>
+
+          <div class="alert alert-warning py-2" role="alert">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              System will alert when batch is expiring soon or has expired
+            </small>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quality & Certification Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-certificate me-2"></i>
+            Quality & Certification
+          </h5>
+        </div>
+        <div class="card-body">
+          
+          <!-- Certificate Number -->
+          <%= f.input :certificate_number,
+              label: 'Certificate Number',
+              placeholder: 'e.g., CERT-2025-001',
+              input_html: { maxlength: 50 },
+              hint: 'Quality certificate or COA number',
+              wrapper_html: { class: 'mb-3' } %>
+
+          <!-- Quality Status -->
+          <%= f.input :quality_status,
+              label: 'Quality Status',
+              collection: [
+                ['Approved', 'APPROVED'],
+                ['Pending Inspection', 'PENDING'],
+                ['Rejected', 'REJECTED'],
+                ['On Hold', 'ON_HOLD']
+              ],
+              include_blank: 'Select Status',
+              input_html: { class: 'form-control' },
+              wrapper_html: { class: 'mb-3' } %>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notes Section -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header d-flex align-items-center bg-secondary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-sticky-note me-2"></i>
+        Additional Notes
+      </h5>
+    </div>
+    <div class="card-body">
+      <%= f.input :notes,
+          label: 'Notes',
+          as: :text,
+          input_html: { 
+            rows: 4,
+            placeholder: 'Any additional information about this batch...',
+            maxlength: 1000
+          },
+          hint: 'Max 1000 characters',
+          wrapper_html: { class: 'mb-0' } %>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <%= link_to inventory_stock_batches_path, class: "btn btn-outline-secondary" do %>
+            <i class="fas fa-times me-1"></i> Cancel
+          <% end %>
+        </div>
+        <div>
+          <%= f.submit @stock_batch.new_record? ? 'Create Batch' : 'Update Batch',
+              class: 'btn btn-primary btn-lg',
+              data: { disable_with: "<i class='fas fa-spinner fa-spin me-1'></i> Saving..." } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<% end %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Auto-uppercase batch number
+    const batchInput = document.querySelector('input[name="stock_batch[batch_number]"]');
+    if (batchInput) {
+      batchInput.addEventListener('input', function(e) {
+        e.target.value = e.target.value.toUpperCase();
+      });
+    }
+
+    // Date validation
+    const manufactureDate = document.querySelector('input[name="stock_batch[manufacture_date]"]');
+    const expiryDate = document.querySelector('input[name="stock_batch[expiry_date]"]');
+
+    if (manufactureDate && expiryDate) {
+      expiryDate.addEventListener('change', function() {
+        if (manufactureDate.value && expiryDate.value) {
+          if (new Date(expiryDate.value) <= new Date(manufactureDate.value)) {
+            alert('Expiry date must be after manufacture date');
+            expiryDate.value = '';
+          }
+        }
+      });
+    }
+
+    // Initialize Select2 if available
+    if (typeof $.fn.select2 !== 'undefined') {
+      $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%'
+      });
+    }
+  });
+</script>
+
+<style>
+  .card-header h5 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  }
+
+  .text-uppercase {
+    text-transform: uppercase;
+  }
+
+  .alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+  }
+</style>
