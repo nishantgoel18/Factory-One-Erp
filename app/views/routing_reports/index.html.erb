@@ -1,0 +1,211 @@
+<%# app/views/routing_reports/index.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Routing Reports</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="#">Reports</a>
+                <span class="breadcrumb-item active">Routing Reports</span>
+            </nav>
+        </div>
+    </div>
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-0">
+        <i class="fas fa-chart-line me-2"></i>
+        Routing Reports & Analytics
+      </h2>
+      <p class="text-muted">Analyze routing performance, costs, and efficiency</p>
+    </div>
+  </div>
+
+  <!-- Reports Grid -->
+  <div class="row">
+    <!-- Report 1: Work Center Utilization -->
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100 border-primary">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-primary text-white rounded p-3">
+                <i class="fas fa-industry fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5 m-l-5">
+              <h5 class="mb-0">Work Center Utilization</h5>
+              <small class="text-muted">Usage & performance metrics</small>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Analyze how work centers are being utilized across active routings. Identify underutilized or overutilized resources.
+          </p>
+          <%= link_to work_center_utilization_routing_path, class: "btn btn-primary w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", work_center_utilization_routing_path(format: :csv), class: "text-decoration-none" %> | 
+            <%= link_to "PDF", work_center_utilization_routing_path(format: :pdf), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 2: Cost Analysis -->
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100 border-success">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-success text-white rounded p-3">
+                <i class="fas fa-dollar-sign fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Routing Cost Analysis</h5>
+              <small class="text-muted">Labor & overhead breakdown</small>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Detailed cost breakdown showing material, labor, and overhead costs for each routing. Compare processing costs across products.
+          </p>
+          <%= link_to routing_cost_analysis_routing_path, class: "btn btn-success w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", routing_cost_analysis_routing_path(format: :csv), class: "text-decoration-none" %> | 
+            <%= link_to "PDF", routing_cost_analysis_routing_path(format: :pdf), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 3: Time Analysis -->
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100 border-info">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-info text-white rounded p-3">
+                <i class="fas fa-clock fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Production Time Analysis</h5>
+              <small class="text-muted">Lead times & bottlenecks</small>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Analyze production times, identify bottlenecks, and calculate lead times for different batch sizes. Find critical operations.
+          </p>
+          <%= link_to production_time_analysis_routing_path, class: "btn btn-info w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", production_time_analysis_routing_path(format: :csv), class: "text-decoration-none" %> | 
+            <%= link_to "PDF", production_time_analysis_routing_path(format: :pdf), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 4: Routing Comparison -->
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100 border-warning">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-warning text-dark rounded p-3">
+                <i class="fas fa-balance-scale fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Routing Comparison</h5>
+              <small class="text-muted">Compare multiple routings</small>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Compare different routings for the same product. Identify the most efficient routing based on time and cost metrics.
+          </p>
+          <%= link_to routing_comparison_routing_path, class: "btn btn-warning w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", routing_comparison_routing_path(format: :csv), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 5: Operations Summary -->
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100 border-secondary">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-secondary text-white rounded p-3">
+                <i class="fas fa-cogs fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Operations Summary</h5>
+              <small class="text-muted">Aggregate operation stats</small>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Summary statistics of all routing operations grouped by work center. View total costs, times, and operation counts.
+          </p>
+          <%= link_to operations_summary_routing_path, class: "btn btn-secondary w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", operations_summary_routing_path(format: :csv), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Production Calculator Link -->
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100 border-danger">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-danger text-white rounded p-3">
+                <i class="fas fa-calculator fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Production Calculator</h5>
+              <small class="text-muted">Cost & time estimates</small>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Calculate production costs and lead times for specific products and quantities. Get detailed breakdowns of materials and operations.
+          </p>
+          <%= link_to production_calculator_path, class: "btn btn-danger w-100" do %>
+            <i class="fas fa-calculator me-2"></i>Open Calculator
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

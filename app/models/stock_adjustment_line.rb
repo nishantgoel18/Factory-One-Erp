@@ -25,6 +25,7 @@ class StockAdjustmentLine < ApplicationRecord
   # ===================================
   # CALLBACKS
   # ===================================
+  before_validation :set_product_batch_if_batch_tracked
   before_validation :set_default_uom, on: :create
   before_validation :capture_system_qty, on: :create
   

@@ -1,0 +1,476 @@
+<%# app/views/routing_reports/routing_cost_analysis.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Routing Cost Analysis Report</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>  Home</a>
+        <a class="breadcrumb-item" href="#">Reports</a>
+        <a class="breadcrumb-item" href="/reports/routing">Routing</a>
+
+        <span class="breadcrumb-item active">Routing Cost Analysis Report</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      
+      
+      <h2 class="mb-0">
+        <i class="fas fa-dollar-sign me-2"></i> 
+        Routing Cost Analysis Report
+      </h2>
+      <p class="text-muted">Detailed cost breakdown for all active routings</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <%= link_to routing_cost_analysis_routing_path(format: :csv), class: "btn btn-success" do %>
+          <i class="fas fa-file-csv me-2"></i> Export CSV
+        <% end %>
+        <%= link_to routing_cost_analysis_routing_path(format: :pdf), class: "btn btn-danger" do %>
+          <i class="fas fa-file-pdf me-2"></i> Export PDF
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h3 class="text-primary mb-0"><%= @routings.count %></h3>
+          <small class="text-muted">Active Routings</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <h3 class="text-success mb-0">
+            $<%= number_with_precision(@cost_analysis.sum { |d| d[:total_product_cost] } / [@routings.count, 1].max, precision: 2) %>
+          </h3>
+          <small class="text-muted">Avg Product Cost</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <h3 class="text-info mb-0">
+            $<%= number_with_precision(@cost_analysis.sum { |d| d[:labor_cost] } / [@routings.count, 1].max, precision: 2) %>
+          </h3>
+          <small class="text-muted">Avg Labor Cost</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h3 class="text-warning mb-0">
+            $<%= number_with_precision(@cost_analysis.sum { |d| d[:overhead_cost] } / [@routings.count, 1].max, precision: 2) %>
+          </h3>
+          <small class="text-muted">Avg Overhead Cost</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Report Table -->
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-table me-2"></i> Cost Breakdown by Routing
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Product</th>
+              <th>Routing</th>
+              <th class="text-end">Material Cost</th>
+              <th class="text-end">Labor Cost</th>
+              <th class="text-end">Overhead Cost</th>
+              <th class="text-end">Processing Cost</th>
+              <th class="text-end">Total Cost</th>
+              <th class="text-center">Cost Breakdown</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @cost_analysis.sort_by { |d| -d[:total_product_cost] }.each do |data| %>
+              <% routing = data[:routing] %>
+              <tr>
+                <td>
+                  <strong><%= routing.product.sku %></strong>
+                  <br>
+                  <small class="text-muted"><%= routing.product.name %></small>
+                </td>
+                <td>
+                  <%= link_to routing.code, routing_path(routing) %>
+                  <br>
+                  <small class="text-muted">
+                    <%= data[:operations_count] %> operations
+                  </small>
+                </td>
+                <td class="text-end">
+                  <strong class="text-primary">
+                    $<%= number_with_precision(data[:material_cost], precision: 2) %>
+                  </strong>
+                  <br>
+                  <small class="text-muted">
+                    <%= data[:cost_breakdown_pct][:material] %>%
+                  </small>
+                </td>
+                <td class="text-end">
+                  <strong class="text-info">
+                    $<%= number_with_precision(data[:labor_cost], precision: 2) %>
+                  </strong>
+                  <br>
+                  <small class="text-muted">
+                    <%= data[:cost_breakdown_pct][:labor] %>%
+                  </small>
+                </td>
+                <td class="text-end">
+                  <strong class="text-warning">
+                    $<%= number_with_precision(data[:overhead_cost], precision: 2) %>
+                  </strong>
+                  <br>
+                  <small class="text-muted">
+                    <%= data[:cost_breakdown_pct][:overhead] %>%
+                  </small>
+                </td>
+                <td class="text-end">
+                  <strong>
+                    $<%= number_with_precision(data[:total_processing_cost], precision: 2) %>
+                  </strong>
+                </td>
+                <td class="text-end">
+                  <strong class="text-success fs-5">
+                    $<%= number_with_precision(data[:total_product_cost], precision: 2) %>
+                  </strong>
+                </td>
+                <td>
+                  <!-- Stacked Progress Bar -->
+                  <div class="progress" style="height: 25px;">
+                    <div class="progress-bar bg-primary" 
+                         style="width: <%= data[:cost_breakdown_pct][:material] %>%"
+                         title="Material: <%= data[:cost_breakdown_pct][:material] %>%">
+                      <% if data[:cost_breakdown_pct][:material] > 15 %>
+                        M
+                      <% end %>
+                    </div>
+                    <div class="progress-bar bg-info" 
+                         style="width: <%= data[:cost_breakdown_pct][:labor] %>%"
+                         title="Labor: <%= data[:cost_breakdown_pct][:labor] %>%">
+                      <% if data[:cost_breakdown_pct][:labor] > 15 %>
+                        L
+                      <% end %>
+                    </div>
+                    <div class="progress-bar bg-warning" 
+                         style="width: <%= data[:cost_breakdown_pct][:overhead] %>%"
+                         title="Overhead: <%= data[:cost_breakdown_pct][:overhead] %>%">
+                      <% if data[:cost_breakdown_pct][:overhead] > 15 %>
+                        O
+                      <% end %>
+                    </div>
+                  </div>
+                  <small class="text-muted">
+                    M: Material | L: Labor | O: Overhead
+                  </small>
+                </td>
+              </tr>
+              
+              <!-- Expandable Details -->
+              <tr class="collapse" id="details-<%= routing.id %>">
+                <td colspan="8" class="bg-light">
+                  <div class="p-3">
+                    <h6 class="mb-3">
+                      <i class="fas fa-cogs me-2"></i> 
+                      Operations Cost Breakdown
+                    </h6>
+                    <div class="table-responsive">
+                      <table class="table table-sm mb-0">
+                        <thead>
+                          <tr>
+                            <th>Seq</th>
+                            <th>Operation</th>
+                            <th>Work Center</th>
+                            <th class="text-end">Labor Cost</th>
+                            <th class="text-end">Overhead Cost</th>
+                            <th class="text-end">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% routing.routing_operations.order(:operation_sequence).each do |op| %>
+                            <tr>
+                              <td><span class="badge bg-secondary"><%= op.operation_sequence %></span></td>
+                              <td><%= op.operation_name %></td>
+                              <td><small class="text-muted"><%= op.work_center.name %></small></td>
+                              <td class="text-end">$<%= number_with_precision(op.labor_cost_per_unit, precision: 2) %></td>
+                              <td class="text-end">$<%= number_with_precision(op.overhead_cost_per_unit, precision: 2) %></td>
+                              <td class="text-end">
+                                <strong>$<%= number_with_precision(op.total_cost_per_unit, precision: 2) %></strong>
+                              </td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <% if data[:most_expensive_operation] %>
+                      <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-info-circle me-2"></i> 
+                        <strong>Most Expensive Operation:</strong> 
+                        <%= data[:most_expensive_operation].operation_name %> 
+                        ($<%= number_with_precision(data[:most_expensive_operation].total_cost_per_unit, precision: 2) %>/unit)
+                      </div>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Toggle Button Row -->
+              <tr>
+                <td colspan="8" class="py-0">
+                  <a class="btn btn-link btn-sm w-100 text-decoration-none" 
+                     data-toggle="collapse" 
+                     href="#details-<%= routing.id %>">
+                    <i class="fas fa-chevron-down me-1"></i> 
+                    View Operation Details
+                  </a>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Distribution Chart -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-start align-items-center bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-pie me-2"></i> Average Cost Distribution
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="costDistributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-start align-items-center bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i> Cost Comparison by Product
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="costComparisonChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-danger">
+        <div class="card-header d-flex justify-content-start align-items-center bg-danger text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-exclamation-circle me-2"></i> Highest Cost Products
+          </h6>
+        </div>
+        <div class="card-body">
+          <% top_cost = @cost_analysis.sort_by { |d| -d[:total_product_cost] }.first(5) %>
+          <ul class="list-unstyled mb-0">
+            <% top_cost.each do |data| %>
+              <li class="mb-2 d-flex justify-content-between">
+                <span><%= data[:routing].product.sku %></span>
+                <strong class="text-danger">
+                  $<%= number_with_precision(data[:total_product_cost], precision: 2) %>
+                </strong>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card shadow-sm border-warning">
+        <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
+          <h6 class="mb-0">
+            <i class="fas fa-users me-2"></i> Labor Intensive Products
+          </h6>
+        </div>
+        <div class="card-body">
+          <% labor_intensive = @cost_analysis.select { |d| d[:cost_breakdown_pct][:labor] > 40 } %>
+          <% if labor_intensive.any? %>
+            <ul class="list-unstyled mb-0">
+              <% labor_intensive.first(5).each do |data| %>
+                <li class="mb-2">
+                  <strong><%= data[:routing].product.sku %></strong>
+                  <br>
+                  <small class="text-muted">
+                    Labor: <%= data[:cost_breakdown_pct][:labor] %>% 
+                    ($<%= number_with_precision(data[:labor_cost], precision: 2) %>)
+                  </small>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-muted mb-0">No labor-intensive products found</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card shadow-sm border-info">
+        <div class="card-header d-flex justify-content-start align-items-center bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-industry me-2"></i> Material Intensive Products
+          </h6>
+        </div>
+        <div class="card-body">
+          <% material_intensive = @cost_analysis.select { |d| d[:cost_breakdown_pct][:material] > 60 } %>
+          <% if material_intensive.any? %>
+            <ul class="list-unstyled mb-0">
+              <% material_intensive.first(5).each do |data| %>
+                <li class="mb-2">
+                  <strong><%= data[:routing].product.sku %></strong>
+                  <br>
+                  <small class="text-muted">
+                    Material: <%= data[:cost_breakdown_pct][:material] %>% 
+                    ($<%= number_with_precision(data[:material_cost], precision: 2) %>)
+                  </small>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-muted mb-0">No material-intensive products found</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Pie Chart - Average Cost Distribution
+  const pieCtx = document.getElementById('costDistributionChart').getContext('2d');
+  
+  const avgMaterialCost = <%= @cost_analysis.sum { |d| d[:material_cost] } / [@routings.count, 1].max %>;
+  const avgLaborCost = <%= @cost_analysis.sum { |d| d[:labor_cost] } / [@routings.count, 1].max %>;
+  const avgOverheadCost = <%= @cost_analysis.sum { |d| d[:overhead_cost] } / [@routings.count, 1].max %>;
+  
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Material Cost', 'Labor Cost', 'Overhead Cost'],
+      datasets: [{
+        data: [avgMaterialCost, avgLaborCost, avgOverheadCost],
+        backgroundColor: [
+          'rgba(13, 110, 253, 0.8)',
+          'rgba(13, 202, 240, 0.8)',
+          'rgba(255, 193, 7, 0.8)'
+        ],
+        borderColor: [
+          'rgba(13, 110, 253, 1)',
+          'rgba(13, 202, 240, 1)',
+          'rgba(255, 193, 7, 1)'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': $' + context.parsed.toFixed(2);
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // Bar Chart - Cost Comparison
+  const barCtx = document.getElementById('costComparisonChart').getContext('2d');
+  
+  const products = <%= raw @cost_analysis.first(10).map { |d| d[:routing].product.sku }.to_json %>;
+  const materialCosts = <%= raw @cost_analysis.first(10).map { |d| d[:material_cost] }.to_json %>;
+  const processingCosts = <%= raw @cost_analysis.first(10).map { |d| d[:total_processing_cost] }.to_json %>;
+  
+  new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: products,
+      datasets: [
+        {
+          label: 'Material Cost',
+          data: materialCosts,
+          backgroundColor: 'rgba(13, 110, 253, 0.6)',
+          borderColor: 'rgba(13, 110, 253, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Processing Cost',
+          data: processingCosts,
+          backgroundColor: 'rgba(40, 167, 69, 0.6)',
+          borderColor: 'rgba(40, 167, 69, 1)',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value;
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': $' + context.parsed.y.toFixed(2);
+            }
+          }
+        }
+      }
+    }
+  });
+});
+</script>

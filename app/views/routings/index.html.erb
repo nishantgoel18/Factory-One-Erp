@@ -1,0 +1,233 @@
+<%# app/views/work_centers/index.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Routings</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Masters</a>
+        <span class="breadcrumb-item active">Routings</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2 class="mb-0">
+        <i class="fas fa-route me-2"></i>
+        Routings
+      </h2>
+      <p class="text-muted">Manage production routings and operation sequences</p>
+    </div>
+    <div class="col-md-6 d-flex align-items-center justify-content-end">
+      <%= link_to new_routing_path, class: "btn btn-primary btn-lg" do %>
+        <i class="fas fa-plus me-2"></i> New Routing
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <%= form_with url: routings_path, method: :get, class: "row g-3" do |f| %>
+        <!-- Search -->
+        <div class="col-md-4">
+          <label class="form-label">Search</label>
+          <%= f.text_field :search, 
+                          value: params[:search],
+                          class: "form-control", 
+                          placeholder: "Code, Name, Description..." %>
+        </div>
+
+        <!-- Product Filter -->
+        <div class="col-md-3">
+          <label class="form-label">Product</label>
+          <%= f.select :product_id, 
+                      options_from_collection_for_select(
+                        Product.where(deleted: false)
+                               .where(product_type: ["Finished Goods", "Semi-Finished Goods"])
+                               .order(:name), 
+                        :id, :name, params[:product_id]
+                      ),
+                      { include_blank: "All Products" },
+                      { class: "form-control" } %>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <%= f.select :status,
+                      options_for_select(
+                        Routing::STATUS_CHOICES.map { |s| [s.titleize, s] },
+                        params[:status]
+                      ),
+                      { include_blank: "All Statuses" },
+                      { class: "form-control" } %>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="col-md-2 d-flex align-items-end">
+          <%= f.submit "Filter", class: "btn btn-primary w-100" %>
+          <%= link_to "Reset", routings_path, class: "btn btn-outline-secondary w-100" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h3 class="text-primary mb-0">
+            <%= Routing.where(deleted: false).count %>
+          </h3>
+          <small class="text-muted">Total Routings</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <h3 class="text-success mb-0">
+            <%= Routing.where(deleted: false, status: "ACTIVE").count %>
+          </h3>
+          <small class="text-muted">Active</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h3 class="text-warning mb-0">
+            <%= Routing.where(deleted: false, status: "DRAFT").count %>
+          </h3>
+          <small class="text-muted">Draft</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <h3 class="text-info mb-0">
+            <%= Routing.where(deleted: false, is_default: true).count %>
+          </h3>
+          <small class="text-muted">Default Routings</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Routings Table -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <% if @routings.any? %>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Product</th>
+                <th>Revision</th>
+                <th>Operations</th>
+                <th>Total Time</th>
+                <th>Cost/Unit</th>
+                <th>Status</th>
+                <th>Default</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @routings.each do |routing| %>
+                <tr>
+                  <td>
+                    <strong><%= link_to routing.code, routing_path(routing) %></strong>
+                  </td>
+                  <td><%= routing.name %></td>
+                  <td>
+                    <%= routing.product.name %>
+                    <br>
+                    <small class="text-muted"><%= routing.product.sku %></small>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary"><%= routing.revision %></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">
+                      <%= routing.routing_operations.count %> ops
+                    </span>
+                  </td>
+                  <td>
+                    <small class="text-muted">Setup:</small> 
+                    <%= number_with_precision(routing.total_setup_time_minutes, precision: 1) %>m
+                    <br>
+                    <small class="text-muted">Run/unit:</small> 
+                    <%= number_with_precision(routing.total_run_time_per_unit_minutes, precision: 1) %>m
+                  </td>
+                  <td>
+                    <strong>$<%= number_with_precision(routing.total_cost_per_unit, precision: 2) %></strong>
+                  </td>
+                  <td>
+                    <% case routing.status %>
+                    <% when "ACTIVE" %>
+                      <span class="badge bg-success">Active</span>
+                    <% when "DRAFT" %>
+                      <span class="badge bg-warning">Draft</span>
+                    <% when "INACTIVE" %>
+                      <span class="badge bg-secondary">Inactive</span>
+                    <% when "ARCHIVED" %>
+                      <span class="badge bg-dark">Archived</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if routing.is_default? %>
+                      <i class="fas fa-star text-warning" title="Default Routing"></i>
+                    <% end %>
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                      <%= link_to routing_path(routing), class: "btn btn-sm btn-outline-primary", title: "View" do %>
+                        <i class="fas fa-eye"></i>
+                      <% end %>
+                      <%= link_to edit_routing_path(routing), class: "btn btn-sm btn-outline-warning", title: "Edit" do %>
+                        <i class="fas fa-edit"></i>
+                      <% end %>
+                      <%= button_to duplicate_routing_path(routing), 
+                                    method: :post,
+                                    class: "btn btn-sm btn-outline-info",
+                                    title: "Duplicate" do %>
+                        <i class="fas fa-copy"></i>
+                      <% end %>
+                      <%= button_to routing_path(routing), 
+                                    method: :delete,
+                                    class: "btn btn-sm btn-outline-danger",
+                                    title: "Delete",
+                                    data: { confirm: "Are you sure?" } do %>
+                        <i class="fas fa-trash"></i>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-3">
+          <%= paginate @routings %>
+        </div>
+      <% else %>
+        <div class="text-center py-5">
+          <i class="fas fa-route fa-3x text-muted mb-3"></i>
+          <p class="text-muted">No routings found.</p>
+          <%= link_to "Create First Routing", new_routing_path, class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

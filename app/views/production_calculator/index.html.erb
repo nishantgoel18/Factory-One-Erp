@@ -1,0 +1,284 @@
+<%# app/views/production_calculator/index.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Production Calculator</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item">
+                    <i class="anticon anticon-home m-r-5"></i>Home
+                </a>
+                <a class="breadcrumb-item" href="#">Tools & Utilities</a>
+                <span class="breadcrumb-item active">Production Calculator</span>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="fas fa-calculator me-2"></i>
+                Production Cost Calculator
+            </h2>
+            <p class="text-muted">Calculate production costs and lead times</p>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <!-- Input Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-start align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i> Calculate
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Product</label>
+                        <select id="product-select" class="form-control">
+                            <option value="">-- Select Product --</option>
+                            <% @products.each do |product| %>
+                                <option value="<%= product.id %>"
+                                        data-ready="<%= product.ready_for_production? %>">
+                                    <%= product.name %> (<%= product.sku %>)
+                                </option>
+                            <% end %>
+                        </select>
+                        <small class="text-muted">Only products with BOM and Routing</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" id="quantity-input" class="form-control"
+                               value="100" min="1">
+                    </div>
+
+                    <button id="calculate-btn" class="btn btn-primary w-100" disabled>
+                        <i class="fas fa-calculator me-2"></i>Calculate
+                    </button>
+
+                    <div id="not-ready-alert" class="alert alert-warning mt-3" style="display: none;">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This product is not ready for production. Please ensure it has both BOM and Routing.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="col-md-8">
+
+            <div id="results-container" style="display: none;">
+
+                <!-- Product Info -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <h5 class="mb-0" id="result-product-name"></h5>
+                        <small class="text-muted" id="result-product-code"></small>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <small class="text-muted d-block">Total Cost</small>
+                                <h3 class="text-primary mb-0" id="result-total-cost">$0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <small class="text-muted d-block">Cost per Unit</small>
+                                <h3 class="text-success mb-0" id="result-unit-cost">$0.00</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <small class="text-muted d-block">Total Time</small>
+                                <h3 class="text-info mb-0" id="result-total-time">0h</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <small class="text-muted d-block">Lead Time</small>
+                                <h3 class="text-warning mb-0" id="result-lead-time">0 days</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Breakdown -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-light d-flex justify-content-start align-items-center">
+                        <h6 class="mb-0">Cost Breakdown</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="text-muted small">Material Cost</label>
+                                <div class="fs-4 fw-bold text-primary" id="result-material-cost">$0.00</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Processing Cost</label>
+                                <div class="fs-4 fw-bold text-info" id="result-processing-cost">$0.00</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materials Table -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-light d-flex justify-content-start align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-cubes me-2"></i> Materials (BOM)
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Component</th>
+                                        <th class="text-end">Qty/Unit</th>
+                                        <th class="text-end">Total Qty</th>
+                                        <th class="text-end">Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materials-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operations Table -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-start align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i> Operations (Routing)
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Seq</th>
+                                        <th>Operation</th>
+                                        <th>Work Center</th>
+                                        <th class="text-end">Setup Cost</th>
+                                        <th class="text-end">Run Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="operations-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="text-center py-5">
+                <i class="fas fa-calculator fa-4x text-muted mb-3"></i>
+                <p class="text-muted">
+                    Select a product and quantity to calculate production costs
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productSelect = document.getElementById('product-select');
+    const quantityInput = document.getElementById('quantity-input');
+    const calculateBtn = document.getElementById('calculate-btn');
+    const notReadyAlert = document.getElementById('not-ready-alert');
+    const resultsContainer = document.getElementById('results-container');
+    const emptyState = document.getElementById('empty-state');
+
+    productSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const isReady = selectedOption.dataset.ready === 'true';
+
+        calculateBtn.disabled = !isReady || !this.value;
+        notReadyAlert.style.display = (this.value && !isReady) ? 'block' : 'none';
+    });
+
+    calculateBtn.addEventListener('click', async function() {
+        const productId = productSelect.value;
+        const quantity = quantityInput.value;
+
+        if (!productId || !quantity) return;
+
+        try {
+            const response = await fetch('/tools/production_calculator/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ product_id: productId, quantity: quantity })
+            });
+
+            const data = await response.json();
+            displayResults(data, quantity);
+        } catch (error) {
+            alert('Error calculating production cost');
+            console.error(error);
+        }
+    });
+
+    function displayResults(data, quantity) {
+        document.getElementById('result-product-name').textContent = data.product.name;
+        document.getElementById('result-product-code').textContent = data.product.code;
+
+        document.getElementById('result-total-cost').textContent = '$' + data.totals.total_cost;
+        document.getElementById('result-unit-cost').textContent = '$' + data.totals.cost_per_unit;
+        document.getElementById('result-total-time').textContent = data.time.total_time_hours + 'h';
+        document.getElementById('result-lead-time').textContent = data.time.lead_time_days + ' days';
+
+        document.getElementById('result-material-cost').textContent = '$' + data.totals.material_cost;
+        document.getElementById('result-processing-cost').textContent = '$' + data.totals.processing_cost;
+
+        const materialsBody = document.getElementById('materials-table-body');
+        materialsBody.innerHTML = data.material.components.map(comp => `
+            <tr>
+                <td>${comp.component}</td>
+                <td class="text-end">${comp.quantity}</td>
+                <td class="text-end">${(comp.quantity * quantity).toFixed(2)}</td>
+                <td class="text-end">$${comp.cost}</td>
+            </tr>
+        `).join('');
+
+        const operationsBody = document.getElementById('operations-table-body');
+        operationsBody.innerHTML = data.processing.operations.map(op => `
+            <tr>
+                <td><span class="badge bg-primary">${op.sequence}</span></td>
+                <td>${op.name}</td>
+                <td><small class="text-muted">${op.work_center}</small></td>
+                <td class="text-end">$${op.setup_cost}</td>
+                <td class="text-end">$${(op.cost_per_unit * quantity).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        emptyState.style.display = 'none';
+        resultsContainer.style.display = 'block';
+    }
+});
+</script>

@@ -1,0 +1,290 @@
+<%# app/views/routing_reports/work_center_utilization.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Work Center Utilization Report</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i> Home</a>
+                <a class="breadcrumb-item" href="#">Reports</a>
+                <a class="breadcrumb-item" href="/reports/routing">Routing</a>
+
+                <span class="breadcrumb-item active">Work Center Utilization Report</span>
+            </nav>
+        </div>
+    </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h2 class="mb-0">
+        <i class="fas fa-industry me-2"></i> 
+        Work Center Utilization Report
+      </h2>
+      <p class="text-muted">Analysis of work center usage across active routings</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <%= link_to work_center_utilization_routing_path(format: :csv), class: "btn btn-success" do %>
+          <i class="fas fa-file-csv me-2"></i>  Export CSV
+        <% end %>
+        <%= link_to work_center_utilization_routing_path(format: :pdf), class: "btn btn-danger" do %>
+          <i class="fas fa-file-pdf me-2"></i>  Export PDF
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <h3 class="text-primary mb-0"><%= @work_centers.count %></h3>
+          <small class="text-muted">Total Work Centers</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <h3 class="text-success mb-0">
+            <%= @utilization_data.count { |d| d[:active_operations] > 0 } %>
+          </h3>
+          <small class="text-muted">Actively Used</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-warning">
+        <div class="card-body text-center">
+          <h3 class="text-warning mb-0">
+            <%= @utilization_data.sum { |d| d[:total_operations] } %>
+          </h3>
+          <small class="text-muted">Total Operations</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <h3 class="text-info mb-0">
+            <%= (@utilization_data.sum { |d| d[:utilization_score] } / [@work_centers.count, 1].max).round(0) %>%
+          </h3>
+          <small class="text-muted">Avg Utilization</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Report Table -->
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-table me-2"></i> Work Center Details
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Work Center</th>
+              <th>Type</th>
+              <th class="text-center">Capacity/Hr</th>
+              <th class="text-center">Efficiency</th>
+              <th class="text-center">Total Ops</th>
+              <th class="text-center">Active Ops</th>
+              <th class="text-center">Setup Time</th>
+              <th class="text-center">Avg Run Time</th>
+              <th class="text-center">Utilization</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @utilization_data.sort_by { |d| -d[:utilization_score] }.each do |data| %>
+              <% wc = data[:work_center] %>
+              <tr>
+                <td>
+                  <strong><%= link_to wc.code, work_center_path(wc) %></strong>
+                  <br>
+                  <small class="text-muted"><%= wc.name %></small>
+                </td>
+                <td>
+                  <span class="badge bg-secondary"><%= wc.type_label %></span>
+                </td>
+                <td class="text-center">
+                  <%= number_with_precision(wc.capacity_per_hour, precision: 1) %>
+                  <br>
+                  <small class="text-muted">
+                    (<%= number_with_precision(wc.effective_capacity_per_hour, precision: 1) %> eff)
+                  </small>
+                </td>
+                <td class="text-center">
+                  <div class="progress" style="height: 20px; min-width: 60px;">
+                    <div class="progress-bar <%= wc.efficiency_percent >= 90 ? 'bg-success' : wc.efficiency_percent >= 75 ? 'bg-warning' : 'bg-danger' %>" 
+                         style="width: <%= wc.efficiency_percent %>%">
+                      <%= wc.efficiency_percent %>%
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="badge bg-info"><%= data[:total_operations] %></span>
+                </td>
+                <td class="text-center">
+                  <% if data[:active_operations] > 0 %>
+                    <span class="badge bg-success"><%= data[:active_operations] %></span>
+                  <% else %>
+                    <span class="badge bg-secondary">0</span>
+                  <% end %>
+                </td>
+                <td class="text-center">
+                  <%= number_with_precision(data[:total_setup_time], precision: 1) %>m
+                </td>
+                <td class="text-center">
+                  <%= number_with_precision(data[:avg_run_time], precision: 2) %>m
+                </td>
+                <td class="text-center">
+                  <div class="progress" style="height: 25px; min-width: 80px;">
+                    <div class="progress-bar <%= data[:utilization_score] >= 70 ? 'bg-success' : data[:utilization_score] >= 40 ? 'bg-warning' : 'bg-danger' %>" 
+                         style="width: <%= data[:utilization_score] %>%">
+                      <strong><%= data[:utilization_score] %>%</strong>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Utilization Chart -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-start align-items-center bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i> Utilization Overview
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="utilizationChart" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Insights Section -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-success">
+        <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-thumbs-up me-2"></i> High Utilization (70%+)
+          </h6>
+        </div>
+        <div class="card-body">
+          <% high_util = @utilization_data.select { |d| d[:utilization_score] >= 70 } %>
+          <% if high_util.any? %>
+            <ul class="list-unstyled mb-0">
+              <% high_util.each do |data| %>
+                <li class="mb-2">
+                  <i class="fas fa-check-circle text-success me-2"></i> 
+                  <strong><%= data[:work_center].code %></strong> - 
+                  <%= data[:active_operations] %> active operations
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-muted mb-0">No work centers with high utilization</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card shadow-sm border-warning">
+        <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
+          <h6 class="mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i> Low Utilization (<40%)
+          </h6>
+        </div>
+        <div class="card-body">
+          <% low_util = @utilization_data.select { |d| d[:utilization_score] < 40 } %>
+          <% if low_util.any? %>
+            <ul class="list-unstyled mb-0">
+              <% low_util.each do |data| %>
+                <li class="mb-2">
+                  <i class="fas fa-exclamation-circle text-warning me-2"></i> 
+                  <strong><%= data[:work_center].code %></strong> - 
+                  Only <%= data[:active_operations] %> operations
+                </li>
+              <% end %>
+            </ul>
+            <div class="alert alert-warning mt-3 mb-0">
+              <small>
+                <i class="fas fa-lightbulb me-1"></i> 
+                Consider consolidating operations or reviewing capacity planning
+              </small>
+            </div>
+          <% else %>
+            <p class="text-muted mb-0">All work centers have adequate utilization</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('utilizationChart').getContext('2d');
+  
+  const data = {
+    labels: <%= raw @utilization_data.map { |d| d[:work_center].code }.to_json %>,
+    datasets: [{
+      label: 'Utilization Score',
+      data: <%= raw @utilization_data.map { |d| d[:utilization_score] }.to_json %>,
+      backgroundColor: <%= raw @utilization_data.map { |d| d[:utilization_score] >= 70 ? 'rgba(40, 167, 69, 0.6)' : d[:utilization_score] >= 40 ? 'rgba(255, 193, 7, 0.6)' : 'rgba(220, 53, 69, 0.6)' }.to_json %>,
+      borderColor: <%= raw @utilization_data.map { |d| d[:utilization_score] >= 70 ? 'rgba(40, 167, 69, 1)' : d[:utilization_score] >= 40 ? 'rgba(255, 193, 7, 1)' : 'rgba(220, 53, 69, 1)' }.to_json %>,
+      borderWidth: 2
+    }]
+  };
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            callback: function(value) {
+              return value + '%';
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Utilization: ' + context.parsed.y + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+});
+</script>

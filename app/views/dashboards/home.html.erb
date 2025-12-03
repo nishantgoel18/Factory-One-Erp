@@ -134,6 +134,269 @@
       </div>
 
     </div>
+    <div class="row">
+      <div class="col-12">
+        <h5 class="mb-3">
+          <i class="fas fa-route me-2"></i> Production Routing Metrics
+        </h5>
+      </div>
+      
+      <!-- Total Routings -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                  Total Routings
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  <%= @routing_metrics[:total] %>
+                </div>
+                <div class="text-xs text-muted mt-1">
+                  <span class="text-success"><%= @routing_metrics[:active] %> Active</span> | 
+                  <span class="text-warning"><%= @routing_metrics[:draft] %> Draft</span>
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-route fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <%= link_to "View All Routings", routings_path, class: "small text-decoration-none" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Centers -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                  Work Centers
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  <%= @work_center_metrics[:total] %>
+                </div>
+                <div class="text-xs text-muted mt-1">
+                  <span class="text-success"><%= @work_center_metrics[:utilized] %></span> Utilized
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-industry fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <%= link_to "View Work Centers", work_centers_path, class: "small text-decoration-none" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Operations -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                  Total Operations
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  <%= @routing_metrics[:total_operations] %>
+                </div>
+                <div class="text-xs text-muted mt-1">
+                  Avg <%= @routing_metrics[:avg_operations_per_routing].round(1) %> per routing
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-cogs fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <%= link_to "View Reports", 'reports/routing', class: "small text-decoration-none" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avg Work Center Cost -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                  Avg WC Cost/Hour
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  $<%= number_with_precision(@work_center_metrics[:avg_cost_per_hour], precision: 2) %>
+                </div>
+                <div class="text-xs text-muted mt-1">
+                  Active work centers
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
+            <%= link_to "Cost Analysis", routing_cost_analysis_routing_path, class: "small text-decoration-none" %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Production Readiness Card -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow">
+          <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white">
+            <h5 class="mb-0">
+              <i class="fas fa-industry me-2"></i> Production Readiness Status
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Summary Stats -->
+              <div class="col-md-8">
+                <div class="row">
+                  <div class="col-md-3 text-center mb-3">
+                    <div class="border rounded p-3">
+                      <div class="text-muted small">Total Products</div>
+                      <div class="h3 mb-0 text-primary">
+                        <%= @production_readiness[:total_products] %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 text-center mb-3">
+                    <div class="border rounded p-3">
+                      <div class="text-muted small">With BOM</div>
+                      <div class="h3 mb-0 text-info">
+                        <%= @production_readiness[:with_bom] %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 text-center mb-3">
+                    <div class="border rounded p-3">
+                      <div class="text-muted small">With Routing</div>
+                      <div class="h3 mb-0 text-warning">
+                        <%= @production_readiness[:with_routing] %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 text-center mb-3">
+                    <div class="border rounded p-3 bg-success text-white">
+                      <div class="small">Ready</div>
+                      <div class="h3 mb-0">
+                        <%= @production_readiness[:ready_for_production] %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mt-3">
+                  <label class="text-muted small">Overall Production Readiness</label>
+                  <div class="progress" style="height: 30px;">
+                    <div class="progress-bar bg-success" 
+                         style="width: <%= @production_readiness[:readiness_percentage] %>%">
+                      <strong><%= @production_readiness[:readiness_percentage] %>%</strong>
+                    </div>
+                  </div>
+                  <small class="text-muted">
+                    <%= @production_readiness[:ready_for_production] %> out of <%= @production_readiness[:total_products] %> products ready
+                  </small>
+                </div>
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="col-md-4">
+                <div class="border rounded p-3 bg-light h-100">
+                  <h6 class="mb-3">Quick Actions</h6>
+                  <%= link_to work_centers_path, class: "btn btn-outline-primary btn-sm w-100 mb-2" do %>
+                    <i class="fas fa-industry me-2"></i> Manage Work Centers
+                  <% end %>
+                  <%= link_to routings_path, class: "btn btn-outline-info btn-sm w-100 mb-2" do %>
+                    <i class="fas fa-route me-2"></i> Manage Routings
+                  <% end %>
+                  <%= link_to production_calculator_path, class: "btn btn-outline-success btn-sm w-100 mb-2" do %>
+                    <i class="fas fa-calculator me-2"></i> Production Calculator
+                  <% end %>
+                  <%= link_to 'reports/routing', class: "btn btn-outline-warning btn-sm w-100" do %>
+                    <i class="fas fa-chart-line me-2"></i> View Reports
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Routings Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-route me-2"></i> Recent Routings
+            </h5>
+            <%= link_to "View All", routings_path, class: "btn btn-sm btn-primary" %>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Code</th>
+                    <th>Product</th>
+                    <th>Operations</th>
+                    <th>Status</th>
+                    <th>Cost/Unit</th>
+                    <th>Time/Unit</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% Routing.where(deleted: false).order(created_at: :desc).limit(5).each do |routing| %>
+                    <tr>
+                      <td>
+                        <%= link_to routing.code, routing_path(routing), class: "text-decoration-none" %>
+                      </td>
+                      <td>
+                        <%= routing.product.name %>
+                        <br><small class="text-muted"><%= routing.product.sku %></small>
+                      </td>
+                      <td>
+                        <span class="badge bg-info"><%= routing.routing_operations.count %> ops</span>
+                      </td>
+                      <td>
+                        <% case routing.status %>
+                        <% when "ACTIVE" %>
+                          <span class="badge bg-success">Active</span>
+                        <% when "DRAFT" %>
+                          <span class="badge bg-warning">Draft</span>
+                        <% else %>
+                          <span class="badge bg-secondary"><%= routing.status %></span>
+                        <% end %>
+                      </td>
+                      <td>$<%= number_with_precision(routing.total_cost_per_unit, precision: 2) %></td>
+                      <td><%= number_with_precision(routing.total_run_time_per_unit_minutes, precision: 1) %>m</td>
+                      <td><%= time_ago_in_words(routing.created_at) %> ago</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

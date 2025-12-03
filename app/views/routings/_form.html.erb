@@ -1,0 +1,286 @@
+<%# app/views/routings/_form.html.erb %>
+
+<%= simple_form_for @routing, html: { class: 'needs-validation', id: 'routing-form' } do |f| %>
+  
+  <!-- Error Messages -->
+  <%= render 'layouts/error_messages', object: @routing %>
+
+  <div class="row">
+    <!-- Left Column - Routing Header -->
+    <div class="col-lg-5">
+      <!-- Basic Information Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i> Routing Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :code, 
+                      label: 'Routing Code',
+                      input_html: { 
+                        class: 'form-control text-uppercase',
+                        placeholder: 'e.g., RTG-0001'
+                      },
+                      hint: 'Unique identifier (auto-generated if left blank)' %>
+
+          <%= f.input :name,
+                      label: 'Routing Name',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: 'e.g., Standard Production for Widget-A'
+                      } %>
+
+          <%= f.association :product,
+                           label: 'Product',
+                           collection: @products,
+                           label_method: :name,
+                           value_method: :id,
+                           include_blank: 'Select Product',
+                           input_html: { class: 'form-control' },
+                           hint: 'Only Finished Goods and Semi-Finished Goods allowed' %>
+
+          <%= f.input :revision,
+                      label: 'Revision',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: 'e.g., 1, 2, V1.0'
+                      },
+                      hint: 'Version number for this routing' %>
+
+          <%= f.input :description,
+                      label: 'Description',
+                      input_html: { 
+                        class: 'form-control',
+                        rows: 3,
+                        placeholder: 'Detailed description...'
+                      } %>
+        </div>
+      </div>
+
+      <!-- Status & Dates Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i> Status & Dates
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :status,
+                      label: 'Status',
+                      collection: @statuses,
+                      include_blank: false,
+                      input_html: { class: 'form-control' } %>
+
+          <%= f.input :is_default,
+                      label: 'Set as Default Routing',
+                      as: :boolean,
+                      input_html: { class: 'form-check-input' },
+                      wrapper_html: { class: 'form-check form-switch' },
+                      hint: 'Only one default routing per product' %>
+
+          <%= f.input :effective_from,
+                      label: 'Effective From',
+                      as: :date,
+                      input_html: { class: 'form-control' } %>
+
+          <%= f.input :effective_to,
+                      label: 'Effective To',
+                      as: :date,
+                      input_html: { class: 'form-control' },
+                      hint: 'Leave blank for indefinite' %>
+        </div>
+      </div>
+
+      <!-- Summary Card (Auto-calculated) -->
+      <div class="card shadow-sm mb-4 border-warning">
+        <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="fas fa-calculator me-2"></i> Routing Summary
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="text-muted small">Total Setup Time</label>
+              <div class="fs-5 fw-bold" id="summary-setup-time">
+                <%= number_with_precision(@routing.total_setup_time_minutes || 0, precision: 1) %>m
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="text-muted small">Run Time/Unit</label>
+              <div class="fs-5 fw-bold" id="summary-run-time">
+                <%= number_with_precision(@routing.total_run_time_per_unit_minutes || 0, precision: 1) %>m
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="text-muted small">Labor Cost/Unit</label>
+              <div class="fs-5 fw-bold text-primary" id="summary-labor-cost">
+                $<%= number_with_precision(@routing.total_labor_cost_per_unit || 0, precision: 2) %>
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <label class="text-muted small">Overhead Cost/Unit</label>
+              <div class="fs-5 fw-bold text-info" id="summary-overhead-cost">
+                $<%= number_with_precision(@routing.total_overhead_cost_per_unit || 0, precision: 2) %>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="text-center">
+            <label class="text-muted small">Total Cost per Unit</label>
+            <div class="fs-3 fw-bold text-success" id="summary-total-cost">
+              $<%= number_with_precision(@routing.total_cost_per_unit || 0, precision: 2) %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <%= f.input :notes,
+                      label: 'Additional Notes',
+                      input_html: { 
+                        class: 'form-control',
+                        rows: 4,
+                        placeholder: 'Any additional information...'
+                      } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Operations -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-cogs me-2"></i> Operations Sequence
+          </h5>
+          <button type="button" class="btn btn-light btn-sm" id="add-operation-btn">
+            <i class="fas fa-plus me-1"></i>Add Operation
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <!-- Operations Container -->
+          <div id="operations-container">
+            <%= f.simple_fields_for :routing_operations do |operation_form| %>
+              <%= render 'operation_fields', f: operation_form, work_centers: @work_centers %>
+            <% end %>
+          </div>
+          <template id="operation-template">
+            <%= f.simple_fields_for :routing_operations, RoutingOperation.new, child_index: 'NEW_RECORD' do |operation_form| %>
+              <%= render 'operation_fields', f: operation_form, work_centers: @work_centers %>
+            <% end %>
+          </template>
+
+          <!-- Empty State -->
+          <div id="operations-empty-state" class="text-center py-5" style="<%= 'display: none;' if @routing.routing_operations.any? %>">
+            <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No operations added yet.</p>
+            <button type="button" class="btn btn-primary" id="add-first-operation-btn">
+              <i class="fas fa-plus me-2"></i>Add First Operation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="d-flex justify-content-between sticky-bottom bg-white py-3 border-top">
+    <%= link_to 'Cancel', routings_path, class: 'btn btn-secondary btn-lg' %>
+    <%= f.submit @routing.new_record? ? 'Create Routing' : 'Update Routing', 
+                 class: 'btn btn-primary btn-lg' %>
+  </div>
+<% end %>
+
+<!-- Template for new operations (hidden) -->
+
+
+<!-- JavaScript for Dynamic Operations -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('operations-container');
+  const template = document.getElementById('operation-template');
+  const addBtn = document.getElementById('add-operation-btn');
+  const addFirstBtn = document.getElementById('add-first-operation-btn');
+  const emptyState = document.getElementById('operations-empty-state');
+  
+  let operationIndex = <%= @routing.routing_operations.size %>;
+  
+  function addOperation() {
+    const content = template.innerHTML.replace(/NEW_RECORD/g, new Date().getTime());
+    container.insertAdjacentHTML('beforeend', content);
+    
+    operationIndex++;
+    updateEmptyState();
+    updateSequenceNumbers();
+    recalculateSummary();
+  }
+  
+  function updateEmptyState() {
+    const hasOperations = container.querySelectorAll('.operation-card:not([style*="display: none"])').length > 0;
+    emptyState.style.display = hasOperations ? 'none' : 'block';
+  }
+  
+  function updateSequenceNumbers() {
+    const operations = container.querySelectorAll('.operation-card:not([style*="display: none"])');
+    operations.forEach((op, index) => {
+      const sequenceInput = op.querySelector('.operation-sequence-input');
+      if (sequenceInput && !sequenceInput.value) {
+        sequenceInput.value = (index + 1) * 10;
+      }
+    });
+  }
+  
+  function recalculateSummary() {
+    let totalSetup = 0;
+    let totalRun = 0;
+    
+    const operations = container.querySelectorAll('.operation-card:not([style*="display: none"])');
+    operations.forEach(op => {
+      const setup = parseFloat(op.querySelector('.setup-time-input')?.value) || 0;
+      const run = parseFloat(op.querySelector('.run-time-input')?.value) || 0;
+      
+      totalSetup += setup;
+      totalRun += run;
+    });
+    
+    document.getElementById('summary-setup-time').textContent = totalSetup.toFixed(1) + 'm';
+    document.getElementById('summary-run-time').textContent = totalRun.toFixed(1) + 'm';
+  }
+  
+  // Add button click handlers
+  addBtn?.addEventListener('click', addOperation);
+  addFirstBtn?.addEventListener('click', addOperation);
+  
+  // Delegate remove button clicks
+  container.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-operation-btn')) {
+      const card = e.target.closest('.operation-card');
+      const destroyInput = card.querySelector('input[name*="_destroy"]');
+      
+      if (destroyInput) {
+        destroyInput.value = '1';
+        card.style.display = 'none';
+      } else {
+        card.remove();
+      }
+      
+      updateEmptyState();
+      recalculateSummary();
+    }
+  });
+  
+  // Recalculate on time input changes
+  container.addEventListener('input', function(e) {
+    if (e.target.matches('.setup-time-input, .run-time-input')) {
+      recalculateSummary();
+    }
+  });
+  
+  // Initial state
+  updateEmptyState();
+});
+</script>

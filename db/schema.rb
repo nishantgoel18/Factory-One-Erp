@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_090552) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -349,6 +349,59 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_090552) do
     t.index ["warehouse_id"], name: "index_purchase_orders_on_warehouse_id"
   end
 
+  create_table "routing_operations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "deleted", default: false
+    t.text "description"
+    t.boolean "is_quality_check_required", default: false
+    t.decimal "labor_cost_per_unit", precision: 12, scale: 2, default: "0.0"
+    t.decimal "labor_hours_per_unit", precision: 8, scale: 4, default: "0.0"
+    t.decimal "move_time_minutes", precision: 10, scale: 2, default: "0.0"
+    t.text "notes"
+    t.string "operation_name", limit: 100, null: false
+    t.integer "operation_sequence", null: false
+    t.decimal "overhead_cost_per_unit", precision: 12, scale: 2, default: "0.0"
+    t.text "quality_check_instructions"
+    t.bigint "routing_id", null: false
+    t.decimal "run_time_per_unit_minutes", precision: 10, scale: 2, default: "0.0"
+    t.decimal "setup_time_minutes", precision: 10, scale: 2, default: "0.0"
+    t.datetime "updated_at", null: false
+    t.decimal "wait_time_minutes", precision: 10, scale: 2, default: "0.0"
+    t.bigint "work_center_id", null: false
+    t.index ["routing_id", "deleted"], name: "index_routing_operations_on_routing_id_and_deleted"
+    t.index ["routing_id", "operation_sequence"], name: "index_routing_ops_on_routing_and_seq"
+    t.index ["routing_id"], name: "index_routing_operations_on_routing_id"
+    t.index ["work_center_id"], name: "index_routing_operations_on_work_center_id"
+  end
+
+  create_table "routings", force: :cascade do |t|
+    t.string "code", limit: 20, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.boolean "deleted", default: false
+    t.text "description"
+    t.date "effective_from", null: false
+    t.date "effective_to"
+    t.boolean "is_default", default: false
+    t.string "name", limit: 100, null: false
+    t.text "notes"
+    t.bigint "product_id", null: false
+    t.string "revision", limit: 16, default: "1"
+    t.string "status", limit: 20, default: "DRAFT", null: false
+    t.decimal "total_labor_cost_per_unit", precision: 12, scale: 2, default: "0.0"
+    t.decimal "total_overhead_cost_per_unit", precision: 12, scale: 2, default: "0.0"
+    t.decimal "total_run_time_per_unit_minutes", precision: 10, scale: 2, default: "0.0"
+    t.decimal "total_setup_time_minutes", precision: 10, scale: 2, default: "0.0"
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_routings_on_code", unique: true
+    t.index ["created_by_id"], name: "index_routings_on_created_by_id"
+    t.index ["effective_from", "effective_to"], name: "index_routings_on_effective_from_and_effective_to"
+    t.index ["product_id", "is_default"], name: "index_routings_on_product_id_and_is_default"
+    t.index ["product_id", "status"], name: "index_routings_on_product_id_and_status"
+    t.index ["product_id"], name: "index_routings_on_product_id"
+    t.index ["status"], name: "index_routings_on_status"
+  end
+
   create_table "stock_adjustment_lines", force: :cascade do |t|
     t.bigint "batch_id"
     t.datetime "created_at", null: false
@@ -601,6 +654,34 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_090552) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "work_centers", force: :cascade do |t|
+    t.decimal "capacity_per_hour", precision: 10, scale: 2, default: "0.0"
+    t.string "code", limit: 20, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.boolean "deleted", default: false
+    t.text "description"
+    t.integer "efficiency_percent", default: 100
+    t.boolean "is_active", default: true
+    t.decimal "labor_cost_per_hour", precision: 10, scale: 2, default: "0.0"
+    t.bigint "location_id"
+    t.string "name", limit: 100, null: false
+    t.text "notes"
+    t.decimal "overhead_cost_per_hour", precision: 10, scale: 2, default: "0.0"
+    t.integer "queue_time_minutes", default: 0
+    t.integer "setup_time_minutes", default: 0
+    t.datetime "updated_at", null: false
+    t.bigint "warehouse_id"
+    t.string "work_center_type", limit: 30, null: false
+    t.index ["code"], name: "index_work_centers_on_code", unique: true
+    t.index ["created_by_id"], name: "index_work_centers_on_created_by_id"
+    t.index ["is_active"], name: "index_work_centers_on_is_active"
+    t.index ["location_id"], name: "index_work_centers_on_location_id"
+    t.index ["warehouse_id", "is_active"], name: "index_work_centers_on_warehouse_id_and_is_active"
+    t.index ["warehouse_id"], name: "index_work_centers_on_warehouse_id"
+    t.index ["work_center_type"], name: "index_work_centers_on_work_center_type"
+  end
+
   add_foreign_key "bill_of_materials", "products"
   add_foreign_key "bom_items", "bill_of_materials"
   add_foreign_key "bom_items", "products", column: "component_id"
@@ -634,6 +715,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_090552) do
   add_foreign_key "purchase_orders", "users", column: "confirmed_by_id"
   add_foreign_key "purchase_orders", "users", column: "created_by_id"
   add_foreign_key "purchase_orders", "warehouses"
+  add_foreign_key "routing_operations", "routings"
+  add_foreign_key "routing_operations", "work_centers"
+  add_foreign_key "routings", "products"
+  add_foreign_key "routings", "users", column: "created_by_id"
   add_foreign_key "stock_adjustment_lines", "locations"
   add_foreign_key "stock_adjustment_lines", "products"
   add_foreign_key "stock_adjustment_lines", "stock_adjustments"
@@ -669,4 +754,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_090552) do
   add_foreign_key "stock_transfers", "users", column: "requested_by_id"
   add_foreign_key "stock_transfers", "warehouses", column: "from_warehouse_id"
   add_foreign_key "stock_transfers", "warehouses", column: "to_warehouse_id"
+  add_foreign_key "work_centers", "locations"
+  add_foreign_key "work_centers", "users", column: "created_by_id"
+  add_foreign_key "work_centers", "warehouses"
 end

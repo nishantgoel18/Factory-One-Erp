@@ -1,0 +1,247 @@
+<%# app/views/work_centers/_form.html.erb %>
+
+<%= simple_form_for @work_center, html: { class: 'needs-validation' } do |f| %>
+  
+  <!-- Error Messages -->
+  <%= render 'layouts/error_messages', object: @work_center %>
+
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-md-6">
+      <!-- Basic Information Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i> Basic Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :code, 
+                      label: 'Work Center Code',
+                      input_html: { 
+                        class: 'form-control text-uppercase',
+                        placeholder: 'e.g., WC-001'
+                      },
+                      hint: 'Unique identifier (auto-generated if left blank)' %>
+
+          <%= f.input :name,
+                      label: 'Work Center Name',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: 'e.g., CNC Machine 01'
+                      } %>
+
+          <%= f.input :work_center_type,
+                      label: 'Type',
+                      collection: @work_center_types,
+                      include_blank: 'Select Type',
+                      input_html: { class: 'form-control' } %>
+
+          <%= f.input :description,
+                      label: 'Description',
+                      input_html: { 
+                        class: 'form-control',
+                        rows: 3,
+                        placeholder: 'Detailed description of this work center...'
+                      } %>
+        </div>
+      </div>
+
+      <!-- Location Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-info text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-map-marker-alt me-2"></i> Location
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :warehouse_id,
+                      label: 'Warehouse',
+                      collection: @warehouses,
+                      label_method: :name,
+                      value_method: :id,
+                      include_blank: 'Select Warehouse',
+                      input_html: { 
+                        class: 'form-control',
+                        id: 'warehouse-select'
+                      } %>
+
+          <%= f.input :location_id,
+                      label: 'Location (Optional)',
+                      collection: @locations,
+                      label_method: :name,
+                      value_method: :id,
+                      include_blank: 'Select Location',
+                      input_html: { 
+                        class: 'form-control',
+                        id: 'location-select'
+                      },
+                      hint: 'Specific location within the warehouse' %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-md-6">
+      <!-- Capacity & Performance Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i> Capacity & Performance
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :capacity_per_hour,
+                      label: 'Capacity per Hour',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: '10.00',
+                        step: '0.01',
+                        min: '0'
+                      },
+                      hint: 'How many units this work center can process per hour' %>
+
+          <%= f.input :efficiency_percent,
+                      label: 'Efficiency %',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: '100',
+                        min: '1',
+                        max: '100'
+                      },
+                      hint: 'Expected efficiency (100% = perfect, 85% = typical)' %>
+
+          <div id="effective-capacity-display" class="alert alert-info">
+            <strong>Effective Capacity:</strong> 
+            <span id="effective-capacity-value">-</span> units/hour
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Information Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="fas fa-dollar-sign me-2"></i> Cost Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :labor_cost_per_hour,
+                      label: 'Labor Cost per Hour ($)',
+                      input_html: { 
+                        class: 'form-control cost-input',
+                        placeholder: '25.00',
+                        step: '0.01',
+                        min: '0'
+                      },
+                      hint: 'Direct labor cost' %>
+
+          <%= f.input :overhead_cost_per_hour,
+                      label: 'Overhead Cost per Hour ($)',
+                      input_html: { 
+                        class: 'form-control cost-input',
+                        placeholder: '15.00',
+                        step: '0.01',
+                        min: '0'
+                      },
+                      hint: 'Includes electricity, depreciation, maintenance' %>
+
+          <div id="total-cost-display" class="alert alert-success">
+            <strong>Total Cost per Hour:</strong> 
+            $<span id="total-cost-value">0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Settings Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header d-flex align-items-center bg-secondary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-clock me-2"></i> Time Settings
+          </h5>
+        </div>
+        <div class="card-body">
+          <%= f.input :setup_time_minutes,
+                      label: 'Default Setup Time (minutes)',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: '10',
+                        min: '0'
+                      },
+                      hint: 'Time required to prepare this work center' %>
+
+          <%= f.input :queue_time_minutes,
+                      label: 'Average Queue Time (minutes)',
+                      input_html: { 
+                        class: 'form-control',
+                        placeholder: '30',
+                        min: '0'
+                      },
+                      hint: 'Average waiting time before work starts' %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes & Status Row -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <%= f.input :notes,
+                      label: 'Additional Notes',
+                      input_html: { 
+                        class: 'form-control',
+                        rows: 3,
+                        placeholder: 'Any additional information...'
+                      } %>
+
+          <%= f.input :is_active,
+                      label: 'Active',
+                      as: :boolean,
+                      input_html: { class: 'form-check-input' },
+                      wrapper_html: { class: 'form-check form-switch' } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="d-flex justify-content-between">
+    <%= link_to 'Cancel', work_centers_path, class: 'btn btn-secondary' %>
+    <%= f.submit @work_center.new_record? ? 'Create Work Center' : 'Update Work Center', 
+                 class: 'btn btn-primary btn-lg' %>
+  </div>
+<% end %>
+
+<!-- JavaScript for Real-time Calculations -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Calculate effective capacity
+  function updateEffectiveCapacity() {
+    const capacity = parseFloat(document.querySelector('[name="work_center[capacity_per_hour]"]').value) || 0;
+    const efficiency = parseFloat(document.querySelector('[name="work_center[efficiency_percent]"]').value) || 100;
+    const effective = (capacity * (efficiency / 100)).toFixed(2);
+    document.getElementById('effective-capacity-value').textContent = effective;
+  }
+  
+  // Calculate total cost
+  function updateTotalCost() {
+    const labor = parseFloat(document.querySelector('[name="work_center[labor_cost_per_hour]"]').value) || 0;
+    const overhead = parseFloat(document.querySelector('[name="work_center[overhead_cost_per_hour]"]').value) || 0;
+    const total = (labor + overhead).toFixed(2);
+    document.getElementById('total-cost-value').textContent = total;
+  }
+  
+  // Attach event listeners
+  document.querySelector('[name="work_center[capacity_per_hour]"]')?.addEventListener('input', updateEffectiveCapacity);
+  document.querySelector('[name="work_center[efficiency_percent]"]')?.addEventListener('input', updateEffectiveCapacity);
+  document.querySelectorAll('.cost-input').forEach(input => {
+    input.addEventListener('input', updateTotalCost);
+  });
+  
+  // Initial calculations
+  updateEffectiveCapacity();
+  updateTotalCost();
+});
+</script>

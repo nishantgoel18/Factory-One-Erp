@@ -1,0 +1,306 @@
+<%# app/views/routing/routing_comparison.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Routing Comparison Report</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i> Home</a>
+        <a class="breadcrumb-item" href="#">Reports</a>
+        <a class="breadcrumb-item" href="/reports/routing">Routing</a>
+
+        <span class="breadcrumb-item active">Routing Comparison Report</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h2 class="mb-0">
+        <i class="fas fa-balance-scale me-2"></i>
+        Routing Comparison Report
+      </h2>
+      <p class="text-muted">Compare different routings for the same product</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group">
+        <%= link_to routing_comparison_routing_path(format: :csv), class: "btn btn-success" do %>
+          <i class="fas fa-file-csv me-2"></i>Export CSV
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 text-center">
+              <h3 class="mb-0"><%= @products.count %></h3>
+              <small>Products with Multiple Routings</small>
+            </div>
+            <div class="col-md-3 text-center">
+              <h3 class="mb-0">
+                <%= @comparison_data.values.flatten.count %>
+              </h3>
+              <small>Total Routings</small>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-light mb-0">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>About this report:</strong> This report shows products that have multiple routing versions, 
+                allowing you to compare efficiency, costs, and operation counts.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if @products.any? %>
+    <!-- Comparison Cards for Each Product -->
+    <% @products.each do |product| %>
+      <% routings_data = @comparison_data[product.id] %>
+      
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h5 class="mb-0">
+                <i class="fas fa-box me-2"></i>
+                <%= product.code %> - <%= product.name %>
+              </h5>
+              <small class="text-muted">
+                <%= routings_data.count %> routing versions available
+              </small>
+            </div>
+            <div class="col-md-4 text-end">
+              <% best_routing = routings_data.max_by { |d| d[:efficiency_score] } %>
+              <span class="badge bg-success">
+                <i class="fas fa-star me-1"></i>
+                Best: <%= best_routing[:routing].code %>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Comparison Table -->
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Routing Code</th>
+                  <th>Routing Name</th>
+                  <th>Status</th>
+                  <th class="text-center">Operations</th>
+                  <th class="text-end">Time/Unit</th>
+                  <th class="text-end">Cost/Unit</th>
+                  <th class="text-center">Efficiency Score</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% routings_data.sort_by { |d| -d[:efficiency_score] }.each_with_index do |data, index| %>
+                  <% routing = data[:routing] %>
+                  <tr class="<%= 'table-success' if index == 0 %>">
+                    <td>
+                      <strong><%= routing.code %></strong>
+                      <% if index == 0 %>
+                        <span class="badge bg-success ms-2">Best</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <%= routing.name %>
+                      <br>
+                      <small class="text-muted">Rev <%= routing.revision %></small>
+                    </td>
+                    <td>
+                      <% case routing.status %>
+                      <% when "ACTIVE" %>
+                        <span class="badge bg-success">Active</span>
+                      <% when "DRAFT" %>
+                        <span class="badge bg-warning">Draft</span>
+                      <% when "INACTIVE" %>
+                        <span class="badge bg-secondary">Inactive</span>
+                      <% else %>
+                        <span class="badge bg-dark"><%= routing.status %></span>
+                      <% end %>
+                      <% if routing.is_default? %>
+                        <br><span class="badge bg-warning mt-1">Default</span>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge bg-info"><%= data[:operations_count] %></span>
+                    </td>
+                    <td class="text-end">
+                      <strong><%= number_with_precision(data[:total_time], precision: 1) %></strong>
+                      <small class="text-muted">min</small>
+                      <% if index > 0 %>
+                        <br>
+                        <% diff = ((data[:total_time] - routings_data[0][:total_time]) / routings_data[0][:total_time] * 100).round(1) %>
+                        <small class="<%= diff > 0 ? 'text-danger' : 'text-success' %>">
+                          <%= diff > 0 ? '+' : '' %><%= diff %>%
+                        </small>
+                      <% end %>
+                    </td>
+                    <td class="text-end">
+                      <strong>$<%= number_with_precision(data[:total_cost], precision: 2) %></strong>
+                      <% if index > 0 %>
+                        <br>
+                        <% cost_diff = ((data[:total_cost] - routings_data[0][:total_cost]) / routings_data[0][:total_cost] * 100).round(1) %>
+                        <small class="<%= cost_diff > 0 ? 'text-danger' : 'text-success' %>">
+                          <%= cost_diff > 0 ? '+' : '' %><%= cost_diff %>%
+                        </small>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <div class="progress" style="height: 25px; min-width: 80px;">
+                        <div class="progress-bar <%= data[:efficiency_score] >= 70 ? 'bg-success' : data[:efficiency_score] >= 50 ? 'bg-warning' : 'bg-danger' %>" 
+                             style="width: <%= data[:efficiency_score] %>%">
+                          <strong><%= data[:efficiency_score] %>%</strong>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <%= link_to routing_path(routing), class: "btn btn-sm btn-outline-primary" do %>
+                        <i class="fas fa-eye"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Visual Comparison Chart -->
+          <div class="mt-4">
+            <h6 class="mb-3">
+              <i class="fas fa-chart-bar me-2"></i>Visual Comparison
+            </h6>
+            <canvas id="comparison-chart-<%= product.id %>" height="80"></canvas>
+          </div>
+
+          <!-- Insights -->
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <div class="alert alert-info mb-0">
+                <strong><i class="fas fa-lightbulb me-2"></i>Recommendation:</strong>
+                <% best = routings_data.max_by { |d| d[:efficiency_score] } %>
+                <% worst = routings_data.min_by { |d| d[:efficiency_score] } %>
+                <br>
+                Routing <%= best[:routing].code %> is <%= (best[:efficiency_score] - worst[:efficiency_score]).round(0) %>% 
+                more efficient than <%= worst[:routing].code %>. 
+                <% if best[:total_cost] < worst[:total_cost] %>
+                  It also saves $<%= number_with_precision(worst[:total_cost] - best[:total_cost], precision: 2) %> per unit.
+                <% end %>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="alert alert-warning mb-0">
+                <strong><i class="fas fa-exclamation-triangle me-2"></i>Considerations:</strong>
+                <br>
+                <% if routings_data.any? { |d| d[:routing].status == 'DRAFT' } %>
+                  • Some routings are still in DRAFT status
+                  <br>
+                <% end %>
+                • Always test new routings before setting as default
+                <br>
+                • Consider work center availability when choosing routing
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart.js Data -->
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const ctx<%= product.id %> = document.getElementById('comparison-chart-<%= product.id %>').getContext('2d');
+        
+        new Chart(ctx<%= product.id %>, {
+          type: 'bar',
+          data: {
+            labels: <%= raw routings_data.map { |d| d[:routing].code }.to_json %>,
+            datasets: [
+              {
+                label: 'Time per Unit (min)',
+                data: <%= raw routings_data.map { |d| d[:total_time] }.to_json %>,
+                backgroundColor: 'rgba(13, 202, 240, 0.6)',
+                borderColor: 'rgba(13, 202, 240, 1)',
+                borderWidth: 2,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Cost per Unit ($)',
+                data: <%= raw routings_data.map { |d| d[:total_cost] }.to_json %>,
+                backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 2,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            scales: {
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                  display: true,
+                  text: 'Time (minutes)'
+                }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Cost ($)'
+                },
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        });
+      });
+      </script>
+    <% end %>
+
+  <% else %>
+    <!-- Empty State -->
+    <div class="card shadow-sm">
+      <div class="card-body text-center py-5">
+        <i class="fas fa-balance-scale fa-4x text-muted mb-3"></i>
+        <h5 class="text-muted">No Products with Multiple Routings</h5>
+        <p class="text-muted">
+          This report shows products that have more than one routing version for comparison.
+          <br>
+          Create multiple routing versions for a product to see them compared here.
+        </p>
+        <%= link_to "Go to Routings", routings_path, class: "btn btn-primary" %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>

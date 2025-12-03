@@ -68,7 +68,56 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :work_centers do
+    member do
+      patch :toggle_status  # For activating/deactivating
+    end
+    
+    collection do
+      get :generate_code  # For auto-generating next code
+    end
+  end
 
+  resources :routings do
+    member do
+      patch :toggle_status
+      post :duplicate  # For creating copies
+    end
+    
+    collection do
+      get :generate_code
+    end
+    
+    # Nested operations management (optional, for AJAX)
+    resources :routing_operations, only: [:create, :update, :destroy], shallow: true
+  end
+  scope :tools do
+    get 'production_calculator', to: 'production_calculator#index'
+    post 'production_calculator/calculate', to: 'production_calculator#calculate'
+  end
+
+  scope :reports do
+    scope :inventory do
+      get 'stock_levels', to: 'inventory_reports#stock_levels'           # Current inventory
+      get 'stock_movements', to: 'inventory_reports#stock_movements'        # Transaction history
+      get 'valuation', to: 'inventory_reports#valuation'                # Inventory valuation
+      get 'aging', to: 'inventory_reports#aging'                   # Inventory aging
+      get 'receiving_performance', to: 'inventory_reports#receiving_performance'   # GRN metrics
+      get 'variance_analysis', to: 'inventory_reports#variance_analysis'     # Cycle count variances
+      get 'low_stock', to: 'inventory_reports#low_stock'              # Items below reorder point
+    end
+
+    resource :routing, only: [] do
+      collection do
+        get :index, to: 'routing_reports#index'
+        get :work_center_utilization, to: 'routing_reports#work_center_utilization'
+        get :routing_cost_analysis, to: 'routing_reports#routing_cost_analysis'
+        get :production_time_analysis, to: 'routing_reports#production_time_analysis'
+        get :routing_comparison, to: 'routing_reports#routing_comparison'
+        get :operations_summary, to: 'routing_reports#operations_summary'
+      end
+    end
+  end
   namespace :inventory do
     # Dashboard
     get 'dashboard', to: 'dashboard#index', as: :dashboard
@@ -175,19 +224,6 @@ Rails.application.routes.draw do
       end
     end
 
-    # ===================================
-    # REPORTS & ANALYTICS
-    # ===================================
-    namespace :reports do
-      get 'stock_levels'           # Current inventory
-      get 'stock_movements'        # Transaction history
-      get 'valuation'              # Inventory valuation
-      get 'aging'                  # Inventory aging
-      get 'receiving_performance'  # GRN metrics
-      get 'variance_analysis'      # Cycle count variances
-      get 'low_stock'              # Items below reorder point
-    end
-    
     # ===================================
     # AJAX ENDPOINTS
     # ===================================

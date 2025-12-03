@@ -1,0 +1,169 @@
+<%# app/views/routings/_operation_fields.html.erb %>
+
+<div class="operation-card border-bottom py-3 px-3" style="background: #f8f9fa;">
+  <div class="row g-3">
+    <!-- Hidden fields -->
+    <%= f.input :id, as: :hidden %>
+    <%= f.input :_destroy, as: :hidden, input_html: { class: 'destroy-flag' } %>
+    
+    <!-- Operation Header -->
+    <div class="col-12 d-flex justify-content-between align-items-center mb-2">
+      <h6 class="mb-0 text-primary">
+        <i class="fas fa-cog me-2"></i>
+        <span class="operation-title">Operation</span>
+      </h6>
+      <button type="button" class="btn btn-sm btn-outline-danger remove-operation-btn">
+        <i class="fas fa-trash"></i> Remove
+      </button>
+    </div>
+    
+    <!-- Sequence & Name -->
+    <div class="col-md-2">
+      <%= f.input :operation_sequence,
+                  label: 'Sequence',
+                  input_html: { 
+                    class: 'form-control operation-sequence-input',
+                    placeholder: '10'
+                  },
+                  wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <div class="col-md-5">
+      <%= f.input :operation_name,
+                  label: 'Operation Name',
+                  input_html: { 
+                    class: 'form-control',
+                    placeholder: 'e.g., Cutting, Drilling'
+                  },
+                  wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <div class="col-md-5">
+      <%= f.association :work_center,
+                       label: 'Work Center',
+                       collection: work_centers,
+                       label_method: :display_name,
+                       value_method: :id,
+                       include_blank: 'Select Work Center',
+                       input_html: { class: 'form-control work-center-select' },
+                       wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <!-- Time Settings Row 1 -->
+    <div class="col-md-3">
+      <%= f.input :setup_time_minutes,
+                  label: 'Setup Time (min)',
+                  input_html: { 
+                    class: 'form-control setup-time-input',
+                    placeholder: '10',
+                    step: '0.1',
+                    min: '0'
+                  },
+                  wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <div class="col-md-3">
+      <%= f.input :run_time_per_unit_minutes,
+                  label: 'Run Time/Unit (min)',
+                  input_html: { 
+                    class: 'form-control run-time-input',
+                    placeholder: '5',
+                    step: '0.1',
+                    min: '0'
+                  },
+                  wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <div class="col-md-3">
+      <%= f.input :wait_time_minutes,
+                  label: 'Wait Time (min)',
+                  input_html: { 
+                    class: 'form-control',
+                    placeholder: '30',
+                    step: '0.1',
+                    min: '0'
+                  },
+                  wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <div class="col-md-3">
+      <%= f.input :move_time_minutes,
+                  label: 'Move Time (min)',
+                  input_html: { 
+                    class: 'form-control',
+                    placeholder: '5',
+                    step: '0.1',
+                    min: '0'
+                  },
+                  wrapper_html: { class: 'mb-0' } %>
+    </div>
+    
+    <!-- Labor & Quality -->
+    <div class="col-md-4">
+      <%= f.input :labor_hours_per_unit,
+                  label: 'Labor Hours/Unit',
+                  input_html: { 
+                    class: 'form-control',
+                    placeholder: '0.5',
+                    step: '0.01',
+                    min: '0'
+                  },
+                  wrapper_html: { class: 'mb-0' },
+                  hint: 'Leave blank to use run time' %>
+    </div>
+    
+    <div class="col-md-4">
+      <%= f.input :is_quality_check_required,
+                  label: 'Quality Check Required',
+                  as: :boolean,
+                  input_html: { class: 'form-check-input' },
+                  wrapper_html: { class: 'form-check form-switch mb-0' } %>
+    </div>
+    
+    <!-- Description & Notes (Collapsible) -->
+    <div class="col-12">
+      <a class="btn btn-sm btn-link text-decoration-none" data-toggle="collapse" 
+         href="#details-<%= f.object.object_id %>" role="button" aria-expanded="false" aria-controls="details-<%= f.object.object_id %>">
+        <i class="fas fa-chevron-down me-1"></i>
+        More Details (Description, Quality Instructions, Notes)
+      </a>
+      
+      <div class="collapse" id="details-<%= f.object.object_id %>">
+        <div class="row g-3 mt-2">
+          <div class="col-12">
+            <%= f.input :description,
+                        label: 'Description',
+                        input_html: { 
+                          class: 'form-control',
+                          rows: 2,
+                          placeholder: 'Detailed operation description...'
+                        },
+                        wrapper_html: { class: 'mb-2' } %>
+          </div>
+          
+          <div class="col-12">
+            <%= f.input :quality_check_instructions,
+                        label: 'Quality Check Instructions',
+                        input_html: { 
+                          class: 'form-control',
+                          rows: 2,
+                          placeholder: 'Quality control instructions...'
+                        },
+                        wrapper_html: { class: 'mb-2' } %>
+          </div>
+          
+          <div class="col-12">
+            <%= f.input :notes,
+                        label: 'Operation Notes',
+                        input_html: { 
+                          class: 'form-control',
+                          rows: 2,
+                          placeholder: 'Additional notes...'
+                        },
+                        wrapper_html: { class: 'mb-0' } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
