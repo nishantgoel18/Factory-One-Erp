@@ -1,0 +1,532 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Production Efficiency Report</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>  Home</a>
+        <a class="breadcrumb-item" href="#">Reports</a>
+        <a class="breadcrumb-item" href="/reports/work_order">Work Orders</a>
+
+        <span class="breadcrumb-item active">Production Efficiency Report</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-speedometer"></i> Production Efficiency Report
+      </h2>
+      <p class="text-muted mb-0">
+        Period: <%= @start_date.strftime("%B %d, %Y") %> to <%= @end_date.strftime("%B %d, %Y") %>
+      </p>
+    </div>
+    <div>
+      <%= link_to "Export PDF", efficiency_report_reports_work_order_reports_path(format: :pdf, 
+          start_date: @start_date, end_date: @end_date), 
+          class: "btn btn-danger me-2", target: "_blank" %>
+      <%= link_to "Export CSV", efficiency_report_reports_work_order_reports_path(format: :csv, 
+          start_date: @start_date, end_date: @end_date), 
+          class: "btn btn-success" %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <%= form_with url: efficiency_report_reports_work_order_reports_path, method: :get, class: "row g-3" do |f| %>
+        <div class="col-md-4">
+          <%= f.label :start_date, "Start Date", class: "form-label" %>
+          <%= f.date_field :start_date, value: @start_date, class: "form-control" %>
+        </div>
+        <div class="col-md-4">
+          <%= f.label :end_date, "End Date", class: "form-label" %>
+          <%= f.date_field :end_date, value: @end_date, class: "form-control" %>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <%= f.submit "Generate Report", class: "btn btn-primary w-100" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Overall Efficiency Summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-12">
+      <div class="card shadow-sm border-primary">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-3 text-center border-end">
+              <h6 class="text-muted mb-2">Overall Efficiency</h6>
+              <h1 class="mb-0 display-4 text-primary"><%= @overall_efficiency %>%</h1>
+              <small class="text-muted">Planned vs Actual Time</small>
+            </div>
+            <div class="col-md-3 text-center border-end">
+              <h6 class="text-muted mb-2">Total Operations</h6>
+              <h3 class="mb-0"><%= @operations.count %></h3>
+              <small class="text-muted">Completed</small>
+            </div>
+            <div class="col-md-3 text-center border-end">
+              <h6 class="text-muted mb-2">Assignment Accuracy</h6>
+              <h3 class="mb-0 text-<%= @assignment_accuracy >= 80 ? 'success' : @assignment_accuracy >= 60 ? 'warning' : 'danger' %>">
+                <%= @assignment_accuracy %>%
+              </h3>
+              <small class="text-muted">Completed by assigned operator</small>
+            </div>
+            <div class="col-md-3 text-center">
+              <h6 class="text-muted mb-2">Reassignments</h6>
+              <h3 class="mb-0 text-warning"><%= @reassigned_operations.count %></h3>
+              <small class="text-muted">Operations completed by others</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEW: Assignment Insights -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-info h-100">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="bi bi-clipboard-check"></i> Assignment Compliance
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h4 class="mb-0 text-info"><%= @assignment_accuracy %>%</h4>
+              <small class="text-muted">Operations completed as assigned</small>
+            </div>
+            <div class="text-end">
+              <% total_assigned = @operations.where.not(assigned_operator_id: nil).count %>
+              <% completed_assigned = @operations.where('assigned_operator_id = operator_id').count %>
+              <strong><%= completed_assigned %></strong> / <%= total_assigned %>
+            </div>
+          </div>
+          
+          <div class="progress mb-3" style="height: 30px;">
+            <div class="progress-bar bg-success" style="width: <%= @assignment_accuracy %>%">
+              <%= @assignment_accuracy %>%
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="text-center">
+                <i class="bi bi-check-circle text-success fs-3"></i>
+                <br>
+                <strong><%= completed_assigned %></strong>
+                <br>
+                <small class="text-muted">As Assigned</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <i class="bi bi-arrow-left-right text-warning fs-3"></i>
+                <br>
+                <strong><%= @reassigned_operations.count %></strong>
+                <br>
+                <small class="text-muted">Reassigned</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card shadow-sm border-warning h-100">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0">
+            <i class="bi bi-exclamation-triangle"></i> Reassignment Analysis
+          </h6>
+        </div>
+        <div class="card-body">
+          <% if @reassigned_operations.any? %>
+            <h6 class="mb-3">Top Reassigned Operations:</h6>
+            <div class="list-group list-group-flush">
+              <% @reassigned_operations.first(5).each do |op| %>
+                <div class="list-group-item px-0">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <strong><%= op.work_order.wo_number %></strong> - Seq <%= op.sequence_no %>
+                      <br>
+                      <small class="text-muted"><%= op.operation_name %></small>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-info">
+                        <%= op.assigned_operator&.full_name || 'Unassigned' %>
+                      </span>
+                      <br>
+                      <i class="bi bi-arrow-right"></i>
+                      <br>
+                      <span class="badge bg-success">
+                        <%= op.operator.full_name %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center text-success py-4">
+              <i class="bi bi-check-circle fs-1 d-block mb-2"></i>
+              <p class="mb-0">Perfect! All operations completed as assigned.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Efficiency by Work Center -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0"><i class="bi bi-gear-wide-connected"></i> Efficiency by Work Center</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Work Center</th>
+              <th>Type</th>
+              <th>Operations</th>
+              <th>Planned Minutes</th>
+              <th>Actual Minutes</th>
+              <th>Variance</th>
+              <th>Efficiency %</th>
+              <th>Performance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @work_center_efficiency.each do |stat| %>
+              <tr>
+                <td>
+                  <strong><%= stat[:work_center].code %></strong>
+                  <br>
+                  <small class="text-muted"><%= stat[:work_center].name %></small>
+                </td>
+                <td><%= stat[:work_center].type_label %></td>
+                <td>
+                  <span class="badge bg-info">
+                    <%= @operations.where(work_center_id: stat[:work_center].id).count %>
+                  </span>
+                </td>
+                <td><%= number_with_delimiter(stat[:planned_minutes]) %> min</td>
+                <td><%= number_with_delimiter(stat[:actual_minutes]) %> min</td>
+                <td class="<%= (stat[:planned_minutes] - stat[:actual_minutes]) >= 0 ? 'text-success' : 'text-danger' %>">
+                  <%= (stat[:planned_minutes] - stat[:actual_minutes]) >= 0 ? '+' : '' %>
+                  <%= number_with_delimiter(stat[:planned_minutes] - stat[:actual_minutes]) %> min
+                </td>
+                <td>
+                  <strong class="<%= stat[:efficiency] >= 100 ? 'text-success' : stat[:efficiency] >= 80 ? 'text-warning' : 'text-danger' %>">
+                    <%= stat[:efficiency] %>%
+                  </strong>
+                </td>
+                <td>
+                  <div class="progress" style="height: 25px; width: 150px;">
+                    <div class="progress-bar bg-<%= stat[:efficiency] >= 100 ? 'success' : stat[:efficiency] >= 80 ? 'warning' : 'danger' %>" 
+                         style="width: <%= [stat[:efficiency], 100].min %>%">
+                      <%= stat[:efficiency] %>%
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operator Performance (UPDATED WITH ASSIGNMENT TRACKING) -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0"><i class="bi bi-people"></i> Operator Performance</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Operator</th>
+              <th>Assigned</th>
+              <th>Completed</th>
+              <th>Helped Others</th>
+              <th>Compliance</th>
+              <th>Efficiency %</th>
+              <th>Units</th>
+              <th>Scrap Rate</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @operator_stats.each do |stat| %>
+              <tr>
+                <td>
+                  <strong><%= stat[:operator].full_name %></strong>
+                  <br>
+                  <small class="text-muted"><%= stat[:operator].email %></small>
+                </td>
+                
+                <!-- Assigned -->
+                <td>
+                  <span class="badge bg-info">
+                    <%= stat[:assigned_count] %>
+                  </span>
+                </td>
+                
+                <!-- Completed -->
+                <td>
+                  <span class="badge bg-success">
+                    <%= stat[:operations_count] %>
+                  </span>
+                  <br>
+                  <small class="text-muted">
+                    (<%= stat[:completed_assigned] %> assigned)
+                  </small>
+                </td>
+                
+                <!-- Helped Others (NEW) -->
+                <td>
+                  <% if stat[:helped_others] > 0 %>
+                    <span class="badge bg-primary">
+                      +<%= stat[:helped_others] %>
+                    </span>
+                    <br>
+                    <small class="text-muted">team player!</small>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                
+                <!-- Compliance -->
+                <td>
+                  <% compliance = stat[:assignment_compliance] %>
+                  <div class="progress" style="height: 25px; width: 100px;">
+                    <div class="progress-bar bg-<%= compliance >= 80 ? 'success' : compliance >= 60 ? 'warning' : 'danger' %>" 
+                         style="width: <%= compliance %>%">
+                      <%= compliance %>%
+                    </div>
+                  </div>
+                  <small class="text-muted">
+                    <%= stat[:completed_assigned] %> / <%= stat[:assigned_count] %>
+                  </small>
+                </td>
+                
+                <!-- Efficiency -->
+                <td>
+                  <strong class="<%= stat[:efficiency] >= 100 ? 'text-success' : stat[:efficiency] >= 80 ? 'text-warning' : 'text-danger' %>">
+                    <%= stat[:efficiency] %>%
+                  </strong>
+                </td>
+                
+                <!-- Units -->
+                <td>
+                  <strong><%= number_with_precision(stat[:total_completed], precision: 0) %></strong>
+                  <% if stat[:total_scrapped] > 0 %>
+                    <br>
+                    <small class="text-danger">-<%= stat[:total_scrapped] %></small>
+                  <% end %>
+                </td>
+                
+                <!-- Scrap Rate -->
+                <td>
+                  <span class="badge bg-<%= stat[:scrap_rate] < 5 ? 'success' : stat[:scrap_rate] < 10 ? 'warning' : 'danger' %>">
+                    <%= stat[:scrap_rate] %>%
+                  </span>
+                </td>
+                
+                <!-- Rating -->
+                <td>
+                  <% if stat[:efficiency] >= 100 && stat[:scrap_rate] < 5 && compliance >= 80 %>
+                    <span class="badge bg-success">⭐ Excellent</span>
+                  <% elsif stat[:efficiency] >= 80 && stat[:scrap_rate] < 10 && compliance >= 60 %>
+                    <span class="badge bg-warning">Good</span>
+                  <% else %>
+                    <span class="badge bg-danger">Needs Work</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Efficiency Distribution Chart -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-light">
+          <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Efficiency Distribution</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="efficiencyDistributionChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 10 Best & Worst Performers -->
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-success">
+        <div class="card-header bg-success text-white">
+          <h6 class="mb-0"><i class="bi bi-trophy"></i> Top 10 Most Efficient Operations</h6>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>WO Number</th>
+                  <th>Operation</th>
+                  <th>Operator</th>
+                  <th>Efficiency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @operations.sort_by { |op| -op.efficiency_percentage }.first(10).each do |op| %>
+                  <tr>
+                    <td>
+                      <%= link_to op.work_order.wo_number, work_order_path(op.work_order), 
+                          class: "text-decoration-none" %>
+                    </td>
+                    <td><%= op.operation_name %></td>
+                    <td>
+                      <%= op.operator.full_name %>
+                      <% if op.assigned_operator_id != op.operator_id && op.assigned_operator.present? %>
+                        <br>
+                        <small class="text-muted">(Assigned: <%= op.assigned_operator.full_name %>)</small>
+                      <% end %>
+                    </td>
+                    <td>
+                      <strong class="text-success"><%= op.efficiency_percentage %>%</strong>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm border-danger">
+        <div class="card-header bg-danger text-white">
+          <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Bottom 10 - Needs Improvement</h6>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>WO Number</th>
+                  <th>Operation</th>
+                  <th>Operator</th>
+                  <th>Efficiency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @operations.select { |op| op.efficiency_percentage < 100 }
+                              .sort_by { |op| op.efficiency_percentage }
+                              .first(10).each do |op| %>
+                  <tr>
+                    <td>
+                      <%= link_to op.work_order.wo_number, work_order_path(op.work_order), 
+                          class: "text-decoration-none" %>
+                    </td>
+                    <td><%= op.operation_name %></td>
+                    <td>
+                      <%= op.operator.full_name %>
+                      <% if op.assigned_operator_id != op.operator_id && op.assigned_operator.present? %>
+                        <br>
+                        <small class="text-muted">(Assigned: <%= op.assigned_operator.full_name %>)</small>
+                      <% end %>
+                    </td>
+                    <td>
+                      <strong class="text-danger"><%= op.efficiency_percentage %>%</strong>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Efficiency Distribution
+  const efficiencyCtx = document.getElementById('efficiencyDistributionChart').getContext('2d');
+  
+  // Calculate distribution buckets
+  const operations = <%= raw @operations.map { |op| op.efficiency_percentage }.to_json %>;
+  const buckets = {
+    '0-50%': 0,
+    '51-75%': 0,
+    '76-90%': 0,
+    '91-100%': 0,
+    '101-125%': 0,
+    '126%+': 0
+  };
+  
+  operations.forEach(eff => {
+    if (eff <= 50) buckets['0-50%']++;
+    else if (eff <= 75) buckets['51-75%']++;
+    else if (eff <= 90) buckets['76-90%']++;
+    else if (eff <= 100) buckets['91-100%']++;
+    else if (eff <= 125) buckets['101-125%']++;
+    else buckets['126%+']++;
+  });
+  
+  new Chart(efficiencyCtx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(buckets),
+      datasets: [{
+        label: 'Number of Operations',
+        data: Object.values(buckets),
+        backgroundColor: [
+          '#dc3545',
+          '#fd7e14',
+          '#ffc107',
+          '#198754',
+          '#0dcaf0',
+          '#6610f2'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      }
+    }
+  });
+</script>

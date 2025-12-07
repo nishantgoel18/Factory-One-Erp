@@ -28,11 +28,11 @@
     <div class="col-md-6 text-end">
       <!-- Status Badge -->
       <% if @work_center.is_active? %>
-        <span class="badge bg-success fs-5 me-2">
+        <span class="text-white badge bg-success fs-5 me-2">
           <i class="fas fa-check-circle me-1"></i> Active
         </span>
       <% else %>
-        <span class="badge bg-secondary fs-5 me-2">
+        <span class="text-white badge bg-secondary fs-5 me-2">
           <i class="fas fa-times-circle me-1"></i> Inactive
         </span>
       <% end %>
@@ -65,7 +65,7 @@
     <!-- Left Column -->
     <div class="col-lg-8">
       <!-- Basic Information Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-info-circle me-2"></i> Basic Information
@@ -84,7 +84,7 @@
             <div class="col-md-6 mb-3">
               <label class="text-muted small">Type</label>
               <div>
-                <span class="badge bg-secondary fs-6">
+                <span class="text-white badge bg-secondary fs-6">
                   <%= @work_center.type_label %>
                 </span>
               </div>
@@ -93,16 +93,16 @@
               <label class="text-muted small">Status</label>
               <div>
                 <% if @work_center.is_active? %>
-                  <span class="badge bg-success fs-6">Active</span>
+                  <span class="text-white badge bg-success fs-6">Active</span>
                 <% else %>
-                  <span class="badge bg-secondary fs-6">Inactive</span>
+                  <span class="text-white badge bg-secondary fs-6">Inactive</span>
                 <% end %>
               </div>
             </div>
             <% if @work_center.description.present? %>
               <div class="col-12 mb-3">
                 <label class="text-muted small">Description</label>
-                <div class="border rounded p-3 bg-light">
+                <div class="border rounded p-3 bg-primary">
                   <%= simple_format(@work_center.description) %>
                 </div>
               </div>
@@ -112,8 +112,8 @@
       </div>
 
       <!-- Location Card -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-info text-white">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-map-marker-alt me-2"></i> Location
           </h5>
@@ -146,7 +146,7 @@
       </div>
 
       <!-- Capacity & Performance Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-success text-white">
           <h5 class="mb-0">
             <i class="fas fa-tachometer-alt me-2"></i> Capacity & Performance
@@ -192,7 +192,7 @@
       </div>
 
       <!-- Time Settings Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-secondary text-white">
           <h5 class="mb-0">
             <i class="fas fa-clock me-2"></i> Time Settings
@@ -228,14 +228,14 @@
 
       <!-- Notes Card -->
       <% if @work_center.notes.present? %>
-        <div class="card shadow-sm mb-4">
+        <div class="card  mb-4">
           <div class="card-header d-flex align-items-center">
             <h5 class="mb-0">
               <i class="fas fa-sticky-note me-2"></i>Notes
             </h5>
           </div>
           <div class="card-body">
-            <div class="border rounded p-3 bg-light">
+            <div class="border rounded p-3 bg-primary">
               <%= simple_format(@work_center.notes) %>
             </div>
           </div>
@@ -246,7 +246,7 @@
     <!-- Right Column - Summary Cards -->
     <div class="col-lg-4">
       <!-- Cost Summary Card -->
-      <div class="card shadow-sm mb-4 border-warning">
+      <div class="card  mb-4 border-warning">
         <div class="card-header d-flex align-items-center bg-warning text-dark">
           <h5 class="mb-0">
             <i class="fas fa-dollar-sign me-2"></i> Cost Summary
@@ -276,8 +276,8 @@
             </div>
           </div>
         </div>
-        <div class="card-footer bg-light">
-          <small class="text-muted">
+        <div class="card-footer bg-primary d-flex justify-content-start align-items-center">
+          <small class="text-light">
             <i class="fas fa-calculator me-1"></i>
             Cost per minute: $<%= number_with_precision(@work_center.total_cost_per_hour / 60, precision: 2) %>
           </small>
@@ -285,7 +285,7 @@
       </div>
 
       <!-- Cost Calculations Card -->
-      <div class="card shadow-sm mb-4 border-primary">
+      <div class="card  mb-4 border-primary">
         <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-calculator me-2"></i> Quick Cost Calculator
@@ -332,8 +332,8 @@
       </div>
 
       <!-- Future Usage Card (Placeholder) -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-light">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-route me-2"></i> Routing Usage
           </h5>
@@ -348,8 +348,8 @@
       </div>
 
       <!-- Audit Information Card -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-light">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-history me-2"></i> Audit Information
           </h5>

@@ -40,7 +40,7 @@
       <% if f.object.variance.present? %>
         <div class="col-md-1">
           <label class="form-label">Variance</label>
-          <span class="badge <%= f.object.variance > 0 ? 'bg-success' : 'bg-danger' %> d-block">
+          <span class="text-white badge <%= f.object.variance > 0 ? 'bg-success' : 'bg-danger' %> d-block">
             <%= f.object.variance > 0 ? '+' : '' %><%= f.object.variance %>
           </span>
         </div>

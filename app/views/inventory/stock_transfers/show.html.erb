@@ -31,7 +31,7 @@
       <%= render 'shared/status_badge', status: @stock_transfer.status %>
       
       <% if @stock_transfer.status == 'POSTED' %>
-        <span class="badge bg-success ms-2">
+        <span class="text-white badge bg-success ms-2">
           <i class="bi bi-check-circle me-1"></i>
           Posted on <%= @stock_transfer.posted_at.strftime('%b %d, %Y') %>
         </span>
@@ -78,7 +78,7 @@
     <div class="col-md-8">
       <!-- Stock Transfer Information -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Receipt Information</h5>
         </div>
         <div class="card-body">
@@ -107,7 +107,7 @@
 
       <!-- Received Items -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Received Items</h5>
         </div>
         <div class="card-body p-0">
@@ -133,7 +133,7 @@
                     </td>
                     <td>
                       <% if line.batch %>
-                        <span class="badge bg-info">
+                        <span class="text-white badge bg-primary">
                           <%= line.batch.batch_number %>
                         </span>
                       <% else %>
@@ -141,13 +141,13 @@
                       <% end %>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">
+                      <span class="text-white badge bg-secondary">
                         <%= line.from_location.code %>
                       </span>
                       <br><small class="text-muted"><%= line.from_location.name %></small>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">
+                      <span class="text-white badge bg-secondary">
                         <%= line.to_location.code %>
                       </span>
                       <br><small class="text-muted"><%= line.to_location.name %></small>
@@ -168,7 +168,7 @@
       <!-- Stock Transactions (if posted) -->
       <% if @stock_transfer.status == 'POSTED' %>
         <div class="card">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-arrow-repeat me-2"></i>
               Stock Transactions Created
@@ -194,7 +194,7 @@
                       ).includes(:product, :from_location).each do |txn| %>
                     <tr>
                       <td>
-                        <span class="badge bg-success">
+                        <span class="text-white badge bg-success">
                           <%= txn.txn_type %>
                         </span>
                       </td>
@@ -216,7 +216,7 @@
     <div class="col-md-4">
       <!-- Status Info -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h6 class="mb-0">Status Information</h6>
         </div>
         <div class="card-body">
@@ -247,7 +247,7 @@
 
       <% if @stock_transfer.from_warehouse %>
         <div class="card mt-4">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h6 class="mb-0">From Warehouse Info</h6>
           </div>
           <div class="card-body">
@@ -265,7 +265,7 @@
       <% end %>
       <% if @stock_transfer.to_warehouse %>
         <div class="card mt-4">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h6 class="mb-0">To Warehouse Info</h6>
           </div>
           <div class="card-body">

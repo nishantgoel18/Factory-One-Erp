@@ -1,0 +1,213 @@
+<!-- app/views/work_orders/_form.html.erb -->
+
+<div class="card ">
+  <div class="card-header d-flex align-items-center justify-content-start bg-primary text-white">
+    <h5 class="mb-0">
+      <i class="bi bi-file-earmark-plus"></i> 
+      <%= @work_order.new_record? ? "Create New Work Order" : "Edit Work Order" %>
+    </h5>
+  </div>
+
+  <div class="card-body">
+    <%= simple_form_for @work_order, html: { class: "needs-validation", novalidate: true } do |f| %>
+      
+      <!-- Product Selection Section -->
+      <div class="row mb-4">
+        <div class="col-md-12">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <strong>Note:</strong> Only Finished Goods and Semi-Finished Goods products can be manufactured.
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <!-- Product -->
+        <div class="col-md-6">
+          <%= f.input :product_id,
+              collection: @products,
+              label_method: lambda { |p| "#{p.sku} - #{p.name}" },
+              value_method: :id,
+              label: "Product to Manufacture *",
+              input_html: { 
+                class: "select2", 
+                id: "work_order_product_id",
+                required: true,
+                data: { 
+                  controller: "product-selector",
+                  action: "change->product-selector#loadProductDetails"
+                }
+              },
+              include_blank: "Select Product..." %>
+          
+          <!-- Product Details (Auto-populated via JS) -->
+          <div id="product-details" class="mt-2" style="display: none;">
+            <div class="card bg-primary">
+              <div class="card-body p-2">
+                <small>
+                  <div class="row">
+                    <div class="col-6">
+                      <strong>BOM:</strong> <span id="product-bom">-</span>
+                    </div>
+                    <div class="col-6">
+                      <strong>Routing:</strong> <span id="product-routing">-</span>
+                    </div>
+                  </div>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warehouse -->
+        <div class="col-md-6">
+          <%= f.input :warehouse_id,
+              collection: @warehouses,
+              label_method: lambda { |w| "#{w.code} - #{w.name}" },
+              value_method: :id,
+              label: "Warehouse *",
+              input_html: { class: "form-control", required: true },
+              include_blank: "Select Warehouse..." %>
+        </div>
+
+        <!-- Quantity -->
+        <div class="col-md-4">
+          <%= f.input :quantity_to_produce,
+              label: "Quantity to Produce *",
+              input_html: { 
+                class: "form-control", 
+                required: true,
+                min: 0.0001,
+                step: 0.0001,
+                id: "quantity_to_produce",
+                data: { 
+                  action: "input->cost-calculator#calculate"
+                }
+              } %>
+        </div>
+
+        <!-- UOM -->
+        <div class="col-md-4">
+          <%= f.input :uom_id,
+              collection: @uoms,
+              label_method: :name,
+              value_method: :id,
+              label: "Unit of Measure *",
+              input_html: { class: "form-control", required: true, id: "uom_select" },
+              include_blank: "Select UOM..." %>
+        </div>
+
+        <!-- Priority -->
+        <div class="col-md-4">
+          <%= f.input :priority,
+              collection: WorkOrder::PRIORITIES.map { |p| [p.titleize, p] },
+              label: "Priority *",
+              input_html: { class: "form-control", required: true },
+              selected: @work_order.priority || 'NORMAL' %>
+        </div>
+
+        <!-- Scheduled Start Date -->
+        <div class="col-md-6">
+          <%= f.input :scheduled_start_date,
+              as: :date,
+              label: "Scheduled Start Date *",
+              input_html: { 
+                class: "form-control", 
+                required: true,
+                value: @work_order.scheduled_start_date || Date.current
+              } %>
+        </div>
+
+        <!-- Scheduled End Date -->
+        <div class="col-md-6">
+          <%= f.input :scheduled_end_date,
+              as: :date,
+              label: "Scheduled End Date *",
+              input_html: { 
+                class: "form-control", 
+                required: true,
+                value: @work_order.scheduled_end_date || (Date.current + 7.days)
+              } %>
+        </div>
+
+        <!-- Customer (Optional) -->
+        <div class="col-md-6">
+          <%= f.input :customer_id,
+              collection: @customers,
+              label_method: :full_name,
+              value_method: :id,
+              label: "Customer (Optional)",
+              input_html: { class: "select2" },
+              include_blank: "None - Stock Production" %>
+        </div>
+
+        <!-- Notes -->
+        <div class="col-md-12">
+          <%= f.input :notes,
+              as: :text,
+              label: "Notes / Special Instructions",
+              input_html: { 
+                class: "form-control", 
+                rows: 3,
+                placeholder: "Enter any special instructions or notes for this work order..."
+              } %>
+        </div>
+      </div>
+
+      <!-- Estimated Costs Section -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <h6 class="border-bottom pb-2 mb-3">
+            <i class="bi bi-calculator"></i> Estimated Production Costs
+          </h6>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card bg-primary">
+            <div class="card-body">
+              <h6 class="text-muted small mb-2">Material Cost</h6>
+              <h4 class="mb-0" id="estimated-material-cost">
+                $<%= number_with_precision(@work_order.planned_material_cost || 0, precision: 2) %>
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card bg-primary">
+            <div class="card-body">
+              <h6 class="text-muted small mb-2">Labor + Overhead</h6>
+              <h4 class="mb-0" id="estimated-labor-cost">
+                $<%= number_with_precision((@work_order.planned_labor_cost.to_d + @work_order.planned_overhead_cost.to_d), precision: 2) %>
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <h6 class="small mb-2">Total Estimated Cost</h6>
+              <h4 class="mb-0" id="estimated-total-cost">
+                $<%= number_with_precision(@work_order.total_planned_cost || 0, precision: 2) %>
+              </h4>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <hr>
+          <div class="d-flex justify-content-between">
+            <%= link_to "Cancel", work_orders_path, class: "btn btn-outline-secondary" %>
+            <%= f.submit @work_order.new_record? ? "Create Work Order" : "Update Work Order", 
+                class: "btn btn-primary" %>
+          </div>
+        </div>
+      </div>
+
+    <% end %>
+  </div>
+</div>

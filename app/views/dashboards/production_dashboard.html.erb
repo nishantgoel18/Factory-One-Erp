@@ -1,0 +1,433 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="container-fluid">
+    <div class="page-header">
+      <h2 class="header-title">Executive Summary</h2>
+    </div>
+  <div class="mb-4">
+    <h2 class="mb-1">
+      <i class="bi bi-speedometer2"></i> Production Dashboard
+    </h2>
+    <p class="text-muted mb-0">Real-time production monitoring and analytics</p>
+  </div>
+
+  <!-- Today's Snapshot -->
+  <div class="row g-3">
+    <div class="col-md-12">
+      <h5 class="border-bottom pb-2 mb-3">
+        <i class="bi bi-calendar-day"></i> Today's Snapshot
+      </h5>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-blue">
+              <i class="fa fa-play"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @today_stats[:wos_to_start] %></h2>
+              <p class="m-b-0 text-muted">WOs to Start</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-green">
+              <i class="fa fa-check-circle"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @today_stats[:wos_to_complete] %></h2>
+              <p class="m-b-0 text-muted">WOs to Complete</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-gold">
+              <i class="fa fa-clock"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @today_stats[:operations_pending] %></h2>
+              <p class="m-b-0 text-muted">Operations Pending</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-cyan">
+              <i class="fa fa-cog"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @today_stats[:operations_in_progress] %></h2>
+              <p class="m-b-0 text-muted">Ops In Progress</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- This Week & Month Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h4 class="mb-0"><i class="bi bi-calendar-week"></i> This Week</h4>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="border-end">
+                <small class="text-muted d-block">WOs Created</small>
+                <h4 class="mb-0 text-primary"><%= @week_stats[:wos_created] %></h4>
+              </div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block">WOs Completed</small>
+              <h4 class="mb-0 text-success"><%= @week_stats[:wos_completed] %></h4>
+            </div>
+            <div class="col-6">
+              <div class="border-end">
+                <small class="text-muted d-block">Quantity Produced</small>
+                <h4 class="mb-0"><%= number_with_precision(@week_stats[:quantity_produced], precision: 0) %></h4>
+              </div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block">Avg Completion</small>
+              <h4 class="mb-0"><%= @week_stats[:avg_completion_time] %> hrs</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h4 class="mb-0"><i class="bi bi-calendar-month"></i> This Month</h4>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="border-end">
+                <small class="text-muted d-block">WOs Completed</small>
+                <h4 class="mb-0 text-success"><%= @month_stats[:wos_completed] %></h4>
+              </div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block">Production Cost</small>
+              <h4 class="mb-0">$<%= number_with_precision(@month_stats[:total_production_cost], precision: 0) %></h4>
+            </div>
+            <div class="col-6">
+              <div class="border-end">
+                <small class="text-muted d-block">Avg Cost Variance</small>
+                <h4 class="mb-0 text-<%= @month_stats[:avg_cost_variance] >= 0 ? 'success' : 'danger' %>">
+                  $<%= number_with_precision(@month_stats[:avg_cost_variance].abs, precision: 0) %>
+                </h4>
+              </div>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block">On-Time Rate</small>
+              <h4 class="mb-0 text-info"><%= @month_stats[:on_time_completion_rate] %>%</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Work Orders & Alerts -->
+  <div class="row g-3 mb-4">
+    <!-- Active Work Orders -->
+    <div class="col-md-6">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary d-flex justify-content-between align-items-center">
+          <h4 class="mb-0"><i class="bi bi-list-check"></i> Active Work Orders</h4>
+          <%= link_to "View All", work_orders_path(status: ['RELEASED', 'IN_PROGRESS']), 
+              class: "btn btn-sm btn-success" %>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <% if @active_wos.any? %>
+              <% @active_wos.first(5).each do |wo| %>
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <%= link_to wo.wo_number, work_order_path(wo), 
+                          class: "fw-semibold text-decoration-none" %>
+                      <span class="badge bg-<%= wo.status_badge_class %> ms-2">
+                        <%= wo.status.titleize %>
+                      </span>
+                      <span class="badge bg-<%= wo.priority_badge_class %> ms-1">
+                        <%= wo.priority %>
+                      </span>
+                      <br>
+                      <small class="text-muted">
+                        <%= wo.product.sku %> | 
+                        Qty: <%= number_with_precision(wo.quantity_to_produce, precision: 0) %>
+                      </small>
+                    </div>
+                    <div class="text-end">
+                      <small class="text-muted">Due:</small>
+                      <br>
+                      <strong><%= wo.scheduled_end_date.strftime("%b %d") %></strong>
+                    </div>
+                  </div>
+                  <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-success" 
+                         style="width: <%= wo.progress_percentage %>%">
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <div class="list-group-item text-center text-muted py-4">
+                No active work orders
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="col-md-6">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Alerts & Urgent Items</h4>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <!-- Overdue WOs -->
+            <% if @overdue_wos.any? %>
+              <div class="list-group-item bg-danger bg-opacity-10">
+                <h4 class="mb-2 text-danger">
+                  <i class="bi bi-clock-history"></i> Overdue Work Orders (<%= @overdue_wos.count %>)
+                </h4>
+                <% @overdue_wos.first(3).each do |wo| %>
+                  <div class="mb-2">
+                    <%= link_to wo.wo_number, work_order_path(wo), class: "text-decoration-none" %>
+                    - <%= wo.product.sku %>
+                    <br>
+                    <small class="text-danger">
+                      Due: <%= wo.scheduled_end_date.strftime("%b %d, %Y") %>
+                      (<%= (Date.current - wo.scheduled_end_date).to_i %> days overdue)
+                    </small>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <!-- Urgent WOs -->
+            <% if @urgent_wos.any? %>
+              <div class="list-group-item bg-warning bg-opacity-10">
+                <h4 class="mb-2 text-warning">
+                  <i class="bi bi-exclamation-circle"></i> Urgent Priority (<%= @urgent_wos.count %>)
+                </h4>
+                <% @urgent_wos.first(3).each do |wo| %>
+                  <div class="mb-2">
+                    <%= link_to wo.wo_number, work_order_path(wo), class: "text-decoration-none" %>
+                    - <%= wo.product.sku %>
+                    <span class="badge bg-<%= wo.status_badge_class %> ms-2">
+                      <%= wo.status.titleize %>
+                    </span>
+                    <br>
+                    <small class="text-muted">
+                      Due: <%= wo.scheduled_end_date.strftime("%b %d, %Y") %>
+                    </small>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <% unless @overdue_wos.any? || @urgent_wos.any? %>
+              <div class="list-group-item text-center text-success py-4">
+                <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+                All Clear! No urgent alerts.
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-3 mb-4">
+    <!-- Production Trend -->
+    <div class="col-md-6">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h4 class="mb-0"><i class="bi bi-graph-up"></i> Production Trend (Last 7 Days)</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="productionTrendChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cost Trend -->
+    <div class="col-md-6">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h4 class="mb-0"><i class="bi bi-currency-dollar"></i> Cost Trend (Last 7 Days)</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="costTrendChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Work Center Utilization -->
+  <div class="row g-3">
+    <div class="col-md-12">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h4 class="mb-0"><i class="bi bi-gear-wide-connected"></i> Work Center Utilization</h4>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Work Center</th>
+                  <th>Type</th>
+                  <th>Active Operations</th>
+                  <th>Utilization</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if @work_center_utilization.any? %>
+                  <% @work_center_utilization.each do |stat| %>
+                    <tr>
+                      <td>
+                        <strong><%= stat[:work_center].code %></strong>
+                        <br>
+                        <small class="text-muted"><%= stat[:work_center].name %></small>
+                      </td>
+                      <td><%= stat[:work_center].type_label %></td>
+                      <td>
+                        <span class="badge bg-primary">
+                          <%= stat[:active_operations] %> operations
+                        </span>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="progress flex-grow-1 me-2" style="height: 25px; width: 200px;">
+                            <div class="progress-bar <%= stat[:utilization_percent] > 80 ? 'bg-danger' : 'bg-success' %>" 
+                                 style="width: <%= stat[:utilization_percent] %>%; color: black;">
+                              <%= stat[:utilization_percent] %>%
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% else %>
+                  <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                      No active work center operations
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Production Trend Chart
+  const productionCtx = document.getElementById('productionTrendChart').getContext('2d');
+  new Chart(productionCtx, {
+    type: 'line',
+    data: {
+      labels: <%= raw @production_trend.map { |d| d[:date].strftime("%b %d") }.to_json %>,
+      datasets: [{
+        label: 'Completed WOs',
+        data: <%= raw @production_trend.map { |d| d[:completed] }.to_json %>,
+        borderColor: '#198754',
+        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      }
+    }
+  });
+
+  // Cost Trend Chart
+  const costCtx = document.getElementById('costTrendChart').getContext('2d');
+  new Chart(costCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= raw @cost_trend.map { |d| d[:date].strftime("%b %d") }.to_json %>,
+      datasets: [
+        {
+          label: 'Planned Cost',
+          data: <%= raw @cost_trend.map { |d| d[:planned] }.to_json %>,
+          backgroundColor: '#0dcaf0'
+        },
+        {
+          label: 'Actual Cost',
+          data: <%= raw @cost_trend.map { |d| d[:actual] }.to_json %>,
+          backgroundColor: '#198754'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+</script>

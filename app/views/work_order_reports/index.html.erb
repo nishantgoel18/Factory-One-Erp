@@ -1,0 +1,152 @@
+<%# app/views/routing_reports/index.html.erb %>
+
+<div class="main-content">
+    <%= render 'layouts/alerts' %>
+
+    <div class="page-header">
+        <h2 class="header-title">Work Order Reports</h2>
+        <div class="header-sub-title">
+            <nav class="breadcrumb breadcrumb-dash">
+                <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+                <a class="breadcrumb-item" href="#">Reports</a>
+                <span class="breadcrumb-item active">Work Order Reports</span>
+            </nav>
+        </div>
+    </div>
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="mb-0">
+        <i class="fas fa-chart-line me-2"></i>
+        Work Order Reports & Analytics
+      </h2>
+      <p class="text-dark">Analyze Work order performance, costs, and efficiency</p>
+    </div>
+  </div>
+
+  <!-- Reports Grid -->
+  <div class="row">
+    <!-- Report 1: Work Center Utilization -->
+    <div class="col-md-6 col-lg-6 mb-4">
+      <div class="card  h-100 border-primary">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-primary text-white rounded p-3">
+                <i class="fas fa-industry fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5 m-l-5">
+              <h5 class="mb-0">Work Order Status</h5>
+              <%# <small class="text-dark">Usage & performance metrics</small> %>
+            </div>
+          </div>
+          <p class="text-dark small">
+            Real-time visibility into every work order’s status, progress, and delays to ensure smooth and timely production.
+          </p>
+          <%= link_to status_report_work_order_path, class: "btn btn-primary w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer d-flex justify-content-start align-items-center">
+          <small class="text-dark">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", status_report_work_order_path(format: :csv), class: "text-decoration-none" %> | 
+            <%= link_to "PDF", status_report_work_order_path(format: :pdf), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 2: Cost Analysis -->
+    <div class="col-md-6 col-lg-6 mb-4">
+      <div class="card  h-100 border-success">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-success text-white rounded p-3">
+                <i class="fas fa-dollar-sign fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Cost Variance Report</h5>
+            </div>
+          </div>
+          <p class="text-muted small">
+            Tracks cost differences between planned and actual manufacturing to identify inefficiencies and improve margins
+          </p>
+          <%= link_to cost_variance_report_work_order_path, class: "btn btn-success w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer d-flex justify-content-start align-items-center">
+          <small class="text-dark">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", cost_variance_report_work_order_path(format: :csv), class: "text-decoration-none" %> | 
+            <%= link_to "PDF", cost_variance_report_work_order_path(format: :pdf), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 3: Time Analysis -->
+    <div class="col-md-6 col-lg-6 mb-4">
+      <div class="card  h-100 border-info">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-primary text-white rounded p-3">
+                <i class="fas fa-clock fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Efficiency Report</h5>
+            </div>
+          </div>
+          <p class="text-dark small">
+            Measures how efficiently each work order was executed by comparing planned vs actual time, output, and resource usage.
+          </p>
+          <%= link_to efficiency_report_work_order_path, class: "btn btn-info w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer d-flex justify-content-start align-items-center">
+          <small class="text-dark">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", efficiency_report_work_order_path(format: :csv), class: "text-decoration-none" %> | 
+            <%= link_to "PDF", efficiency_report_work_order_path(format: :pdf), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Report 4: Routing Comparison -->
+    <div class="col-md-6 col-lg-6 mb-4">
+      <div class="card  h-100 border-warning">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="flex-shrink-0">
+              <div class="bg-warning text-dark rounded p-3">
+                <i class="fas fa-balance-scale fa-2x"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 m-l-5">
+              <h5 class="mb-0">Material Consumption Report</h5>
+            </div>
+          </div>
+          <p class="text-dark small">
+            Shows the planned vs actual material consumed in each work order to identify variances, wastage, and efficiency.
+          </p>
+          <%= link_to material_consumption_report_work_order_path, class: "btn btn-warning w-100" do %>
+            <i class="fas fa-eye me-2"></i>View Report
+          <% end %>
+        </div>
+        <div class="card-footer d-flex justify-content-start align-items-center">
+          <small class="text-dark">
+            <i class="fas fa-download me-1"></i>
+            <%= link_to "CSV", material_consumption_report_work_order_path(format: :csv), class: "text-decoration-none" %>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

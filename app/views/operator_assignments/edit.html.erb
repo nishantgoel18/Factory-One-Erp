@@ -1,0 +1,189 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Assign Operators in Work Order</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Core Manufacturing</a>
+        <a class="breadcrumb-item" href="/work_orders">Work Orders</a>
+        <a class="breadcrumb-item" href="/work_orders/<%= @work_order.id %>">View Work Order</a>
+
+        <span class="breadcrumb-item active">Assign Operators in Work Order</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-people"></i> Assign Operators
+      </h2>
+      <p class="text-muted mb-0">
+        Work Order: <%= @work_order.wo_number %> - <%= @work_order.product.name %>
+      </p>
+    </div>
+    <div>
+      <%= link_to "Back to Work Order", work_order_path(@work_order), class: "btn btn-outline-secondary" %>
+    </div>
+  </div>
+
+  <!-- Assignment Form -->
+  <%= form_with url: assign_operators_work_order_path(@work_order), method: :patch do |f| %>
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+        <h6 class="mb-0">
+          <i class="bi bi-list-task"></i> Operations to Assign
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table">
+              <tr>
+                <th>Seq</th>
+                <th>Operation</th>
+                <th>Work Center</th>
+                <th>Status</th>
+                <th>Planned Time</th>
+                <th>Currently Assigned</th>
+                <th>Assign To</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @operations.each do |operation| %>
+                <tr>
+                  <!-- Seq -->
+                  <td>
+                    <span class="badge bg-secondary"><%= operation.sequence_no %></span>
+                  </td>
+                  
+                  <!-- Operation -->
+                  <td>
+                    <strong><%= operation.operation_name %></strong>
+                    <% if operation.operation_description.present? %>
+                      <br>
+                      <small class="text-muted"><%= operation.operation_description.truncate(50) %></small>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Work Center -->
+                  <td>
+                    <%= operation.work_center.code %>
+                    <br>
+                    <small class="text-muted"><%= operation.work_center.name %></small>
+                  </td>
+                  
+                  <!-- Status -->
+                  <td>
+                    <span class="badge bg-<%= operation.status_badge_class %>">
+                      <%= operation.status.titleize %>
+                    </span>
+                  </td>
+                  
+                  <!-- Planned Time -->
+                  <td>
+                    <%= operation.planned_total_minutes %> min
+                    <br>
+                    <small class="text-muted">
+                      (<%= (operation.planned_total_minutes / 60.0).round(1) %> hrs)
+                    </small>
+                  </td>
+                  
+                  <!-- Currently Assigned -->
+                  <td>
+                    <% if operation.assigned_operator.present? %>
+                      <span class="badge bg-info">
+                        <%= operation.assigned_operator.full_name %>
+                      </span>
+                      <br>
+                      <small class="text-muted">
+                        Assigned <%= operation.assigned_at&.strftime("%b %d") %>
+                        <% if operation.assigned_by.present? %>
+                          by <%= operation.assigned_by.full_name %>
+                        <% end %>
+                      </small>
+                    <% else %>
+                      <span class="badge bg-warning">Unassigned</span>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Assign To -->
+                  <td>
+                    <%= f.select "operations[#{operation.id}]assigned_operator_id",
+                        options_from_collection_for_select(@operators, :id, :full_name, operation.assigned_operator_id),
+                        { include_blank: "-- Select Operator --" },
+                        { class: "form-control" } %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Form Actions -->
+      <div class="card-footer bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <i class="bi bi-info-circle text-muted"></i>
+            <small class="text-muted">
+              Select operators for each operation. Leave blank to unassign.
+            </small>
+          </div>
+          <div>
+            <%= link_to "Cancel", work_order_path(@work_order), class: "btn btn-secondary me-2" %>
+            <%= f.submit "Save Assignments", class: "btn btn-primary" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Operator Availability (Optional Enhancement) -->
+  <div class="card shadow-sm mt-4">
+    <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+      <h6 class="mb-0">
+        <i class="bi bi-person-check"></i> Operator Availability
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <% @operators.each do |operator| %>
+          <div class="col-md-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h6 class="card-title mb-2">
+                  <%= operator.full_name %>
+                  <% if LaborTimeEntry.operator_clocked_in?(operator.id) %>
+                    <span class="badge bg-success">Active</span>
+                  <% end %>
+                </h6>
+                
+                <small class="text-muted">
+                  <% assigned_count = WorkOrderOperation.non_deleted
+                                                        .assigned_to(operator.id)
+                                                        .where(status: ['PENDING', 'IN_PROGRESS'])
+                                                        .count %>
+                  <i class="bi bi-list-task"></i> 
+                  <%= assigned_count %> assigned operations
+                  
+                  <% if assigned_count > 0 %>
+                    <br>
+                    <% total_mins = WorkOrderOperation.non_deleted
+                                                      .assigned_to(operator.id)
+                                                      .where(status: ['PENDING', 'IN_PROGRESS'])
+                                                      .sum(:planned_total_minutes) %>
+                    <i class="bi bi-clock"></i>
+                    ~<%= (total_mins / 60.0).round(1) %> hrs workload
+                  <% end %>
+                </small>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,4 +5,6 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   mount_uploader :avatar, ImageUploader
+
+  has_many :assigned_work_order_operations, class_name: 'WorkOrderOperation', foreign_key: :assigned_operator_id
 end

@@ -1,0 +1,267 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Material Consumption Report</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>  Home</a>
+        <a class="breadcrumb-item" href="#">Reports</a>
+        <a class="breadcrumb-item" href="/reports/work_order">Work Orders</a>
+
+        <span class="breadcrumb-item active">Material Consumption Report</span>
+      </nav>
+    </div>
+  </div>
+  <!-- app/views/reports/work_order_reports/material_consumption_report.html.erb -->
+
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-box-seam"></i> Material Consumption Report
+      </h2>
+      <p class="text-muted mb-0">
+        Period: <%= @start_date.strftime("%B %d, %Y") %> to <%= @end_date.strftime("%B %d, %Y") %>
+      </p>
+    </div>
+    <div>
+      <%= link_to "Export PDF", material_consumption_report_work_order_path(format: :pdf, 
+          start_date: @start_date, end_date: @end_date), 
+          class: "btn btn-danger me-2", target: "_blank" %>
+      <%= link_to "Export CSV", material_consumption_report_work_order_path(format: :csv, 
+          start_date: @start_date, end_date: @end_date), 
+          class: "btn btn-success" %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card  mb-4">
+    <div class="card-body">
+      <%= form_with url: material_consumption_report_work_order_path, method: :get, class: "row g-3" do |f| %>
+        <div class="col-md-4">
+          <%= f.label :start_date, "Start Date", class: "form-label" %>
+          <%= f.date_field :start_date, value: @start_date, class: "form-control" %>
+        </div>
+        <div class="col-md-4">
+          <%= f.label :end_date, "End Date", class: "form-label" %>
+          <%= f.date_field :end_date, value: @end_date, class: "form-control" %>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <%= f.submit "Generate Report", class: "btn btn-primary w-100" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card  border-primary">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Total Materials Consumed</h6>
+          <h3 class="mb-0"><%= @total_materials %></h3>
+          <small class="text-muted">Unique materials</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card  border-success">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Total Material Cost</h6>
+          <h3 class="mb-0 text-success">$<%= number_with_precision(@total_cost, precision: 2) %></h3>
+          <small class="text-muted">Actual consumption</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card  border-warning">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Over-Consumed Items</h6>
+          <h3 class="mb-0 text-warning"><%= @over_consumed.count %></h3>
+          <small class="text-muted">Exceeded planned qty</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 10 Over-Consumed Materials -->
+  <% if @over_consumed.any? %>
+    <div class="card  mb-4">
+      <div class="card-header d-flex justify-content-start align-items-center bg-primary text-dark">
+        <h6 class="mb-0">
+          <i class="bi bi-exclamation-triangle"></i> Top 10 Over-Consumed Materials
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Material Code</th>
+                <th>Material Name</th>
+                <th>Required Qty</th>
+                <th>Consumed Qty</th>
+                <th>Variance</th>
+                <th>Variance %</th>
+                <th>Total Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @over_consumed.each do |data| %>
+                <tr>
+                  <td><strong><%= data[:product].sku %></strong></td>
+                  <td><%= data[:product].name %></td>
+                  <td><%= number_with_precision(data[:required], precision: 4) %></td>
+                  <td><%= number_with_precision(data[:consumed], precision: 4) %></td>
+                  <td class="text-danger">
+                    <strong><%= number_with_precision(data[:variance], precision: 4) %></strong>
+                  </td>
+                  <td class="text-danger">
+                    <strong><%= data[:variance_percent] %>%</strong>
+                  </td>
+                  <td>$<%= number_with_precision(data[:total_cost], precision: 2) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Material Consumption by Product -->
+  <div class="card  mb-4">
+    <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+      <h6 class="mb-0"><i class="bi bi-box"></i> Material Consumption by Product</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Material Code</th>
+              <th>Material Name</th>
+              <th>Product Type</th>
+              <th>Required Qty</th>
+              <th>Consumed Qty</th>
+              <th>Variance</th>
+              <th>Variance %</th>
+              <th>Total Cost</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @consumption_by_product.each do |data| %>
+              <tr>
+                <td><strong><%= data[:product].sku %></strong></td>
+                <td>
+                  <%= data[:product].name %>
+                  <br>
+                  <small class="text-muted"><%= data[:product].description&.truncate(50) %></small>
+                </td>
+                <td>
+                  <span class="badge bg-primary">
+                    <%= data[:product].product_type %>
+                  </span>
+                </td>
+                <td><%= number_with_precision(data[:required], precision: 4) %></td>
+                <td><%= number_with_precision(data[:consumed], precision: 4) %></td>
+                <td class="<%= data[:variance] >= 0 ? 'text-success' : 'text-danger' %>">
+                  <strong>
+                    <%= data[:variance] >= 0 ? '+' : '' %><%= number_with_precision(data[:variance], precision: 4) %>
+                  </strong>
+                </td>
+                <td class="<%= data[:variance] >= 0 ? 'text-success' : 'text-danger' %>">
+                  <strong>
+                    <%= data[:variance] >= 0 ? '+' : '' %><%= data[:variance_percent] %>%
+                  </strong>
+                </td>
+                <td>
+                  <strong>$<%= number_with_precision(data[:total_cost], precision: 2) %></strong>
+                </td>
+                <td>
+                  <% if data[:variance].abs <= (data[:required] * 0.05) %>
+                    <span class="badge bg-success">Within Tolerance</span>
+                  <% elsif data[:variance] >= 0 %>
+                    <span class="badge bg-primary">Under-consumed</span>
+                  <% else %>
+                    <span class="badge bg-danger">Over-consumed</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot class="table-light">
+            <tr>
+              <th colspan="7" class="text-end">Total Material Cost:</th>
+              <th colspan="2">
+                <strong class="fs-5">$<%= number_with_precision(@total_cost, precision: 2) %></strong>
+              </th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Material Cost Distribution Chart -->
+  <div class="row g-3">
+    <div class="col-md-12">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+          <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Top 10 Materials by Cost</h6>
+        </div>
+        <div class="card-body">
+          <canvas id="materialCostChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Material Cost Chart
+  const materialCtx = document.getElementById('materialCostChart').getContext('2d');
+  
+  const topMaterials = <%= raw @consumption_by_product.first(10).map { |d| 
+    { label: d[:product].sku, cost: d[:total_cost] }
+  }.to_json %>;
+  
+  new Chart(materialCtx, {
+    type: 'bar',
+    data: {
+      labels: topMaterials.map(m => m.label),
+      datasets: [{
+        label: 'Material Cost ($)',
+        data: topMaterials.map(m => m.cost),
+        backgroundColor: '#0dcaf0',
+        borderColor: '#0dcaf0',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+</script>

@@ -1,0 +1,307 @@
+<!-- app/views/work_orders/_costs_tab.html.erb -->
+
+<div class="row g-4">
+  
+  <!-- Cost Breakdown Section -->
+  <div class="col-md-12">
+    <h5 class="border-bottom pb-2 mb-3">
+      <i class="bi bi-pie-chart"></i> Cost Breakdown
+    </h5>
+  </div>
+
+  <!-- Material Costs -->
+  <div class="col-md-4">
+    <div class="card border-primary h-100">
+      <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-box-seam"></i> Material Costs</h6>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-6">
+            <small class="text-muted d-block">Planned</small>
+            <h5 class="mb-0">$<%= number_with_precision(work_order.planned_material_cost, precision: 2) %></h5>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Actual</small>
+            <h5 class="mb-0 text-primary">
+              $<%= number_with_precision(work_order.actual_material_cost, precision: 2) %>
+            </h5>
+          </div>
+        </div>
+        
+        <% material_variance = work_order.planned_material_cost.to_d - work_order.actual_material_cost.to_d %>
+        <% if work_order.planned_material_cost.to_d > 0 %>
+          <% material_variance_pct = (material_variance / work_order.planned_material_cost.to_d * 100).round(2) %>
+          
+          <div class="progress mb-2" style="height: 25px;">
+            <div class="progress-bar bg-primary" 
+                 role="progressbar" 
+                 style="width: <%= [100, (work_order.actual_material_cost.to_d / work_order.planned_material_cost.to_d * 100).round(2)].min %>%">
+              <%= number_with_precision((work_order.actual_material_cost.to_d / work_order.planned_material_cost.to_d * 100), precision: 1) %>%
+            </div>
+          </div>
+
+          <div class="alert <%= material_variance >= 0 ? 'alert-success' : 'alert-danger' %> mb-0 py-2">
+            <small>
+              <strong>Variance:</strong> 
+              $<%= number_with_precision(material_variance.abs, precision: 2) %>
+              (<%= material_variance >= 0 ? '+' : '-' %><%= number_with_precision(material_variance_pct.abs, precision: 1) %>%)
+              <br>
+              <strong><%= material_variance >= 0 ? 'Under Budget' : 'Over Budget' %></strong>
+            </small>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Labor Costs -->
+  <div class="col-md-4">
+    <div class="card border-warning h-100">
+      <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-people"></i> Labor Costs</h6>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-6">
+            <small class="text-muted d-block">Planned</small>
+            <h5 class="mb-0">$<%= number_with_precision(work_order.planned_labor_cost, precision: 2) %></h5>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Actual</small>
+            <h5 class="mb-0 text-warning">
+              $<%= number_with_precision(work_order.actual_labor_cost, precision: 2) %>
+            </h5>
+          </div>
+        </div>
+        
+        <% labor_variance = work_order.planned_labor_cost.to_d - work_order.actual_labor_cost.to_d %>
+        <% if work_order.planned_labor_cost.to_d > 0 %>
+          <% labor_variance_pct = (labor_variance / work_order.planned_labor_cost.to_d * 100).round(2) %>
+          
+          <div class="progress mb-2" style="height: 25px;">
+            <div class="progress-bar bg-warning" 
+                 role="progressbar" 
+                 style="width: <%= [100, (work_order.actual_labor_cost.to_d / work_order.planned_labor_cost.to_d * 100).round(2)].min %>%">
+              <%= number_with_precision((work_order.actual_labor_cost.to_d / work_order.planned_labor_cost.to_d * 100), precision: 1) %>%
+            </div>
+          </div>
+
+          <div class="alert <%= labor_variance >= 0 ? 'alert-success' : 'alert-danger' %> mb-0 py-2">
+            <small>
+              <strong>Variance:</strong> 
+              $<%= number_with_precision(labor_variance.abs, precision: 2) %>
+              (<%= labor_variance >= 0 ? '+' : '-' %><%= number_with_precision(labor_variance_pct.abs, precision: 1) %>%)
+              <br>
+              <strong><%= labor_variance >= 0 ? 'Under Budget' : 'Over Budget' %></strong>
+            </small>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overhead Costs -->
+  <div class="col-md-4">
+    <div class="card border-info h-100">
+      <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-gear"></i> Overhead Costs</h6>
+      </div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-6">
+            <small class="text-muted d-block">Planned</small>
+            <h5 class="mb-0">$<%= number_with_precision(work_order.planned_overhead_cost, precision: 2) %></h5>
+          </div>
+          <div class="col-6">
+            <small class="text-muted d-block">Actual</small>
+            <h5 class="mb-0 text-info">
+              $<%= number_with_precision(work_order.actual_overhead_cost, precision: 2) %>
+            </h5>
+          </div>
+        </div>
+        
+        <% overhead_variance = work_order.planned_overhead_cost.to_d - work_order.actual_overhead_cost.to_d %>
+        <% if work_order.planned_overhead_cost.to_d > 0 %>
+          <% overhead_variance_pct = (overhead_variance / work_order.planned_overhead_cost.to_d * 100).round(2) %>
+          
+          <div class="progress mb-2" style="height: 25px;">
+            <div class="progress-bar bg-primary" 
+                 role="progressbar" 
+                 style="width: <%= [100, (work_order.actual_overhead_cost.to_d / work_order.planned_overhead_cost.to_d * 100).round(2)].min %>%">
+              <%= number_with_precision((work_order.actual_overhead_cost.to_d / work_order.planned_overhead_cost.to_d * 100), precision: 1) %>%
+            </div>
+          </div>
+
+          <div class="alert <%= overhead_variance >= 0 ? 'alert-success' : 'alert-danger' %> mb-0 py-2">
+            <small>
+              <strong>Variance:</strong> 
+              $<%= number_with_precision(overhead_variance.abs, precision: 2) %>
+              (<%= overhead_variance >= 0 ? '+' : '-' %><%= number_with_precision(overhead_variance_pct.abs, precision: 1) %>%)
+              <br>
+              <strong><%= overhead_variance >= 0 ? 'Under Budget' : 'Over Budget' %></strong>
+            </small>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Cost Summary -->
+  <div class="col-md-12 mt-4">
+    <div class="card border-success ">
+      <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Total Cost Summary</h5>
+      </div>
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-4 text-center border-end">
+            <h6 class="text-muted mb-2">Total Planned Cost</h6>
+            <h2 class="mb-0">$<%= number_with_precision(work_order.total_planned_cost, precision: 2) %></h2>
+          </div>
+          <div class="col-md-4 text-center border-end">
+            <h6 class="text-muted mb-2">Total Actual Cost</h6>
+            <h2 class="mb-0 text-primary">
+              $<%= number_with_precision(work_order.total_actual_cost, precision: 2) %>
+            </h2>
+          </div>
+          <div class="col-md-4 text-center">
+            <h6 class="text-muted mb-2">Total Variance</h6>
+            <h2 class="mb-0 <%= @cost_variance >= 0 ? 'text-success' : 'text-danger' %>">
+              $<%= number_with_precision(@cost_variance.abs, precision: 2) %>
+            </h2>
+            <p class="mb-0">
+              <span class="text-white badge bg-<%= @cost_variance >= 0 ? 'success' : 'danger' %> fs-6">
+                <%= @cost_variance >= 0 ? 'Under' : 'Over' %> Budget by 
+                <%= number_with_precision(@cost_variance_percent.abs, precision: 1) %>%
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost per Unit -->
+  <div class="col-md-12">
+    <h5 class="border-bottom pb-2 mb-3 mt-4">
+      <i class="bi bi-calculator"></i> Cost per Unit Analysis
+    </h5>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title">Planned Cost per Unit</h6>
+        <% if work_order.quantity_to_produce > 0 %>
+          <h3 class="text-primary">
+            $<%= number_with_precision(work_order.total_planned_cost / work_order.quantity_to_produce, precision: 4) %>
+          </h3>
+          <small class="text-muted">per <%= work_order.uom.symbol %></small>
+          
+          <div class="mt-3">
+            <div class="d-flex justify-content-between mb-1">
+              <small>Material:</small>
+              <small>$<%= number_with_precision(work_order.planned_material_cost / work_order.quantity_to_produce, precision: 4) %></small>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <small>Labor:</small>
+              <small>$<%= number_with_precision(work_order.planned_labor_cost / work_order.quantity_to_produce, precision: 4) %></small>
+            </div>
+            <div class="d-flex justify-content-between">
+              <small>Overhead:</small>
+              <small>$<%= number_with_precision(work_order.planned_overhead_cost / work_order.quantity_to_produce, precision: 4) %></small>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title">Actual Cost per Unit</h6>
+        <% if work_order.quantity_completed > 0 %>
+          <h3 class="text-success">
+            $<%= number_with_precision(work_order.total_actual_cost / work_order.quantity_completed, precision: 4) %>
+          </h3>
+          <small class="text-muted">per <%= work_order.uom.symbol %></small>
+          
+          <div class="mt-3">
+            <div class="d-flex justify-content-between mb-1">
+              <small>Material:</small>
+              <small>$<%= number_with_precision(work_order.actual_material_cost / work_order.quantity_completed, precision: 4) %></small>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <small>Labor:</small>
+              <small>$<%= number_with_precision(work_order.actual_labor_cost / work_order.quantity_completed, precision: 4) %></small>
+            </div>
+            <div class="d-flex justify-content-between">
+              <small>Overhead:</small>
+              <small>$<%= number_with_precision(work_order.actual_overhead_cost / work_order.quantity_completed, precision: 4) %></small>
+            </div>
+          </div>
+        <% else %>
+          <p class="text-muted">Actual costs will be calculated when production is completed.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Insights -->
+  <% if work_order.status == 'COMPLETED' %>
+    <div class="col-md-12">
+      <h5 class="border-bottom pb-2 mb-3 mt-4">
+        <i class="bi bi-lightbulb"></i> Cost Insights
+      </h5>
+      
+      <div class="alert alert-<%= @cost_variance >= 0 ? 'success' : 'warning' %>">
+        <h6>
+          <i class="bi bi-<%= @cost_variance >= 0 ? 'check-circle' : 'exclamation-triangle' %>"></i> 
+          Overall Performance
+        </h6>
+        <% if @cost_variance >= 0 %>
+          <p class="mb-0">
+            Excellent! This work order was completed 
+            <strong>$<%= number_with_precision(@cost_variance.abs, precision: 2) %>
+            (<%= number_with_precision(@cost_variance_percent.abs, precision: 1) %>%)</strong> 
+            under the planned budget. Great cost control!
+          </p>
+        <% else %>
+          <p class="mb-0">
+            This work order exceeded the planned budget by 
+            <strong>${<%= number_with_precision(@cost_variance.abs, precision: 2) %>} 
+            (<%= number_with_precision(@cost_variance_percent.abs, precision: 1) %>%)</strong>. 
+            Review the variance details above to identify areas for improvement.
+          </p>
+        <% end %>
+      </div>
+
+      <div class="row g-3">
+        <% if material_variance < 0 %>
+          <div class="col-md-6">
+            <div class="alert alert-danger">
+              <strong><i class="bi bi-box-seam"></i> Material Overrun:</strong>
+              Material costs were $<%= number_with_precision(material_variance.abs, precision: 2) %> 
+              (<%= number_with_precision(material_variance_pct.abs, precision: 1) %>%) over budget.
+              Consider reviewing material consumption and waste.
+            </div>
+          </div>
+        <% end %>
+
+        <% if labor_variance < 0 %>
+          <div class="col-md-6">
+            <div class="alert alert-danger">
+              <strong><i class="bi bi-people"></i> Labor Overrun:</strong>
+              Labor costs were $<%= number_with_precision(labor_variance.abs, precision: 2) %> 
+              (<%= number_with_precision(labor_variance_pct.abs, precision: 1) %>%) over budget.
+              Review actual vs planned operation times.
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+</div>

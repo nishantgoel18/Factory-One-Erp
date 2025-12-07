@@ -30,7 +30,7 @@
   </div>
 
   <!-- Filters Card -->
-  <div class="card shadow-sm mb-4">
+  <div class="card  mb-4">
     <div class="card-body">
       <%= form_with url: work_centers_path, method: :get, class: "row g-3" do |f| %>
         <!-- Search -->
@@ -132,7 +132,7 @@
   </div>
 
   <!-- Work Centers Table -->
-  <div class="card shadow-sm">
+  <div class="card ">
     <div class="card-body">
       <% if @work_centers.any? %>
         <div class="table-responsive">
@@ -158,7 +158,7 @@
                   </td>
                   <td><%= wc.name %></td>
                   <td>
-                    <span class="badge bg-secondary">
+                    <span class="text-white badge bg-secondary">
                       <%= wc.type_label %>
                     </span>
                   </td>
@@ -182,9 +182,9 @@
                   </td>
                   <td>
                     <% if wc.is_active? %>
-                      <span class="badge bg-success">Active</span>
+                      <span class="text-white badge bg-success">Active</span>
                     <% else %>
-                      <span class="badge bg-secondary">Inactive</span>
+                      <span class="text-white badge bg-secondary">Inactive</span>
                     <% end %>
                   </td>
                   <td class="text-end">

@@ -1,0 +1,366 @@
+<!-- app/views/work_orders/_materials_tab.html.erb -->
+
+<% if materials.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>Material</th>
+          <th>Status</th>
+          <th>Required</th>
+          <th>Allocated</th>
+          <th>Consumed</th>
+          <th>Variance</th>
+          <th>Location</th>
+          <th>Batch</th>
+          <th>Unit Cost</th>
+          <th>Total Cost</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% materials.each do |material| %>
+          <tr>
+            <td>
+              <strong><%= material.product.sku %></strong>
+              <br>
+              <small class="text-muted"><%= material.product.name %></small>
+            </td>
+            <td>
+              <span class="text-white badge bg-<%= material.status_badge_class %>">
+                <%= material.status.titleize %>
+              </span>
+            </td>
+            <td>
+              <strong><%= number_with_precision(material.quantity_required, precision: 4) %></strong>
+              <%= material.uom.symbol %>
+            </td>
+            <td>
+              <% if material.quantity_allocated > 0 %>
+                <span class="text-info">
+                  <%= number_with_precision(material.quantity_allocated, precision: 4) %>
+                  <%= material.uom.symbol %>
+                </span>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td>
+              <% if material.quantity_consumed > 0 %>
+                <span class="text-success">
+                  <%= number_with_precision(material.quantity_consumed, precision: 4) %>
+                  <%= material.uom.symbol %>
+                </span>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td>
+              <% variance = material.quantity_variance %>
+              <% if variance != 0 && material.status.in?(['CONSUMED', 'RETURNED']) %>
+                <span class="<%= variance >= 0 ? 'text-success' : 'text-danger' %>">
+                  <%= variance >= 0 ? '+' : '' %><%= number_with_precision(variance, precision: 4) %>
+                  <br>
+                  <small>(<%= number_with_precision(material.quantity_variance_percent, precision: 1) %>%)</small>
+                </span>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td>
+              <%= material.location&.code || '-' %>
+            </td>
+            <td>
+              <%= material.batch&.batch_number || '-' %>
+            </td>
+            <td>
+              $<%= number_with_precision(material.unit_cost, precision: 4) %>
+            </td>
+            <td>
+              <strong>$<%= number_with_precision(material.total_cost, precision: 2) %></strong>
+            </td>
+            <td class="text-center">
+              <% if work_order.status.in?(['RELEASED', 'IN_PROGRESS']) %>
+                
+                <!-- ALLOCATE Button -->
+                <% if material.status == 'REQUIRED' %>
+                  <button type="button" 
+                          class="btn btn-sm btn-info" 
+                          data-toggle="modal" 
+                          data-target="#allocateModal<%= material.id %>">
+                    <i class="bi bi-box-arrow-in-down"></i> Allocate
+                  </button>
+
+                  <!-- Allocate Modal -->
+                  <div class="modal fade" id="allocateModal<%= material.id %>" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Allocate Material</h5>
+                          
+                        </div>
+                        <%= form_with url: allocate_work_order_work_order_material_path(work_order, material), 
+                            method: :post do |f| %>
+                          <div class="modal-body">
+                            <div class="alert alert-info">
+                              <strong>Material:</strong> <%= material.product.sku %> - <%= material.product.name %>
+                              <br>
+                              <strong>Required:</strong> <%= number_with_precision(material.quantity_required, precision: 4) %> <%= material.uom.symbol %>
+                            </div>
+
+                            <div class="mb-3">
+                              <label class="form-label text-start">Location *</label>
+                              <select name="location_id" class="form-control" required>
+                                <option value="">Select Location...</option>
+                                <% Location.non_deleted.where(warehouse_id: work_order.warehouse_id).each do |loc| %>
+                                  <option value="<%= loc.id %>">
+                                    <%= loc.code %> - <%= loc.name %>
+                                  </option>
+                                <% end %>
+                              </select>
+                            </div>
+
+                            <% if material.product.is_batch_tracked? %>
+                              <div class="mb-3">
+                                <label class="form-label">Batch Number *</label>
+                                <select name="batch_id" class="form-control" required>
+                                  <option value="">Select Batch...</option>
+                                  <% StockBatch.where(product_id: material.product_id).order(batch_number: :desc).each do |batch| %>
+                                    <option value="<%= batch.id %>">
+                                      <%= batch.batch_number %> (Exp: <%= batch.expiry_date&.strftime("%b %d, %Y") || 'N/A' %>)
+                                    </option>
+                                  <% end %>
+                                </select>
+                              </div>
+                            <% end %>
+
+                            <div class="mb-3">
+                              <label class="form-label">Quantity to Allocate *</label>
+                              <input type="number" 
+                                     name="quantity" 
+                                     class="form-control" 
+                                     value="<%= material.quantity_required %>" 
+                                     required 
+                                     min="0.0001" 
+                                     step="0.0001">
+                              <small class="text-muted">UOM: <%= material.uom.symbol %></small>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-info">Allocate Material</button>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+
+                <!-- ISSUE Button -->
+                <% if material.status == 'ALLOCATED' %>
+                  <button type="button" 
+                          class="btn btn-sm btn-warning" 
+                          data-toggle="modal" 
+                          data-target="#issueModal<%= material.id %>">
+                    <i class="bi bi-send"></i> Issue
+                  </button>
+
+                  <!-- Issue Modal -->
+                  <div class="modal fade" id="issueModal<%= material.id %>" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Issue Material to Production</h5>
+                          <button type="button" class="btn-close" data-dismiss="modal"></button>
+                        </div>
+                        <%= form_with url: issue_work_order_work_order_material_path(work_order, material), 
+                            method: :post do |f| %>
+                          <div class="modal-body">
+                            <div class="alert alert-warning">
+                              <strong>Material:</strong> <%= material.product.sku %> - <%= material.product.name %>
+                              <br>
+                              <strong>Allocated:</strong> <%= number_with_precision(material.quantity_allocated, precision: 4) %> <%= material.uom.symbol %>
+                              <br>
+                              <strong>Location:</strong> <%= material.location.code %>
+                              <% if material.batch.present? %>
+                                <br>
+                                <strong>Batch:</strong> <%= material.batch.batch_number %>
+                              <% end %>
+                            </div>
+
+                            <div class="mb-3">
+                              <label class="form-label">Quantity to Issue *</label>
+                              <input type="number" 
+                                     name="quantity" 
+                                     class="form-control" 
+                                     value="<%= material.quantity_allocated %>" 
+                                     required 
+                                     min="0.0001" 
+                                     step="0.0001"
+                                     max="<%= material.quantity_allocated %>">
+                              <small class="text-muted">UOM: <%= material.uom.symbol %></small>
+                            </div>
+
+                            <div class="alert alert-info">
+                              <i class="bi bi-info-circle"></i>
+                              This will create a stock transaction and reduce inventory at the selected location.
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning">Issue to Production</button>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+
+                <!-- RECORD CONSUMPTION Button -->
+                <% if material.status.in?(['ISSUED', 'CONSUMED']) %>
+                  <button type="button" 
+                          class="btn btn-sm btn-success" 
+                          data-toggle="modal" 
+                          data-target="#consumeModal<%= material.id %>">
+                    <i class="bi bi-check-circle"></i> Record
+                  </button>
+
+                  <!-- Consumption Modal -->
+                  <div class="modal fade" id="consumeModal<%= material.id %>" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Record Actual Consumption</h5>
+                          <button type="button" class="btn-close" data-dismiss="modal"></button>
+                        </div>
+                        <%= form_with url: record_consumption_work_order_work_order_material_path(work_order, material), 
+                            method: :post do |f| %>
+                          <div class="modal-body">
+                            <div class="alert alert-info">
+                              <strong>Material:</strong> <%= material.product.sku %>
+                              <br>
+                              <strong>Required:</strong> <%= number_with_precision(material.quantity_required, precision: 4) %> <%= material.uom.symbol %>
+                              <br>
+                              <strong>Current Consumed:</strong> <%= number_with_precision(material.quantity_consumed, precision: 4) %> <%= material.uom.symbol %>
+                            </div>
+
+                            <div class="mb-3">
+                              <label class="form-label">Actual Quantity Consumed *</label>
+                              <input type="number" 
+                                     name="quantity_consumed" 
+                                     class="form-control" 
+                                     value="<%= material.quantity_consumed || material.quantity_required %>" 
+                                     required 
+                                     min="0.0001" 
+                                     step="0.0001">
+                              <small class="text-muted">UOM: <%= material.uom.symbol %></small>
+                            </div>
+
+                            <div class="alert alert-warning">
+                              <i class="bi bi-exclamation-triangle"></i>
+                              This will update the actual consumption for variance analysis.
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Record Consumption</button>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+
+                <!-- RETURN Button -->
+                <% if material.status == 'CONSUMED' && material.quantity_consumed > 0 %>
+                  <button type="button" 
+                          class="btn btn-sm btn-primary" 
+                          data-toggle="modal" 
+                          data-target="#returnModal<%= material.id %>">
+                    <i class="bi bi-arrow-return-left"></i> Return
+                  </button>
+
+                  <!-- Return Modal -->
+                  <div class="modal fade" id="returnModal<%= material.id %>" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Return Excess Material</h5>
+                          <button type="button" class="btn-close" data-dismiss="modal"></button>
+                        </div>
+                        <%= form_with url: return_material_work_order_work_order_material_path(work_order, material), 
+                            method: :post do |f| %>
+                          <div class="modal-body">
+                            <div class="alert alert-info">
+                              <strong>Material:</strong> <%= material.product.sku %>
+                              <br>
+                              <strong>Consumed:</strong> <%= number_with_precision(material.quantity_consumed, precision: 4) %> <%= material.uom.symbol %>
+                            </div>
+
+                            <div class="mb-3">
+                              <label class="form-label">Quantity to Return *</label>
+                              <input type="number" 
+                                     name="quantity_to_return" 
+                                     class="form-control" 
+                                     required 
+                                     min="0.0001" 
+                                     step="0.0001"
+                                     max="<%= material.quantity_consumed %>">
+                              <small class="text-muted">Maximum: <%= number_with_precision(material.quantity_consumed, precision: 4) %> <%= material.uom.symbol %></small>
+                            </div>
+
+                            <div class="alert alert-success">
+                              <i class="bi bi-info-circle"></i>
+                              This will create a return transaction and add material back to inventory.
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Return to Inventory</button>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <th colspan="9" class="text-end">Total Material Cost:</th>
+          <th>
+            <strong>$<%= number_with_precision(materials.sum(&:total_cost), precision: 2) %></strong>
+          </th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Material Status Legend -->
+  <div class="mt-3">
+    <small class="text-muted">
+      <strong>Status Flow:</strong>
+      <span class="text-white badge bg-secondary text-white">Required</span> →
+      <span class="text-white badge bg-primary text-white">Allocated</span> →
+      <span class="text-white badge bg-warning text-white">Issued</span> →
+      <span class="text-white badge bg-success text-white">Consumed</span>
+    </small>
+  </div>
+
+<% else %>
+  <div class="text-center py-5">
+    <i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i>
+    <p class="text-muted">
+      <% if work_order.status == 'NOT_STARTED' %>
+        Materials will be created automatically from the BOM when the Work Order is released to production.
+      <% else %>
+        No materials found for this Work Order.
+      <% end %>
+    </p>
+  </div>
+<% end %>

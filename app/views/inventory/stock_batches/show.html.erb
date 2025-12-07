@@ -53,7 +53,7 @@
         <% elsif @expiry_status == 'expiring_soon' %>
           <div class="alert alert-warning d-flex align-items-center" role="alert">
             <i class="fas fa-exclamation-circle fa-2x me-3"></i>
-            <div>
+            <div class="m-l-5">
               <strong>Expiring Soon!</strong><br>
               <%= @expiry_message %>
             </div>
@@ -69,7 +69,7 @@
     <div class="col-md-8">
       
       <!-- Basic Information Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-info-circle me-2"></i>
@@ -102,8 +102,8 @@
       </div>
 
       <!-- Dates Card -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-info text-white">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-calendar-alt me-2"></i>
             Dates
@@ -144,7 +144,7 @@
       </div>
 
       <!-- Quality & Certification Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-success text-white">
           <h5 class="mb-0">
             <i class="fas fa-certificate me-2"></i>
@@ -166,9 +166,9 @@
                       when 'PENDING' then 'bg-warning text-dark'
                       when 'REJECTED' then 'bg-danger'
                       when 'ON_HOLD' then 'bg-secondary'
-                      else 'bg-info'
+                      else 'bg-primary'
                     end %>
-                  <span class="badge <%= badge_class %>">
+                  <span class="text-white badge <%= badge_class %>">
                     <%= @stock_batch.quality_status.titleize %>
                   </span>
                 <% else %>
@@ -181,7 +181,7 @@
           <% if @stock_batch.notes.present? %>
             <div class="mt-3">
               <label class="text-muted small mb-1">Notes</label>
-              <div class="p-3 bg-light rounded">
+              <div class="p-3 bg-primary rounded">
                 <%= simple_format(@stock_batch.notes) %>
               </div>
             </div>
@@ -190,7 +190,7 @@
       </div>
 
       <!-- Stock by Location Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-warning text-dark">
           <h5 class="mb-0">
             <i class="fas fa-map-marker-alt me-2"></i>
@@ -229,7 +229,7 @@
       </div>
 
       <!-- Recent Transactions Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-secondary text-white">
           <h5 class="mb-0">
             <i class="fas fa-history me-2"></i>
@@ -254,7 +254,7 @@
                     <tr>
                       <td><%= txn.created_at.strftime('%b %d, %Y') %></td>
                       <td>
-                        <span class="badge bg-info"><%= txn.txn_type %></span>
+                        <span class="text-white badge bg-primary"><%= txn.txn_type %></span>
                       </td>
                       <td><%= txn.to_location&.name || '-' %></td>
                       <td class="text-end">
@@ -283,7 +283,7 @@
     <div class="col-md-4">
       
       <!-- Current Stock Summary -->
-      <div class="card shadow-sm mb-4 border-primary">
+      <div class="card  mb-4 border-primary">
         <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-boxes me-2"></i>
@@ -312,8 +312,8 @@
       </div>
 
       <!-- Metadata Card -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-light">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary">
           <h6 class="mb-0">
             <i class="fas fa-info-circle me-2"></i>
             Metadata
@@ -336,8 +336,8 @@
       </div>
 
       <!-- Quick Actions Card -->
-      <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center bg-light">
+      <div class="card ">
+        <div class="card-header d-flex align-items-center bg-primary">
           <h6 class="mb-0">
             <i class="fas fa-bolt me-2"></i>
             Quick Actions

@@ -1,0 +1,123 @@
+<!-- app/views/work_orders/_complete_modal.html.erb -->
+
+<div class="modal fade" id="completeOperationModal<%= operation.id %>" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- HEADER -->
+      <div class="modal-header">
+        <h5 class="modal-title">
+          Complete Operation: <%= operation.operation_name %>
+        </h5>
+        
+      </div>
+
+      <!-- FORM -->
+      <%= form_with url: complete_work_order_work_order_operation_path(work_order, operation),
+                    method: :post,
+                    local: true do |f| %>
+
+        <div class="modal-body">
+
+          <!-- SUMMARY -->
+          <div class="alert alert-info">
+            <strong>Operation:</strong> <%= operation.operation_name %><br>
+            <strong>Work Center:</strong> <%= operation.work_center.name %><br>
+
+            <% if operation.labor_time_entries.any? %>
+              <br>
+              <strong>Total Labor Time:</strong>
+              <%= operation.total_labor_hours.round(2) %> hrs 
+              (<%= operation.total_labor_minutes %> min)
+            <% else %>
+              <br>
+              <strong>Planned Time:</strong>
+              <%= operation.planned_total_minutes %> minutes
+            <% end %>
+          </div>
+
+          <% if operation.labor_time_entries.any? %>
+            <!-- Auto-Calculated Labor: override optional -->
+            <div class="alert alert-success">
+              <i class="bi bi-info-circle"></i>
+              Auto-calculated time from Clock In/Out:
+              <br>
+              <strong>Total:</strong> <%= operation.total_labor_minutes %> min
+              <br>
+              <small class="text-muted">
+                (<%= operation.labor_time_entries.non_deleted.count %> entries)
+              </small>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :actual_setup_minutes, "Setup Time (optional override)", class: "form-label" %>
+              <%= f.number_field :actual_setup_minutes,
+                  class: "form-control",
+                  step: 0.01,
+                  placeholder: "Leave blank to auto-calculate" %>
+            </div>
+
+          <% else %>
+            <!-- No labor entries: manual input required -->
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              No clock data found — enter time manually.
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <%= f.label :actual_setup_minutes, "Setup Time (min) *", class: "form-label" %>
+                <%= f.number_field :actual_setup_minutes,
+                    value: operation.planned_setup_minutes,
+                    class: "form-control",
+                    step: 0.01,
+                    required: true %>
+              </div>
+
+              <div class="col-md-6">
+                <%= f.label :actual_run_minutes, "Run Time (min) *", class: "form-label" %>
+                <%= f.number_field :actual_run_minutes,
+                    value: (operation.planned_run_minutes_per_unit * operation.quantity_to_process),
+                    class: "form-control",
+                    step: 0.01,
+                    required: true %>
+              </div>
+            </div>
+
+          <% end %>
+
+          <!-- QUANTITY SECTION -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <%= f.label :quantity_completed, "Quantity Completed *", class: "form-label" %>
+              <%= f.number_field :quantity_completed,
+                    value: operation.quantity_to_process,
+                    class: "form-control",
+                    step: 0.01,
+                    required: true %>
+            </div>
+
+            <div class="col-md-6">
+              <%= f.label :quantity_scrapped, "Quantity Scrapped", class: "form-label" %>
+              <%= f.number_field :quantity_scrapped,
+                    value: 0,
+                    class: "form-control",
+                    step: 0.01 %>
+            </div>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Complete Operation
+          </button>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+</div>

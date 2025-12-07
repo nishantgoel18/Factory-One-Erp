@@ -80,8 +80,8 @@
   </div>
 
   <!-- Main Report Table -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header d-flex justify-content-start align-items-center bg-info text-white">
+  <div class="card  mb-4">
+    <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
       <h5 class="mb-0">
         <i class="fas fa-table me-2"></i> Time Analysis by Routing
       </h5>
@@ -117,7 +117,7 @@
                   <small class="text-muted">Rev <%= routing.revision %></small>
                 </td>
                 <td class="text-center">
-                  <span class="badge bg-secondary"><%= data[:operations_count] %></span>
+                  <span class="text-white badge bg-secondary"><%= data[:operations_count] %></span>
                 </td>
                 <td class="text-end">
                   <strong><%= number_with_precision(data[:setup_time], precision: 1) %></strong>
@@ -158,7 +158,7 @@
               
               <!-- Expandable Batch Time Estimates -->
               <tr class="collapse" id="batch-times-<%= routing.id %>">
-                <td colspan="9" class="bg-light">
+                <td colspan="9" class="bg-primary">
                   <div class="p-3">
                     <h6 class="mb-3">
                       <i class="fas fa-calculator me-2"></i> 
@@ -241,8 +241,8 @@
   <!-- Time Breakdown Chart -->
   <div class="row mb-4">
     <div class="col-md-8">
-      <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-start align-items-center bg-light">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-chart-bar me-2"></i> Time Breakdown Comparison
           </h5>
@@ -254,8 +254,8 @@
     </div>
     
     <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-start align-items-center bg-light">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-chart-pie me-2"></i> Avg Time Distribution
           </h5>
@@ -270,7 +270,7 @@
   <!-- Bottleneck Analysis -->
   <div class="row">
     <div class="col-md-6">
-      <div class="card shadow-sm border-danger">
+      <div class="card  border-danger">
         <div class="card-header d-flex justify-content-start align-items-center bg-danger text-white">
           <h6 class="mb-0">
             <i class="fas fa-hourglass-half me-2"></i> Longest Lead Times
@@ -321,7 +321,7 @@
     </div>
     
     <div class="col-md-6">
-      <div class="card shadow-sm border-success">
+      <div class="card  border-success">
         <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
           <h6 class="mb-0">
             <i class="fas fa-tachometer-alt me-2"></i> Fastest Production Times
@@ -375,7 +375,7 @@
   <!-- Critical Operations Summary -->
   <div class="row mt-4">
     <div class="col-12">
-      <div class="card shadow-sm">
+      <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
           <h5 class="mb-0">
             <i class="fas fa-exclamation-triangle me-2"></i> 
@@ -398,7 +398,7 @@
                         <%= wc_name %>
                       </h6>
                       <p class="mb-2">
-                        <span class="badge bg-danger"><%= ops.count %></span>
+                        <span class="text-white badge bg-danger"><%= ops.count %></span>
                         bottleneck operations
                       </p>
                       <small class="text-muted">

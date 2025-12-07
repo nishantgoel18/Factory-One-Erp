@@ -16,7 +16,7 @@ class BillOfMaterialsController < ApplicationController
 
     if @bill_of_material.save
       process_bom_items
-      redirect_to @bill_of_material, notice: "BOM created successfully."
+      redirect_to [@product, @bill_of_material], notice: "BOM created successfully."
     else
       render :new
     end

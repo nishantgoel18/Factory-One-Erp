@@ -16,6 +16,7 @@ class StockTransaction < ApplicationRecord
     "COUNT_CORRECTION",
     "PRODUCTION_CONSUMPTION",
     "PRODUCTION_OUTPUT",
+    "PRODUCTION_RETURN",
     "RETURN_IN",
     "RETURN_OUT"
   ].freeze
@@ -26,6 +27,7 @@ class StockTransaction < ApplicationRecord
     ADJUST_NEG
     COUNT_CORRECTION
     PRODUCTION_CONSUMPTION
+    PRODUCTION_RETURN
     RETURN_OUT
   ].freeze
 

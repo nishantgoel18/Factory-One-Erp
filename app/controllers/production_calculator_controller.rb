@@ -1,6 +1,7 @@
 # app/controllers/production_calculator_controller.rb
 
 class ProductionCalculatorController < ApplicationController
+  before_action :authenticate_user!
   def index
     @products = Product.where(deleted: false)
                        .where(product_type: ["Finished Goods", "Semi-Finished Goods"])

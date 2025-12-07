@@ -30,7 +30,7 @@
   </div>
 
   <!-- Filters Card -->
-  <div class="card shadow-sm mb-4">
+  <div class="card  mb-4">
     <div class="card-body">
       <%= form_with url: routings_path, method: :get, class: "row g-3" do |f| %>
         <!-- Search -->
@@ -122,7 +122,7 @@
   </div>
 
   <!-- Routings Table -->
-  <div class="card shadow-sm">
+  <div class="card ">
     <div class="card-body">
       <% if @routings.any? %>
         <div class="table-responsive">
@@ -154,10 +154,10 @@
                     <small class="text-muted"><%= routing.product.sku %></small>
                   </td>
                   <td>
-                    <span class="badge bg-secondary"><%= routing.revision %></span>
+                    <span class="text-white badge bg-secondary"><%= routing.revision %></span>
                   </td>
                   <td>
-                    <span class="badge bg-info">
+                    <span class="text-white badge bg-primary">
                       <%= routing.routing_operations.count %> ops
                     </span>
                   </td>
@@ -174,13 +174,13 @@
                   <td>
                     <% case routing.status %>
                     <% when "ACTIVE" %>
-                      <span class="badge bg-success">Active</span>
+                      <span class="text-white badge bg-success">Active</span>
                     <% when "DRAFT" %>
-                      <span class="badge bg-warning">Draft</span>
+                      <span class="text-white badge bg-warning">Draft</span>
                     <% when "INACTIVE" %>
-                      <span class="badge bg-secondary">Inactive</span>
+                      <span class="text-white badge bg-secondary">Inactive</span>
                     <% when "ARCHIVED" %>
-                      <span class="badge bg-dark">Archived</span>
+                      <span class="text-white badge bg-dark">Archived</span>
                     <% end %>
                   </td>
                   <td>

@@ -31,7 +31,7 @@
       <%= render 'shared/status_badge', status: @cycle_count.status %>
       
       <% if @cycle_count.status == 'POSTED' %>
-        <span class="badge bg-success ms-2">
+        <span class="text-white badge text-white bg-success ms-2">
           <i class="bi bi-check-circle me-1"></i>
           Posted on <%= @cycle_count.posted_at.strftime('%b %d, %Y') %>
         </span>
@@ -100,7 +100,7 @@
     <div class="col-md-8">
       <!-- Cycle Count Information -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Basic Information</h5>
         </div>
         <div class="card-body">
@@ -186,7 +186,7 @@
 
       <!-- Received Items -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Cycle Count Lines</h5>
         </div>
         <div class="card-body p-0">
@@ -211,7 +211,7 @@
                       <small class="text-muted"><%= line.product.name %></small>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">
+                      <span class="text-white badge text-white bg-secondary">
                         <%= line.location.code %>
                       </span>
                       <br><small class="text-muted"><%= line.location.name %></small>
@@ -234,7 +234,7 @@
       <!-- Stock Transactions (if posted) -->
       <% if @cycle_count.status == 'POSTED' %>
         <div class="card">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-arrow-repeat me-2"></i>
               Stock Transactions Created
@@ -260,7 +260,7 @@
                       ).includes(:product, :from_location).each do |txn| %>
                     <tr>
                       <td>
-                        <span class="badge bg-success">
+                        <span class="text-white badge text-white bg-success">
                           <%= txn.txn_type %>
                         </span>
                       </td>
@@ -282,7 +282,7 @@
     <div class="col-md-4">
       <!-- Status Info -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h6 class="mb-0">Status Information</h6>
         </div>
         <div class="card-body">
@@ -313,7 +313,7 @@
 
       <% if @cycle_count.warehouse %>
         <div class="card mt-4">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h6 class="mb-0">Warehouse Info</h6>
           </div>
           <div class="card-body">

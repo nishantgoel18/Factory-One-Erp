@@ -78,8 +78,8 @@
   </div>
 
   <!-- Main Report Table -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header bg-secondary text-white">
+  <div class="card  mb-4">
+    <div class="card-header d-flex justify-content-start align-items-center bg-secondary text-white">
       <h5 class="mb-0">
         <i class="fas fa-table me-2"></i>Operations Grouped by Work Center
       </h5>
@@ -108,7 +108,7 @@
                   <small class="text-muted"><%= data.wc_name %></small>
                 </td>
                 <td class="text-center">
-                  <span class="badge bg-primary fs-6"><%= data.operations_count %></span>
+                  <span class="text-white badge bg-primary fs-6"><%= data.operations_count %></span>
                 </td>
                 <td class="text-end">
                   <strong><%= number_with_precision(data.total_setup, precision: 1) %></strong>
@@ -190,8 +190,8 @@
   <div class="row mb-4">
     <!-- Operations Distribution -->
     <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-header bg-light">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-chart-pie me-2"></i>Operations Distribution by Work Center
           </h5>
@@ -204,8 +204,8 @@
 
     <!-- Cost Distribution -->
     <div class="col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-header bg-light">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-chart-bar me-2"></i>Cost Distribution by Work Center
           </h5>
@@ -221,8 +221,8 @@
   <div class="row">
     <!-- Most Used Work Centers -->
     <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-success h-100">
-        <div class="card-header bg-success text-white">
+      <div class="card  border-success h-100">
+        <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
           <h6 class="mb-0">
             <i class="fas fa-trophy me-2"></i>Most Used Work Centers
           </h6>
@@ -236,13 +236,13 @@
                   <% if index == 0 %>
                     <i class="fas fa-crown text-warning me-2"></i>
                   <% else %>
-                    <span class="badge bg-secondary me-2"><%= index + 1 %></span>
+                    <span class="text-white badge bg-secondary me-2"><%= index + 1 %></span>
                   <% end %>
                   <strong><%= data.wc_code %></strong>
                   <br>
                   <small class="text-muted"><%= data.wc_name %></small>
                 </div>
-                <span class="badge bg-success fs-6"><%= data.operations_count %> ops</span>
+                <span class="text-white badge bg-success fs-6"><%= data.operations_count %> ops</span>
               </div>
             <% end %>
           </div>
@@ -252,8 +252,8 @@
 
     <!-- Highest Labor Cost -->
     <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-primary h-100">
-        <div class="card-header bg-primary text-white">
+      <div class="card  border-primary h-100">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
           <h6 class="mb-0">
             <i class="fas fa-users me-2"></i>Highest Labor Cost
           </h6>
@@ -264,7 +264,7 @@
             <% top_labor.each_with_index do |data, index| %>
               <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                 <div>
-                  <span class="badge bg-secondary me-2"><%= index + 1 %></span>
+                  <span class="text-white badge bg-secondary me-2"><%= index + 1 %></span>
                   <strong><%= data.wc_code %></strong>
                   <br>
                   <small class="text-muted"><%= data.operations_count %> operations</small>
@@ -281,8 +281,8 @@
 
     <!-- Highest Overhead Cost -->
     <div class="col-md-4 mb-4">
-      <div class="card shadow-sm border-warning h-100">
-        <div class="card-header bg-warning text-dark">
+      <div class="card  border-warning h-100">
+        <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
           <h6 class="mb-0">
             <i class="fas fa-industry me-2"></i>Highest Overhead Cost
           </h6>
@@ -293,7 +293,7 @@
             <% top_overhead.each_with_index do |data, index| %>
               <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                 <div>
-                  <span class="badge bg-secondary me-2"><%= index + 1 %></span>
+                  <span class="text-white badge bg-secondary me-2"><%= index + 1 %></span>
                   <strong><%= data.wc_code %></strong>
                   <br>
                   <small class="text-muted"><%= data.operations_count %> operations</small>
@@ -312,8 +312,8 @@
   <!-- Average Metrics -->
   <div class="row">
     <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-header bg-info text-white">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-chart-line me-2"></i>Average Metrics per Operation
           </h5>
@@ -365,8 +365,8 @@
   <!-- Key Insights -->
   <div class="row mt-4">
     <div class="col-12">
-      <div class="card shadow-sm border-info">
-        <div class="card-header bg-info text-white">
+      <div class="card  border-info">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-lightbulb me-2"></i>Key Insights
           </h5>

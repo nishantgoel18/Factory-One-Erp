@@ -30,22 +30,21 @@
                     </span>
                 </a>
 
-               
                 <ul class="dropdown-menu">
 
                     
 
-                    <li class="<%= 'active' if request.path.include? '' %>">
+                    <li class="<%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'roles_list' %>">Roles Mangment</a>
                     </li>
                 
 
                
-                    <li class="<%= 'active' if request.path.include? '' %>">
+                    <li class="<%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'users_list' %>">Users</a>
                     </li>
                 
-                    <li class="<%= 'active' if request.path.include? '' %>">
+                    <li class="<%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'organizations_list' %>">Settings</a>
                     </li>               
 
@@ -82,11 +81,11 @@
                         <a href="<%= work_centers_path %>">Work Centers</a>
                     </li>
 
-                    <li class="<%= 'active' if request.path.include? '' %>">
+                    <li class="<%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'customers_list' %>">Customers</a>
                     </li>
                
-                    <li class="suppliers' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="suppliers' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'suppliers_list' %>">Suppliers</a>
                     </li>
               
@@ -117,7 +116,7 @@
 
                 <ul class="dropdown-menu">
 
-                    <li class="finance' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="finance' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'finance' %>"> Home</a>
                     </li>
                     <li class="accounts' %> <%= 'active' if request.path.include? accounts_path %>">
@@ -128,23 +127,23 @@
                         <a href="<%= journal_entries_path %>">Journal Entries</a>
                     </li>
                 
-                    <li class="jobcostrecords' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="jobcostrecords' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'jobcostrecords_list' %>">JobCostRecord</a>
                     </li>
                
-                    <li class="overheadrates' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="overheadrates' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'overheadrates_list' %>">OverheadRate</a>
                     </li>
                
-                    <li class="payables' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="payables' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'payables_list' %>">Payable</a>
                     </li>
                
-                    <li class="laborrates' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="laborrates' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'laborrates_list' %>">LaborRate</a>
                     </li>
                 
-                    <li class="productcostsheets' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="productcostsheets' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'productcostsheets_list' %>">Product Cost Sheet</a>
                     </li>
                 </ul> 
@@ -164,45 +163,32 @@
                 </a>
                 <ul class="dropdown-menu">
 
-                    <li class="core_manufacturing' %> <%= 'active' if request.path.include? '' %>">
-                        <a href="<%= 'core_manufacturing' %>"> Home</a>
+                    <li class="<%= 'active' if request.path.include? production_home_path %>">
+                        <a href="<%= production_home_path %>"> Home</a>
                     </li>
                
-                    
+                    <li class="<%= 'active' if request.path.include? work_orders_path %>">
+                        <a href="<%= work_orders_path %>">Work Orders </a>
+                    </li>
+
                
-                    <li class="workordersissues' %> <%= 'active' if request.path.include? '' %>">
-                        <a href="<%= 'workordersissues_list' %>">Work Orders Issue </a>
-                    </li>
-               
-                    <li class="workorderreceipts' %> <%= 'active' if request.path.include? '' %>">
-                        <a href="<%= 'workordersreceipts_list' %>">Work Order Receipt </a>
-                    </li>
-              
-                    <li class="workorderscraps' %> <%= 'active' if request.path.include? '' %>">
-                        <a href="<%= 'workorderscraps_list' %>">WorkOrder Scraps</a>
-                    </li>
-               
-                    <li class="timelogs' %> <%= 'active' if request.path.include? '' %>">
-                        <a href="<%= 'timelogs_list' %>">Time logs</a>
-                    </li>
-                
-                    <li class="mrp_runs' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="mrp_runs' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'mrpruns_list' %>">MRP Runs</a>
                     </li>
                
-                    <li class="planningparameters' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="planningparameters' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'planningparameters_list' %>">Planning Parameters</a>
                     </li>
                 
-                    <li class="mrpprojectedbalances' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="mrpprojectedbalances' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'mrpprojectedbalances_list' %>">MRP Projected Balances</a>
                     </li>
                
-                    <li class="mrpexceptions' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="mrpexceptions' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'mrpexceptions_list' %>">MRP Exception</a>
                     </li>
                
-                    <li class="mrpplannedorders' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="mrpplannedorders' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'mrpplannedorder_list' %>">MRP Planned Order</a>
                     </li>
                
@@ -275,21 +261,21 @@
 
                 <ul class="dropdown-menu">
 
-                    <li class="sales' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="sales' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'sales' %>"> Home</a>
                     </li>
                     <li class="<%= 'active' if request.path.include? customers_path %>">
                         <a href="<%= customers_path %>">Customers</a>
                     </li>
-                    <li class="salesorders' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="salesorders' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'salesorder_list' %>">Sales Orders</a>
                     </li>
                
-                    <li class="shipments' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="shipments' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'shipments_list' %>">Shipments</a>
                     </li>
                
-                    <li class="receivables' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="receivables' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'receivables_list' %>">Receivable</a>
                     </li>
                 </ul> 
@@ -310,19 +296,19 @@
 
                  <ul class="dropdown-menu">
 
-                    <li class="quality' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="quality' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'quality' %>"> Home</a>
                     </li>
 
-                    <li class="qualityinspection' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="qualityinspection' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'qualityinspection_list' %>">Quality Inspection</a>
                     </li>
                
-                    <li class="nonconformancereports' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="nonconformancereports' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'nonconformancereports_list' %>">Non Conformance Reports</a>
                     </li>
                
-                    <li class="capas' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="capas' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'capas_list' %>">CAPA (Corrective and Preventive Action)</a>
                     </li>
                 </ul> 
@@ -345,31 +331,31 @@
 
                 <ul class="dropdown-menu">
 
-                    <li class="maintenance_machine' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="maintenance_machine' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'maintenance_machine' %>"> Home</a>
                     </li>
 
-                    <li class="machines' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="machines' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'machines_list' %>">Machines</a>
                     </li>
                 
-                    <li class="maintenancetasks' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="maintenancetasks' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'maintenancetasks_list' %>">MaintenanceTask</a>
                     </li>
                
-                    <li class="maintenance_checklist' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="maintenance_checklist' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'templates_list' %>">Maintenance Checklist</a>
                     </li>
                
-                    <li class="maintenancechecklistlines' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="maintenancechecklistlines' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'maintenancechecklistlines_list' %>">Maintenance Checklist Line</a>
                     </li>
               
-                    <li class="breakdownlogs' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="breakdownlogs' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'breakdownlogs_list' %>">BreakdownLogs</a>
                     </li>
                
-                    <li class="oee' %> <%= 'active' if request.path.include? '' %>">
+                    <li class="oee' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'oee_list' %>">OEE (Overall Equipment Effectiveness) Calculation</a>
                     </li>
                 </ul> 
@@ -396,7 +382,7 @@
             <li class="nav-item dropdown">
                 <a class="dropdown-toggle" href="javascript:void(0);">
                     <span class="icon-holder">
-                        <i class="anticon anticon-tool"></i>
+                        <i class="anticon anticon-file"></i>
                     </span>
                     <span class="title">Reports</span>
                     <span class="arrow">
@@ -406,6 +392,11 @@
                 <ul class="dropdown-menu">
                     <li class="<%= 'active' if request.path.include? '/reports/routing' %>">
                         <a href="<%= '/reports/routing' %>"> Routings</a>
+                    </li>
+                </ul>
+                <ul class="dropdown-menu">
+                    <li class="<%= 'active' if request.path.include? '/reports/work_order' %>">
+                        <a href="<%= '/reports/work_order' %>"> Work Orders</a>
                     </li>
                 </ul>
             </li>

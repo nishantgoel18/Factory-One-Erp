@@ -1,0 +1,107 @@
+<!-- app/views/work_order_mailer/material_shortage_alert.html.erb -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #ffc107; color: #000; padding: 20px; text-align: center; }
+    .content { background: #f8f9fa; padding: 20px; margin: 20px 0; }
+    .alert { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; }
+    .detail-row { padding: 10px 0; border-bottom: 1px solid #dee2e6; }
+    .detail-label { font-weight: bold; color: #6c757d; }
+    .shortage-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .shortage-table th { background: #ffc107; padding: 10px; text-align: left; }
+    .shortage-table td { padding: 10px; border-bottom: 1px solid #dee2e6; }
+    .shortage-qty { color: #dc3545; font-weight: bold; }
+    .btn { display: inline-block; padding: 10px 20px; background: #ffc107; color: #000; 
+           text-decoration: none; border-radius: 5px; margin: 10px 0; font-weight: bold; }
+    .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>⚠️ Material Shortage Alert</h2>
+    </div>
+    
+    <div class="content">
+      <div class="alert">
+        <strong>ACTION REQUIRED:</strong> Material shortages detected for the following work order. 
+        Immediate procurement or stock allocation is needed.
+      </div>
+      
+      <h3>Work Order Details:</h3>
+      <div class="detail-row">
+        <span class="detail-label">WO Number:</span> <%= @work_order.wo_number %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Product:</span> <%= @work_order.product.code %> - <%= @work_order.product.name %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Quantity to Produce:</span> 
+        <%= @work_order.quantity_to_produce %> <%= @work_order.uom.symbol %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Status:</span> <%= @work_order.status.titleize %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Warehouse:</span> <%= @work_order.warehouse.name %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Scheduled Start:</span> 
+        <%= @work_order.scheduled_start_date.strftime("%B %d, %Y") %>
+      </div>
+      
+      <h3 style="margin-top: 30px; color: #dc3545;">Material Shortages:</h3>
+      
+      <table class="shortage-table">
+        <thead>
+          <tr>
+            <th>Material Code</th>
+            <th>Material Name</th>
+            <th>Required</th>
+            <th>Available</th>
+            <th>Shortage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @shortage_details.each do |shortage| %>
+            <tr>
+              <td><strong><%= shortage[:material_code] %></strong></td>
+              <td><%= shortage[:material_name] %></td>
+              <td><%= shortage[:required_qty] %> <%= shortage[:uom] %></td>
+              <td><%= shortage[:available_qty] %> <%= shortage[:uom] %></td>
+              <td class="shortage-qty">
+                <%= shortage[:shortage_qty] %> <%= shortage[:uom] %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      
+      <div class="alert">
+        <strong>Recommended Actions:</strong>
+        <ul style="margin: 10px 0;">
+          <li>Review and procure shortage materials immediately</li>
+          <li>Check for available stock in other warehouses for transfer</li>
+          <li>Update production schedule if materials cannot be procured in time</li>
+          <li>Consider alternative materials or suppliers if applicable</li>
+        </ul>
+      </div>
+      
+      <p style="text-align: center; margin-top: 20px;">
+        <a href="<%= work_order_url(@work_order) %>" class="btn">View Work Order Details</a>
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>This is an automated alert from your ERP System.</p>
+      <p>Immediate action required to prevent production delays.</p>
+      <p>Please do not reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>

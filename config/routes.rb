@@ -78,6 +78,7 @@ Rails.application.routes.draw do
     end
   end
 
+
   resources :routings do
     member do
       patch :toggle_status
@@ -91,6 +92,57 @@ Rails.application.routes.draw do
     # Nested operations management (optional, for AJAX)
     resources :routing_operations, only: [:create, :update, :destroy], shallow: true
   end
+  
+  resources :work_orders do
+    member do
+      get :release              # Release WO to production
+      get :start_production     # Start production
+      get :complete             # Complete WO
+      get :cancel               # Cancel WO
+      post :send_shortage_alert  # ADD THIS
+    end
+    
+    # Nested routes for operations
+    resources :work_order_operations, only: [] do
+      member do
+        post :start              # Start operation
+        post :complete           # Complete operation
+        patch :update_time
+           # NEW       # Update time tracking
+      end
+    end
+    
+    # Nested routes for materials
+    resources :work_order_materials, only: [] do
+      member do
+        post :allocate           # Allocate material
+        post :issue              # Issue to production
+        post :record_consumption # Record actual consumption
+        post :return_material    # Return excess
+      end
+    end
+
+    member do
+      get 'assign_operators', to: 'operator_assignments#edit'
+      patch 'assign_operators', to: 'operator_assignments#update'
+    end
+  end
+
+  post 'operations/:operation_id/assign', to: 'operator_assignments#assign_single', as: :assign_operation
+
+  resources :labor_time_entries, only: [] do
+    collection do
+      get :my_timesheet
+      get :shop_floor
+      post :clock_in    # NEW
+      post :clock_out 
+    end
+  end
+  
+  # Shortcut routes
+  get 'shop_floor', to: 'labor_time_entries#shop_floor'
+  get 'my_timesheet', to: 'labor_time_entries#my_timesheet'
+
   scope :tools do
     get 'production_calculator', to: 'production_calculator#index'
     post 'production_calculator/calculate', to: 'production_calculator#calculate'
@@ -117,7 +169,18 @@ Rails.application.routes.draw do
         get :operations_summary, to: 'routing_reports#operations_summary'
       end
     end
+
+    resource :work_order, only: [] do
+      collection do
+        get :index, to: 'work_order_reports#index'
+        get :status_report, to: 'work_order_reports#status_report'
+        get :cost_variance_report, to: 'work_order_reports#cost_variance_report'
+        get :efficiency_report, to: 'work_order_reports#efficiency_report'
+        get :material_consumption_report, to: 'work_order_reports#material_consumption_report'
+      end
+    end
   end
+
   namespace :inventory do
     # Dashboard
     get 'dashboard', to: 'dashboard#index', as: :dashboard
@@ -237,6 +300,7 @@ Rails.application.routes.draw do
   end
 
   get '/home', to: 'dashboards#home', as: :home
+  get '/production/home', to: 'dashboards#production_dashboard', as: :production_home
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

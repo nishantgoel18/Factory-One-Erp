@@ -1,4 +1,5 @@
 class TaxCodesController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_tax_code, only: %i[ show edit update destroy ]
 
   # GET /tax_codes or /tax_codes.json

@@ -1,4 +1,5 @@
 class StockIssuesController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_stock_issue, only: %i[ show edit update destroy ]
 
   # GET /stock_issues or /stock_issues.json

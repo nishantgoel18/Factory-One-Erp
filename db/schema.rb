@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -248,15 +248,37 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
     t.index ["journal_entry_id"], name: "index_journal_lines_on_journal_entry_id"
   end
 
+  create_table "labor_time_entries", force: :cascade do |t|
+    t.datetime "clock_in_at", null: false
+    t.datetime "clock_out_at"
+    t.datetime "created_at", null: false
+    t.boolean "deleted", default: false
+    t.string "entry_type", default: "REGULAR"
+    t.decimal "hours_worked", precision: 10, scale: 4, default: "0.0"
+    t.text "notes"
+    t.bigint "operator_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "work_order_operation_id", null: false
+    t.index ["clock_in_at"], name: "index_labor_time_entries_on_clock_in_at"
+    t.index ["clock_out_at"], name: "index_labor_time_entries_on_clock_out_at"
+    t.index ["deleted"], name: "index_labor_time_entries_on_deleted"
+    t.index ["operator_id", "clock_in_at"], name: "index_labor_time_entries_on_operator_id_and_clock_in_at"
+    t.index ["operator_id"], name: "index_labor_time_entries_on_operator_id"
+    t.index ["work_order_operation_id", "operator_id"], name: "index_labor_entries_on_operation_and_operator"
+    t.index ["work_order_operation_id"], name: "index_labor_time_entries_on_work_order_operation_id"
+  end
+
   create_table "locations", force: :cascade do |t|
     t.string "code"
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
     t.boolean "is_pickable"
     t.boolean "is_receivable"
+    t.string "location_type", default: "GENERAL"
     t.string "name"
     t.datetime "updated_at", null: false
     t.bigint "warehouse_id", null: false
+    t.index ["location_type"], name: "index_locations_on_location_type"
     t.index ["warehouse_id"], name: "index_locations_on_warehouse_id"
   end
 
@@ -272,6 +294,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
   create_table "products", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
+    t.text "description"
     t.boolean "is_active"
     t.boolean "is_batch_tracked"
     t.boolean "is_serial_tracked"
@@ -682,6 +705,131 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
     t.index ["work_center_type"], name: "index_work_centers_on_work_center_type"
   end
 
+  create_table "work_order_materials", force: :cascade do |t|
+    t.datetime "allocated_at"
+    t.bigint "batch_id"
+    t.bigint "bom_item_id"
+    t.datetime "created_at", null: false
+    t.boolean "deleted", default: false
+    t.datetime "issued_at"
+    t.bigint "issued_by_id"
+    t.bigint "location_id"
+    t.text "notes"
+    t.bigint "product_id", null: false
+    t.decimal "quantity_allocated", precision: 14, scale: 4, default: "0.0"
+    t.decimal "quantity_consumed", precision: 14, scale: 4, default: "0.0"
+    t.decimal "quantity_required", precision: 14, scale: 4, null: false
+    t.string "status", limit: 20, default: "REQUIRED"
+    t.decimal "total_cost", precision: 12, scale: 2, default: "0.0"
+    t.decimal "unit_cost", precision: 12, scale: 4, default: "0.0"
+    t.bigint "uom_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "work_order_id", null: false
+    t.index ["batch_id"], name: "index_work_order_materials_on_batch_id"
+    t.index ["bom_item_id"], name: "index_work_order_materials_on_bom_item_id"
+    t.index ["deleted"], name: "index_work_order_materials_on_deleted"
+    t.index ["issued_by_id"], name: "index_work_order_materials_on_issued_by_id"
+    t.index ["location_id", "product_id"], name: "index_work_order_materials_on_location_id_and_product_id"
+    t.index ["location_id"], name: "index_work_order_materials_on_location_id"
+    t.index ["product_id"], name: "index_work_order_materials_on_product_id"
+    t.index ["status"], name: "index_work_order_materials_on_status"
+    t.index ["uom_id"], name: "index_work_order_materials_on_uom_id"
+    t.index ["work_order_id", "product_id"], name: "index_work_order_materials_on_work_order_id_and_product_id"
+    t.index ["work_order_id"], name: "index_work_order_materials_on_work_order_id"
+  end
+
+  create_table "work_order_operations", force: :cascade do |t|
+    t.decimal "actual_cost", precision: 12, scale: 2, default: "0.0"
+    t.integer "actual_run_minutes", default: 0
+    t.integer "actual_setup_minutes", default: 0
+    t.integer "actual_total_minutes", default: 0
+    t.datetime "assigned_at"
+    t.bigint "assigned_by_id"
+    t.bigint "assigned_operator_id"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.boolean "deleted", default: false
+    t.text "notes"
+    t.text "operation_description"
+    t.string "operation_name", limit: 100, null: false
+    t.bigint "operator_id"
+    t.decimal "planned_cost", precision: 12, scale: 2, default: "0.0"
+    t.decimal "planned_run_minutes_per_unit", precision: 10, scale: 2, default: "0.0"
+    t.integer "planned_setup_minutes", default: 0
+    t.integer "planned_total_minutes", default: 0
+    t.decimal "quantity_completed", precision: 14, scale: 4, default: "0.0"
+    t.decimal "quantity_scrapped", precision: 14, scale: 4, default: "0.0"
+    t.decimal "quantity_to_process", precision: 14, scale: 4, null: false
+    t.bigint "routing_operation_id", null: false
+    t.integer "sequence_no", null: false
+    t.datetime "started_at"
+    t.string "status", limit: 20, default: "PENDING", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "work_center_id", null: false
+    t.bigint "work_order_id", null: false
+    t.index ["assigned_at"], name: "index_work_order_operations_on_assigned_at"
+    t.index ["assigned_operator_id"], name: "index_work_order_operations_on_assigned_operator_id"
+    t.index ["deleted"], name: "index_work_order_operations_on_deleted"
+    t.index ["operator_id"], name: "index_work_order_operations_on_operator_id"
+    t.index ["routing_operation_id"], name: "index_work_order_operations_on_routing_operation_id"
+    t.index ["status"], name: "index_work_order_operations_on_status"
+    t.index ["work_center_id", "status"], name: "index_work_order_operations_on_work_center_id_and_status"
+    t.index ["work_center_id"], name: "index_work_order_operations_on_work_center_id"
+    t.index ["work_order_id", "sequence_no"], name: "index_work_order_operations_on_work_order_id_and_sequence_no"
+    t.index ["work_order_id"], name: "index_work_order_operations_on_work_order_id"
+  end
+
+  create_table "work_orders", force: :cascade do |t|
+    t.datetime "actual_end_date"
+    t.decimal "actual_labor_cost", precision: 12, scale: 2, default: "0.0"
+    t.decimal "actual_material_cost", precision: 12, scale: 2, default: "0.0"
+    t.decimal "actual_overhead_cost", precision: 12, scale: 2, default: "0.0"
+    t.datetime "actual_start_date"
+    t.bigint "bom_id"
+    t.datetime "completed_at"
+    t.bigint "completed_by_id"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "customer_id"
+    t.boolean "deleted", default: false
+    t.text "notes"
+    t.decimal "planned_labor_cost", precision: 12, scale: 2, default: "0.0"
+    t.decimal "planned_material_cost", precision: 12, scale: 2, default: "0.0"
+    t.decimal "planned_overhead_cost", precision: 12, scale: 2, default: "0.0"
+    t.string "priority", limit: 10, default: "NORMAL"
+    t.bigint "product_id", null: false
+    t.decimal "quantity_completed", precision: 14, scale: 4, default: "0.0"
+    t.decimal "quantity_scrapped", precision: 14, scale: 4, default: "0.0"
+    t.decimal "quantity_to_produce", precision: 14, scale: 4, null: false
+    t.datetime "released_at"
+    t.bigint "released_by_id"
+    t.bigint "routing_id"
+    t.date "scheduled_end_date"
+    t.date "scheduled_start_date"
+    t.string "status", limit: 20, default: "NOT_STARTED", null: false
+    t.bigint "uom_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "warehouse_id", null: false
+    t.string "wo_number", limit: 50, null: false
+    t.index ["bom_id"], name: "index_work_orders_on_bom_id"
+    t.index ["completed_by_id"], name: "index_work_orders_on_completed_by_id"
+    t.index ["created_by_id"], name: "index_work_orders_on_created_by_id"
+    t.index ["customer_id"], name: "index_work_orders_on_customer_id"
+    t.index ["deleted"], name: "index_work_orders_on_deleted"
+    t.index ["priority"], name: "index_work_orders_on_priority"
+    t.index ["product_id", "status"], name: "index_work_orders_on_product_id_and_status"
+    t.index ["product_id"], name: "index_work_orders_on_product_id"
+    t.index ["released_by_id"], name: "index_work_orders_on_released_by_id"
+    t.index ["routing_id"], name: "index_work_orders_on_routing_id"
+    t.index ["scheduled_end_date"], name: "index_work_orders_on_scheduled_end_date"
+    t.index ["scheduled_start_date"], name: "index_work_orders_on_scheduled_start_date"
+    t.index ["status"], name: "index_work_orders_on_status"
+    t.index ["uom_id"], name: "index_work_orders_on_uom_id"
+    t.index ["warehouse_id", "status"], name: "index_work_orders_on_warehouse_id_and_status"
+    t.index ["warehouse_id"], name: "index_work_orders_on_warehouse_id"
+    t.index ["wo_number"], name: "index_work_orders_on_wo_number", unique: true
+  end
+
   add_foreign_key "bill_of_materials", "products"
   add_foreign_key "bom_items", "bill_of_materials"
   add_foreign_key "bom_items", "products", column: "component_id"
@@ -705,6 +853,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
   add_foreign_key "goods_receipts", "users", column: "created_by_id"
   add_foreign_key "goods_receipts", "users", column: "posted_by_id"
   add_foreign_key "goods_receipts", "warehouses"
+  add_foreign_key "labor_time_entries", "users", column: "operator_id"
+  add_foreign_key "labor_time_entries", "work_order_operations"
   add_foreign_key "locations", "warehouses"
   add_foreign_key "purchase_order_lines", "products"
   add_foreign_key "purchase_order_lines", "purchase_orders"
@@ -757,4 +907,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_122700) do
   add_foreign_key "work_centers", "locations"
   add_foreign_key "work_centers", "users", column: "created_by_id"
   add_foreign_key "work_centers", "warehouses"
+  add_foreign_key "work_order_materials", "bom_items"
+  add_foreign_key "work_order_materials", "locations"
+  add_foreign_key "work_order_materials", "products"
+  add_foreign_key "work_order_materials", "stock_batches", column: "batch_id"
+  add_foreign_key "work_order_materials", "unit_of_measures", column: "uom_id"
+  add_foreign_key "work_order_materials", "users", column: "issued_by_id"
+  add_foreign_key "work_order_materials", "work_orders"
+  add_foreign_key "work_order_operations", "routing_operations"
+  add_foreign_key "work_order_operations", "users", column: "operator_id"
+  add_foreign_key "work_order_operations", "work_centers"
+  add_foreign_key "work_order_operations", "work_orders"
+  add_foreign_key "work_orders", "bill_of_materials", column: "bom_id"
+  add_foreign_key "work_orders", "customers"
+  add_foreign_key "work_orders", "products"
+  add_foreign_key "work_orders", "routings"
+  add_foreign_key "work_orders", "unit_of_measures", column: "uom_id"
+  add_foreign_key "work_orders", "users", column: "completed_by_id"
+  add_foreign_key "work_orders", "users", column: "created_by_id"
+  add_foreign_key "work_orders", "users", column: "released_by_id"
+  add_foreign_key "work_orders", "warehouses"
 end

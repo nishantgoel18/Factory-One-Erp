@@ -1,0 +1,233 @@
+<% if operations.any? %>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Seq</th>
+          <th>Operation</th>
+          <th>Work Center</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+          <th>Quantity</th>
+          <th>Time</th>
+          <th>Labor Hours</th>
+          <th>Cost</th>
+          <th style="min-width: 150px;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% @work_order.work_order_operations.order(:sequence_no).each do |operation| %>
+          <tr>
+
+            <!-- Seq -->
+            <td>
+              <span class="badge bg-secondary"><%= operation.sequence_no %></span>
+            </td>
+
+            <!-- Operation -->
+            <td>
+              <strong><%= operation.operation_name %></strong>
+              <% if operation.operation_description.present? %>
+                <br>
+                <small class="text-muted"><%= operation.operation_description %></small>
+              <% end %>
+            </td>
+
+            <!-- Work Center -->
+            <td>
+              <%= operation.work_center.code %>
+              <br>
+              <small class="text-muted"><%= operation.work_center.name %></small>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class="badge bg-<%= operation.status_badge_class %>">
+                <%= operation.status.titleize %>
+              </span>
+
+              <% if operation.has_active_clock_in? %>
+                <% active_entry = operation.current_clock_in %>
+                <br>
+                <span class="badge bg-success mt-1">
+                  <i class="bi bi-clock"></i> 
+                  <%= active_entry.operator.full_name %> clocked in
+                </span>
+                <br>
+                <small class="text-muted"><%= active_entry.elapsed_time_display %> elapsed</small>
+              <% end %>
+            </td>
+
+            <!-- Assigned To -->
+            <td>
+              <% if operation.assigned_operator.present? %>
+                <span class="badge bg-info mb-1">
+                  <i class="bi bi-person-check"></i> <%= operation.assigned_operator.full_name %>
+                </span>
+                <br>
+                <small class="text-muted">
+                  Assigned <%= operation.assigned_at&.strftime("%b %d") %>
+                </small>
+                <% if operation.started_at.present? %>
+                  <small class="text-muted">
+                    <%= operation.started_at.strftime("%b %d, %I:%M %p") %>
+                  </small>
+                <% end %>
+              <% else %>
+                <span class="badge bg-warning">
+                  <i class="bi bi-person-x"></i> Unassigned
+                </span>
+              <% end %>
+
+              <% if operation.can_be_assigned? %>
+                <br>
+                <%= form_with url: assign_operation_path(operation_id: operation.id), 
+                              method: :post, 
+                              class: "d-inline mt-1" do |f| %>
+                  <br>
+                  <%= f.select :operator_id,
+                      options_from_collection_for_select(User.all, :id, :full_name, operation.assigned_operator_id),
+                      { include_blank: "Quick assign..." },
+                      { class: "form-control form-control-sm",
+                        onchange: "this.form.submit()" } %>
+                <% end %>
+              <% end %>
+            </td>
+
+            <!-- Quantity -->
+            <td>
+              To Process: <%= operation.quantity_to_process %>
+              <br>
+              <% if operation.status == 'COMPLETED' %>
+                <small class="text-success">
+                  Completed: <%= operation.quantity_completed %>
+                </small><br>
+                <% if operation.quantity_scrapped.to_f > 0 %>
+                  <small class="text-danger">
+                    Scrapped: <%= operation.quantity_scrapped %>
+                  </small>
+                <% end %>
+              <% end %>
+            </td>
+
+            <!-- Time -->
+            <td>
+              <small>
+                Planned: <%= operation.planned_total_minutes %> min
+                <br>
+                <% if operation.status == 'COMPLETED' %>
+                  Actual: <%= operation.actual_total_minutes %> min <br>
+                  <% variance = operation.time_variance_minutes %>
+                  <span class="<%= variance >= 0 ? 'text-success' : 'text-danger' %>">
+                    Var: <%= variance >= 0 ? '+' : '' %><%= variance %> min
+                  </span>
+                <% elsif operation.status == 'IN_PROGRESS' %>
+                  <span class="text-muted">In progress...</span>
+                <% end %>
+              </small>
+            </td>
+
+            <!-- Labor Hours -->
+            <td>
+              <% if operation.labor_time_entries.any? %>
+                <strong><%= operation.total_labor_hours.round(2) %> hrs</strong><br>
+                <small class="text-muted">
+                  <%= operation.labor_time_entries.non_deleted.count %> entries
+                </small><br>
+                <% if operation.has_active_clock_in? %>
+                  <small class="text-success">
+                    Current: <%= operation.current_clock_in.elapsed_time_display %>
+                  </small>
+                <% end %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+
+            <!-- Cost -->
+            <td>
+              <small>
+                Planned: $<%= number_with_precision(operation.planned_cost, precision: 2) %><br>
+                <% if operation.status == 'COMPLETED' %>
+                  Actual: $<%= number_with_precision(operation.actual_cost, precision: 2) %>
+                <% end %>
+              </small>
+            </td>
+
+            <td>
+
+              <% if operation.status == 'PENDING' %>
+                <% if !operation.work_order.previous_in_progress_operations_before(operation).present? %>
+                  <% if operation.show_clock_in_button?(current_user) %>
+                    <%= button_to clock_in_labor_time_entries_path(wo_op: operation),
+                        method: :post,
+                        class: "btn btn-sm btn-success mb-1 w-100",
+                        data: { confirm: "Clock in and start this operation?" } do %>
+                      <i class="bi bi-play-circle"></i> Clock In
+                    <% end %>
+                  <% elsif LaborTimeEntry.operator_clocked_in?(current_user.id) %>
+                    <% current_entry = LaborTimeEntry.current_for_operator(current_user.id) %>
+                    <small class="text-warning">
+                      <i class="bi bi-exclamation-circle"></i>
+                      Clocked in to Seq <%= current_entry.work_order_operation.sequence_no %>
+                    </small>
+                  <% end %>
+                <% end -%>
+
+              <% elsif operation.status == 'IN_PROGRESS' %>
+                <% if operation.show_clock_in_button?(current_user) %>
+                  <%= button_to clock_in_labor_time_entries_path(wo_op: operation),
+                      method: :post,
+                      class: "btn btn-sm btn-success mb-1 w-100",
+                      data: { confirm: "Clock in and start this operation?" } do %>
+                    <i class="bi bi-play-circle"></i> Clock In
+                  <% end %>
+                <% end -%>
+                <% if operation.show_clock_out_button?(current_user) %>
+                  <%= button_to clock_out_labor_time_entries_path(wo_op: operation),
+                      method: :post,
+                      class: "btn btn-sm btn-warning mb-1 w-100",
+                      data: { confirm: "Clock out from this operation?" } do %>
+                    <i class="bi bi-stop-circle"></i> Clock Out
+                  <% end %>
+                <% end %>
+
+                <% if operation.show_complete_button?(current_user) %>
+                  <button class="btn btn-sm btn-primary w-100"
+                          data-toggle="modal"
+                          data-target="#completeOperationModal<%= operation.id %>">
+                    <i class="bi bi-check-circle"></i> Complete
+                  </button>
+                <% end %>
+
+              <% elsif operation.status == 'COMPLETED' %>
+                <span class="badge bg-success">
+                  <i class="bi bi-check-circle"></i> Done
+                </span><br>
+                <small class="text-muted">
+                  Eff: <%= operation.efficiency_percentage %>%
+                </small>
+              <% end %>
+
+              <!-- COMPLETE MODAL -->
+              <%= render "work_orders/complete_modal", work_order: @work_order, operation: operation %>
+
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center py-5">
+    <i class="bi bi-info-circle fs-1 text-muted d-block mb-3"></i>
+    <p class="text-muted">
+      <% if work_order.status == 'NOT_STARTED' %>
+        Operations will be created automatically when the Work Order is released.
+      <% else %>
+        No operations found for this Work Order.
+      <% end %>
+    </p>
+  </div>
+<% end %>

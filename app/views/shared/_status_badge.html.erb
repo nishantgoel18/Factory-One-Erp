@@ -6,7 +6,7 @@
                 when 'DRAFT'
                   'bg-secondary'
                 when 'CONFIRMED', 'SCHEDULED', 'IN_PROGRESS'
-                  'bg-info'
+                  'bg-primary'
                 when 'PARTIALLY_RECEIVED'
                   'bg-warning text-dark'
                 when 'RECEIVED', 'COMPLETED', 'POSTED', 'FULLY_RECEIVED'
@@ -22,6 +22,6 @@
                 end
 %>
 
-<span class="badge <%= badge_class %>">
+<span class="text-white badge <%= badge_class %>">
   <%= status.titleize %>
 </span>

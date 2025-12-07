@@ -48,7 +48,7 @@
                                     </tr>
                                     <tr>
                                         <th>Account Type</th>
-                                        <td><span style="color: white;" class="badge <%= badge_color_on_account_type(@account) %>"><%= @account.account_type %></span></td>
+                                        <td><span style="color: white;" class="text-white badge <%= badge_color_on_account_type(@account) %>"><%= @account.account_type %></span></td>
                                     </tr>
                                     <tr>
                                         <th>Sub Type</th>
@@ -57,7 +57,7 @@
                                     <tr>
                                         <th>Current Balance</th>
                                         <td class="text-end">
-                                            <span style="color: white;" class="badge <% if @account.current_balance.to_f >= 0 %>bg-success<% else %>bg-danger<% end %>">
+                                            <span style="color: white;" class="text-white badge <% if @account.current_balance.to_f >= 0 %>bg-success<% else %>bg-danger<% end %>">
                                                 $<%= @account.current_balance.to_f.round(2) %>
                                             </span>
                                         </td>

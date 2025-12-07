@@ -1,0 +1,276 @@
+<!-- app/views/labor_time_entries/shop_floor.html.erb -->
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Shop Floor</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Core Manufacturing</a>
+        <a class="breadcrumb-item" href="#">Labor Time Entries</a>
+        <span class="breadcrumb-item active">Shop Floor</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="mb-4">
+    <h2 class="mb-1">
+      <i class="bi bi-clock-history"></i> Shop Floor - <%= current_user.full_name %>
+    </h2>
+    <p class="text-muted mb-0">Clock in/out and track your operations</p>
+  </div>
+
+  <!-- Currently Clocked In -->
+  <% if @current_entry.present? %>
+    <div class="alert alert-success  mb-4">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1">
+          <h5 class="alert-heading mb-2">
+            <i class="bi bi-play-circle-fill"></i> Currently Clocked In
+          </h5>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <strong>Work Order:</strong> 
+              <%= link_to @current_entry.work_order_operation.work_order.wo_number, 
+                  work_order_path(@current_entry.work_order_operation.work_order),
+                  class: "text-decoration-none" %>
+              <br>
+              <strong>Operation:</strong> 
+              <%= @current_entry.work_order_operation.operation_name %>
+              <br>
+              <strong>Work Center:</strong> 
+              <%= @current_entry.work_order_operation.work_center.name %>
+            </div>
+            
+            <div class="col-md-6">
+              <strong>Clocked In:</strong> 
+              <%= @current_entry.clock_in_at.strftime("%I:%M %p") %>
+              <br>
+              <strong>Time Elapsed:</strong> 
+              <span class="badge bg-primary fs-6" id="elapsed-time">
+                <%= @current_entry.elapsed_time_display %>
+              </span>
+              <br>
+              <strong>Type:</strong> 
+              <span class="badge bg-<%= @current_entry.entry_type_badge_class %>">
+                <%= @current_entry.entry_type_label %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="mt-3">
+        <%= button_to clock_out_labor_time_entries_path(wo_op: @current_entry.work_order_operation),
+            method: :post,
+            class: "btn btn-danger me-2",
+            data: { confirm: "Clock out from this operation?" } do %>
+          <i class="bi bi-stop-circle"></i> Clock Out
+        <% end %>
+        <br />
+        <%= button_to clock_out_labor_time_entries_path(wo_op: @current_entry.work_order_operation, entry_type: 'BREAK'),
+            method: :post,
+            class: "btn btn-warning",
+            data: { confirm: "Take a break? This will clock you out and you'll need to clock back in." } do %>
+          <i class="bi bi-cup-hot"></i> Take Break
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <div class="alert alert-info  mb-4">
+      <i class="bi bi-info-circle"></i> 
+      You are not currently clocked in to any operation.
+    </div>
+  <% end %>
+
+  <!-- Today's Summary -->
+  <div class="row g-3 mb-1">
+    <div class="col-md-4">
+      <div class="card  border-primary">
+        <div class="card-body text-center">
+          <i class="bi bi-clock text-primary fs-1 d-block mb-2"></i>
+          <h6 class="text-muted mb-1 small">Today's Hours</h6>
+          <h3 class="mb-0 text-primary"><%= @today_hours %> hrs</h3>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card  border-success">
+        <div class="card-body text-center">
+          <i class="bi bi-check-circle text-success fs-1 d-block mb-2"></i>
+          <h6 class="text-muted mb-1 small">Completed Today</h6>
+          <h3 class="mb-0 text-success"><%= @completed_today.count %></h3>
+          <small class="text-muted">operations</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="card  border-warning">
+        <div class="card-body text-center">
+          <i class="bi bi-list-task text-warning fs-1 d-block mb-2"></i>
+          <h6 class="text-muted mb-1 small">Pending</h6>
+          <h3 class="mb-0 text-warning"><%= @pending_operations.count %></h3>
+          <small class="text-muted">operations</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Operations -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+      <h6 class="mb-0">
+        <i class="bi bi-list-task"></i> My Pending Operations
+      </h6>
+    </div>
+    <div class="card-body p-0">
+      <% if @pending_operations.any? %>
+        <div class="list-group list-group-flush">
+          <% @pending_operations.each do |operation| %>
+            <% next if operation.work_order.previous_in_progress_operations_before(operation).present? %>
+            <div class="list-group-item">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h6 class="mb-1">
+                    <%= operation.work_order.wo_number %>
+                    <span class="badge bg-<%= operation.work_order.status_badge_class %> ms-2">
+                      <%= operation.work_order.status.titleize %>
+                    </span>
+                    <span class="badge bg-<%= operation.work_order.priority_badge_class %> ms-1">
+                      <%= operation.work_order.priority %>
+                    </span>
+                  </h6>
+                  
+                  <div class="mb-2">
+                    <strong>Seq <%= operation.sequence_no %>:</strong> 
+                    <%= operation.operation_name %>
+                  </div>
+                  
+                  <small class="text-muted">
+                    <i class="bi bi-box-seam"></i> 
+                    <%= operation.work_order.product.sku %> - 
+                    <%= operation.work_order.product.name %>
+                    <br>
+                    <i class="bi bi-gear"></i> 
+                    <%= operation.work_center.name %>
+                    <br>
+                    <i class="bi bi-clock"></i> 
+                    Planned: <%= operation.planned_total_minutes %> min
+                  </small>
+                </div>
+                
+                <div class="col-md-4 text-end">
+                  <% if operation.has_active_clock_in? %>
+                    <% if operation.current_clock_in.operator_id == current_user.id %>
+                      <span class="badge bg-success mb-2">You're clocked in</span>
+                      <br>
+                    <% else %>
+                      <span class="badge bg-warning mb-2">Someone else working</span>
+                      <br>
+                    <% end %>
+                  <% else %>
+                    <% if @current_entry.blank? %>
+                      <%= button_to clock_in_labor_time_entries_path(wo_op: operation),
+                          method: :post,
+                          class: "btn btn-success btn-sm" do %>
+                        <i class="bi bi-play-circle"></i> Clock In & Start
+                      <% end %>
+                    <% else %>
+                      <small class="text-muted">Clock out current operation first</small>
+                    <% end %>
+                  <% end %>
+                  
+                  <%= link_to "View Details", 
+                      work_order_path(operation.work_order), 
+                      class: "btn btn-outline-primary btn-sm mt-2 d-block" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+          <p>No pending operations assigned to you.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Completed Today -->
+  <% if @completed_today.any? %>
+    <div class="card ">
+      <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+        <h6 class="mb-0">
+          <i class="bi bi-check-circle"></i> Completed Today
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Work Order</th>
+                <th>Operation</th>
+                <th>Time Worked</th>
+                <th>Completed At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @completed_today.each do |operation| %>
+                <tr>
+                  <td>
+                    <%= link_to operation.work_order.wo_number, 
+                        work_order_path(operation.work_order),
+                        class: "text-decoration-none" %>
+                  </td>
+                  <td>
+                    Seq <%= operation.sequence_no %>: <%= operation.operation_name %>
+                  </td>
+                  <td>
+                    <% my_entries = operation.labor_time_entries.for_operator(current_user.id).for_date(Date.current) %>
+                    <%= my_entries.sum(:hours_worked).round(2) %> hrs
+                  </td>
+                  <td>
+                    <%= operation.completed_at&.strftime("%I:%M %p") %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Auto-refresh elapsed time every minute -->
+<script>
+  <% if @current_entry.present? %>
+    setInterval(function() {
+      // Reload the page to update elapsed time
+      // In production, you might want to use AJAX instead
+      location.reload();
+    }, 60000); // 60 seconds
+  <% end %>
+</script>
+
+<style>
+  /* Mobile-friendly styles */
+  @media (max-width: 768px) {
+    .card-body {
+      font-size: 0.9rem;
+    }
+    
+    .btn-sm {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+    }
+  }
+</style>

@@ -1,6 +1,7 @@
 # app/controllers/routing_reports_controller.rb
 require 'csv'
 class RoutingReportsController < ApplicationController
+  before_action :authenticate_user!
   def index
     # Main reports landing page
   end
@@ -150,20 +151,27 @@ class RoutingReportsController < ApplicationController
   # REPORT 5: Operations Summary
   # ========================================
   def operations_summary
-    @operations_data = RoutingOperation.where(deleted: false)
-                                       .joins(:routing, :work_center)
-                                       .where(routings: { status: 'ACTIVE', deleted: false })
-                                       .select(
-                                         'work_centers.name as wc_name',
-                                         'work_centers.code as wc_code',
-                                         'COUNT(routing_operations.id) as operations_count',
-                                         'SUM(routing_operations.setup_time_minutes) as total_setup',
-                                         'AVG(routing_operations.run_time_per_unit_minutes) as avg_run_time',
-                                         'SUM(routing_operations.labor_cost_per_unit) as total_labor_cost',
-                                         'SUM(routing_operations.overhead_cost_per_unit) as total_overhead_cost'
-                                       )
-                                       .group('work_centers.id, work_centers.name, work_centers.code')
-                                       .order('operations_count DESC')
+    # Simple Ruby approach - more reliable!
+    work_centers = WorkCenter.where(deleted: false, is_active: true)
+                             .includes(routing_operations: :routing)
+    
+    @operations_data = work_centers.map do |wc|
+      operations = wc.routing_operations
+                     .joins(:routing)
+                     .where(deleted: false, routings: { status: 'ACTIVE', deleted: false })
+      
+      OpenStruct.new(
+        wc_id: wc.id,
+        wc_code: wc.code,
+        wc_name: wc.name,
+        operations_count: operations.count,
+        total_setup: operations.sum(:setup_time_minutes).to_f,
+        avg_run_time: operations.average(:run_time_per_unit_minutes).to_f.round(2),
+        total_labor_cost: operations.sum(:labor_cost_per_unit).to_f,
+        total_overhead_cost: operations.sum(:overhead_cost_per_unit).to_f
+      )
+    end.select { |data| data.operations_count > 0 }
+       .sort_by { |data| -data.operations_count }
     
     respond_to do |format|
       format.html

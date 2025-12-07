@@ -34,7 +34,7 @@
 
             <!-- General Info -->
             <div class="card mb-4">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">General Info</h5>
                 </div>
                 <div class="card-body">
@@ -224,14 +224,14 @@
                 </div>
 
                 <!-- Routing Panel -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div class="card  mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-route me-2"></i> Production Routing
                         </h5>
                         <%= link_to new_routing_path(product_id: @product.id), 
-                                    class: "btn btn-light btn-sm" do %>
-                            <i class="fas fa-plus me-2"></i>Create Routing
+                                    class: "btn btn-success btn-sm" do %>
+                            <i class="fas fa-plus me-2"></i> Create Routing
                         <% end %>
                     </div>
 
@@ -246,7 +246,7 @@
                                         <%= link_to routing.display_name, 
                                                     routing_path(routing), 
                                                     class: "text-decoration-none" %>
-                                        <span class="badge bg-success ms-2">Default</span>
+                                        <span class="text-white badge bg-success ms-2">Default</span>
                                     </h6>
                                     <p class="text-muted small mb-0">
                                         <strong>Revision:</strong> <%= routing.revision %> |
@@ -309,7 +309,7 @@
                     </div>
                 </div>
 
-                <div class="card shadow-sm mb-4">
+                <div class="card  mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                         <h5 class="mb-0">
                             <i class="fas fa-industry me-2"></i> Production Summary
@@ -343,11 +343,11 @@
 
                             <div class="col-md-6 text-end">
                                 <% if readiness[:ready] %>
-                                    <span class="badge bg-success fs-5">
+                                    <span class="text-white badge bg-success fs-5">
                                         <i class="fas fa-check me-1"></i> Ready for Production
                                     </span>
                                 <% else %>
-                                    <span class="badge bg-warning fs-5">
+                                    <span class="text-white badge bg-warning fs-5">
                                         <i class="fas fa-exclamation-triangle me-1"></i> Not Ready
                                     </span>
                                 <% end %>

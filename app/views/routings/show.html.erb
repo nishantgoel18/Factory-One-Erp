@@ -28,25 +28,25 @@
       <!-- Status Badge -->
       <% case @routing.status %>
       <% when "ACTIVE" %>
-        <span class="badge bg-success fs-5 me-2 m-r-5">
+        <span class="text-white badge bg-success fs-5 me-2 m-r-5">
           <i class="fas fa-check-circle me-1"></i> Active
         </span>
       <% when "DRAFT" %>
-        <span class="badge bg-warning fs-5 me-2 m-r-5">
+        <span class="text-white badge bg-warning fs-5 me-2 m-r-5">
           <i class="fas fa-pencil-alt me-1"></i> Draft
         </span>
       <% when "INACTIVE" %>
-        <span class="badge bg-secondary fs-5 me-2 m-r-5">
+        <span class="text-white badge bg-secondary fs-5 me-2 m-r-5">
           <i class="fas fa-pause-circle me-1"></i> Inactive
         </span>
       <% when "ARCHIVED" %>
-        <span class="badge bg-dark fs-5 me-2 m-r-5">
+        <span class="text-white badge bg-dark fs-5 me-2 m-r-5">
           <i class="fas fa-archive me-1"></i> Archived
         </span>
       <% end %>
       
       <% if @routing.is_default? %>
-        <span class="badge bg-warning fs-5 me-2 m-r-5">
+        <span class="text-white badge bg-warning fs-5 me-2 m-r-5">
           <i class="fas fa-star me-1"></i> Default
         </span>
       <% end %>
@@ -84,7 +84,7 @@
     <!-- Left Column - Main Information -->
     <div class="col-lg-8">
       <!-- Basic Information Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-info-circle me-2"></i>Routing Information
@@ -111,7 +111,7 @@
             <div class="col-md-3 mb-3">
               <label class="text-muted small">Revision</label>
               <div>
-                <span class="badge bg-secondary fs-6"><%= @routing.revision %></span>
+                <span class="text-white badge bg-secondary fs-6"><%= @routing.revision %></span>
               </div>
             </div>
             <div class="col-md-3 mb-3">
@@ -119,20 +119,20 @@
               <div>
                 <% case @routing.status %>
                 <% when "ACTIVE" %>
-                  <span class="badge bg-success fs-6">Active</span>
+                  <span class="text-white badge bg-success fs-6">Active</span>
                 <% when "DRAFT" %>
-                  <span class="badge bg-warning fs-6">Draft</span>
+                  <span class="text-white badge bg-warning fs-6">Draft</span>
                 <% when "INACTIVE" %>
-                  <span class="badge bg-secondary fs-6">Inactive</span>
+                  <span class="text-white badge bg-secondary fs-6">Inactive</span>
                 <% when "ARCHIVED" %>
-                  <span class="badge bg-dark fs-6">Archived</span>
+                  <span class="text-white badge bg-dark fs-6">Archived</span>
                 <% end %>
               </div>
             </div>
             <% if @routing.description.present? %>
               <div class="col-12 mb-3">
                 <label class="text-muted small">Description</label>
-                <div class="border rounded p-3 bg-light">
+                <div class="border rounded p-3 bg-primary">
                   <%= simple_format(@routing.description) %>
                 </div>
               </div>
@@ -142,8 +142,8 @@
       </div>
 
       <!-- Effective Dates Card -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-info text-white">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-calendar-alt me-2"></i> Effective Dates
           </h5>
@@ -174,12 +174,12 @@
       </div>
 
       <!-- Operations Sequence Card -->
-      <div class="card shadow-sm mb-4">
+      <div class="card  mb-4">
         <div class="card-header d-flex align-items-center bg-success text-white">
           <h5 class="mb-0">
             <i class="fas fa-cogs me-2"></i>
             Operations Sequence
-            <span class="badge bg-light text-dark ms-2">
+            <span class="text-white badge bg-primary text-dark ms-2" style="color: black !important;">
               <%= @operations.count %> Operations
             </span>
           </h5>
@@ -202,7 +202,7 @@
                   <% @operations.each_with_index do |op, index| %>
                     <tr>
                       <td>
-                        <span class="badge bg-primary fs-6">
+                        <span class="text-white badge bg-primary fs-6">
                           <%= op.operation_sequence %>
                         </span>
                       </td>
@@ -237,7 +237,7 @@
                     
                     <!-- Expandable Details Row -->
                     <tr class="collapse" id="operation-details-<%= op.id %>">
-                      <td colspan="6" class="bg-light">
+                      <td colspan="6" class="bg-primary">
                         <div class="p-3">
                           <div class="row">
                             <div class="col-md-3">
@@ -336,7 +336,7 @@
 
       <!-- Visual Flow Chart -->
       <% if @operations.any? %>
-        <div class="card shadow-sm mb-4">
+        <div class="card  mb-4">
           <div class="card-header d-flex align-items-center bg-secondary text-white">
             <h5 class="mb-0">
               <i class="fas fa-project-diagram me-2"></i> Process Flow
@@ -352,10 +352,10 @@
                     <i class="fas fa-industry me-1"></i> <%= op.work_center.name %>
                   </div>
                   <div class="small mt-2">
-                    <span class="badge bg-light text-dark">
+                    <span class="text-white badge bg-primary text-dark" style="color: black !important;">
                       Setup: <%= op.setup_time_minutes %>m
                     </span>
-                    <span class="badge bg-light text-dark ms-1">
+                    <span class="text-white badge bg-primary text-dark ms-1" style="color: black !important;">
                       Run: <%= op.run_time_per_unit_minutes %>m/unit
                     </span>
                   </div>
@@ -384,14 +384,14 @@
 
       <!-- Notes Card -->
       <% if @routing.notes.present? %>
-        <div class="card shadow-sm mb-4">
+        <div class="card  mb-4">
           <div class="card-header d-flex align-items-center">
             <h5 class="mb-0">
               <i class="fas fa-sticky-note me-2"></i> Additional Notes
             </h5>
           </div>
           <div class="card-body">
-            <div class="border rounded p-3 bg-light">
+            <div class="border rounded p-3 bg-primary">
               <%= simple_format(@routing.notes) %>
             </div>
           </div>
@@ -402,7 +402,7 @@
     <!-- Right Column - Summary & Analytics -->
     <div class="col-lg-4">
       <!-- Time Summary Card -->
-      <div class="card shadow-sm mb-4 border-primary">
+      <div class="card  mb-4 border-primary">
         <div class="card-header d-flex align-items-center bg-primary text-white">
           <h5 class="mb-0">
             <i class="fas fa-clock me-2"></i> Time Summary
@@ -444,7 +444,7 @@
       </div>
 
       <!-- Cost Summary Card -->
-      <div class="card shadow-sm mb-4 border-warning">
+      <div class="card  mb-4 border-warning">
         <div class="card-header d-flex align-items-center bg-warning text-dark">
           <h5 class="mb-0">
             <i class="fas fa-dollar-sign me-2"></i> Cost Summary
@@ -474,7 +474,7 @@
             </div>
           </div>
         </div>
-        <div class="card-footer bg-light">
+        <div class="card-footer bg-primary">
           <small class="text-muted">
             <i class="fas fa-info-circle me-1"></i>
             Includes labor and overhead costs from all operations
@@ -483,7 +483,7 @@
       </div>
 
       <!-- Batch Cost Calculator -->
-      <div class="card shadow-sm mb-4 border-success">
+      <div class="card  mb-4 border-success">
         <div class="card-header d-flex align-items-center bg-success text-white">
           <h5 class="mb-0">
             <i class="fas fa-calculator me-2"></i> Batch Cost Calculator
@@ -531,7 +531,7 @@
 
       <!-- Critical Path Card -->
       <% if @routing.critical_operation.present? %>
-        <div class="card shadow-sm mb-4 border-danger">
+        <div class="card  mb-4 border-danger">
           <div class="card-header d-flex align-items-center bg-danger text-white">
             <h5 class="mb-0">
               <i class="fas fa-exclamation-triangle me-2"></i> Critical Operation
@@ -556,7 +556,7 @@
               </div>
             </div>
           </div>
-          <div class="card-footer bg-light">
+          <div class="card-footer bg-primary">
             <small class="text-muted">
               <i class="fas fa-info-circle me-1"></i>
               Longest operation - potential bottleneck
@@ -566,8 +566,8 @@
       <% end %>
 
       <!-- Audit Information Card -->
-      <div class="card shadow-sm mb-4">
-        <div class="card-header d-flex align-items-center bg-light">
+      <div class="card  mb-4">
+        <div class="card-header d-flex align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-history me-2"></i> Audit Information
           </h5>

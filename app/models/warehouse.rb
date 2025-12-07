@@ -7,4 +7,5 @@ class Warehouse < ApplicationRecord
   validates :address, length: { maximum: 500 }, allow_blank: true
 
   has_many :stock_issues
+  has_many :locations
 end

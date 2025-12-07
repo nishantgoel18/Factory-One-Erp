@@ -79,7 +79,7 @@
   </div>
 
   <!-- Main Report Table -->
-  <div class="card shadow-sm">
+  <div class="card ">
     <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
       <h5 class="mb-0">
         <i class="fas fa-table me-2"></i> Work Center Details
@@ -111,7 +111,7 @@
                   <small class="text-muted"><%= wc.name %></small>
                 </td>
                 <td>
-                  <span class="badge bg-secondary"><%= wc.type_label %></span>
+                  <span class="text-white badge bg-secondary"><%= wc.type_label %></span>
                 </td>
                 <td class="text-center">
                   <%= number_with_precision(wc.capacity_per_hour, precision: 1) %>
@@ -129,13 +129,13 @@
                   </div>
                 </td>
                 <td class="text-center">
-                  <span class="badge bg-info"><%= data[:total_operations] %></span>
+                  <span class="text-white badge bg-primary"><%= data[:total_operations] %></span>
                 </td>
                 <td class="text-center">
                   <% if data[:active_operations] > 0 %>
-                    <span class="badge bg-success"><%= data[:active_operations] %></span>
+                    <span class="text-white badge bg-success"><%= data[:active_operations] %></span>
                   <% else %>
-                    <span class="badge bg-secondary">0</span>
+                    <span class="text-white badge bg-secondary">0</span>
                   <% end %>
                 </td>
                 <td class="text-center">
@@ -163,8 +163,8 @@
   <!-- Utilization Chart -->
   <div class="row mt-4">
     <div class="col-12">
-      <div class="card shadow-sm">
-        <div class="card-header d-flex justify-content-start align-items-center bg-light">
+      <div class="card ">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary">
           <h5 class="mb-0">
             <i class="fas fa-chart-bar me-2"></i> Utilization Overview
           </h5>
@@ -179,7 +179,7 @@
   <!-- Insights Section -->
   <div class="row mt-4">
     <div class="col-md-6">
-      <div class="card shadow-sm border-success">
+      <div class="card  border-success">
         <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
           <h6 class="mb-0">
             <i class="fas fa-thumbs-up me-2"></i> High Utilization (70%+)
@@ -205,7 +205,7 @@
     </div>
     
     <div class="col-md-6">
-      <div class="card shadow-sm border-warning">
+      <div class="card  border-warning">
         <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
           <h6 class="mb-0">
             <i class="fas fa-exclamation-triangle me-2"></i> Low Utilization (<40%)

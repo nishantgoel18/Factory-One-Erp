@@ -1,0 +1,76 @@
+<!-- app/views/work_order_mailer/work_order_completed.html.erb -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #198754; color: white; padding: 20px; text-align: center; }
+    .content { background: #f8f9fa; padding: 20px; margin: 20px 0; }
+    .detail-row { padding: 10px 0; border-bottom: 1px solid #dee2e6; }
+    .detail-label { font-weight: bold; color: #6c757d; }
+    .success { color: #198754; font-weight: bold; }
+    .warning { color: #ffc107; font-weight: bold; }
+    .danger { color: #dc3545; font-weight: bold; }
+    .btn { display: inline-block; padding: 10px 20px; background: #198754; color: white; 
+           text-decoration: none; border-radius: 5px; margin: 10px 0; }
+    .footer { text-align: center; padding: 20px; color: #6c757d; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>✓ Work Order Completed</h2>
+    </div>
+    
+    <div class="content">
+      <p>Congratulations!</p>
+      
+      <p>The following work order has been completed successfully:</p>
+      
+      <div class="detail-row">
+        <span class="detail-label">WO Number:</span> <%= @work_order.wo_number %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Product:</span> <%= @work_order.product.code %> - <%= @work_order.product.name %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Quantity Completed:</span> 
+        <span class="success"><%= @quantity_completed %> <%= @work_order.uom.symbol %></span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Operations Completed:</span> <%= @operations_count %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Completed On:</span> <%= @work_order.actual_end_date.strftime("%B %d, %Y at %I:%M %p") %>
+      </div>
+      
+      <h4 style="margin-top: 20px;">Cost Summary:</h4>
+      <div class="detail-row">
+        <span class="detail-label">Planned Cost:</span> $<%= number_with_precision(@work_order.total_planned_cost, precision: 2) %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Actual Cost:</span> $<%= number_with_precision(@work_order.total_actual_cost, precision: 2) %>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Cost Variance:</span> 
+        <span class="<%= @cost_variance >= 0 ? 'success' : 'danger' %>">
+          <%= @cost_variance >= 0 ? '+' : '' %>$<%= number_with_precision(@cost_variance.abs, precision: 2) %>
+          (<%= @cost_variance >= 0 ? 'Under Budget' : 'Over Budget' %>)
+        </span>
+      </div>
+      
+      <p style="text-align: center; margin-top: 20px;">
+        <a href="<%= work_order_url(@work_order) %>" class="btn">View Complete Details</a>
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>This is an automated notification from FactoryOneERP System.</p>
+      <p>Please do not reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>

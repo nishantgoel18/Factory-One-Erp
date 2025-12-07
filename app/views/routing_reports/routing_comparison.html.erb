@@ -67,8 +67,8 @@
     <% @products.each do |product| %>
       <% routings_data = @comparison_data[product.id] %>
       
-      <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
+      <div class="card  mb-4">
+        <div class="card-header bg-primary">
           <div class="row align-items-center">
             <div class="col-md-8">
               <h5 class="mb-0">
@@ -81,7 +81,7 @@
             </div>
             <div class="col-md-4 text-end">
               <% best_routing = routings_data.max_by { |d| d[:efficiency_score] } %>
-              <span class="badge bg-success">
+              <span class="text-white badge bg-success">
                 <i class="fas fa-star me-1"></i>
                 Best: <%= best_routing[:routing].code %>
               </span>
@@ -111,7 +111,7 @@
                     <td>
                       <strong><%= routing.code %></strong>
                       <% if index == 0 %>
-                        <span class="badge bg-success ms-2">Best</span>
+                        <span class="text-white badge bg-success ms-2">Best</span>
                       <% end %>
                     </td>
                     <td>
@@ -122,20 +122,20 @@
                     <td>
                       <% case routing.status %>
                       <% when "ACTIVE" %>
-                        <span class="badge bg-success">Active</span>
+                        <span class="text-white badge bg-success">Active</span>
                       <% when "DRAFT" %>
-                        <span class="badge bg-warning">Draft</span>
+                        <span class="text-white badge bg-warning">Draft</span>
                       <% when "INACTIVE" %>
-                        <span class="badge bg-secondary">Inactive</span>
+                        <span class="text-white badge bg-secondary">Inactive</span>
                       <% else %>
-                        <span class="badge bg-dark"><%= routing.status %></span>
+                        <span class="text-white badge bg-dark"><%= routing.status %></span>
                       <% end %>
                       <% if routing.is_default? %>
-                        <br><span class="badge bg-warning mt-1">Default</span>
+                        <br><span class="text-white badge bg-warning mt-1">Default</span>
                       <% end %>
                     </td>
                     <td class="text-center">
-                      <span class="badge bg-info"><%= data[:operations_count] %></span>
+                      <span class="text-white badge bg-primary"><%= data[:operations_count] %></span>
                     </td>
                     <td class="text-end">
                       <strong><%= number_with_precision(data[:total_time], precision: 1) %></strong>
@@ -287,7 +287,7 @@
 
   <% else %>
     <!-- Empty State -->
-    <div class="card shadow-sm">
+    <div class="card ">
       <div class="card-body text-center py-5">
         <i class="fas fa-balance-scale fa-4x text-muted mb-3"></i>
         <h5 class="text-muted">No Products with Multiple Routings</h5>

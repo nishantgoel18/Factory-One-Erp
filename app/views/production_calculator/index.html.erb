@@ -30,7 +30,7 @@
 
         <!-- Input Card -->
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card ">
                 <div class="card-header bg-primary text-white d-flex justify-content-start align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-cogs me-2"></i> Calculate
@@ -59,7 +59,7 @@
                     </div>
 
                     <button id="calculate-btn" class="btn btn-primary w-100" disabled>
-                        <i class="fas fa-calculator me-2"></i>Calculate
+                        <i class="fas fa-calculator me-2"></i> Calculate
                     </button>
 
                     <div id="not-ready-alert" class="alert alert-warning mt-3" style="display: none;">
@@ -76,7 +76,7 @@
             <div id="results-container" style="display: none;">
 
                 <!-- Product Info -->
-                <div class="card shadow-sm mb-3">
+                <div class="card  mb-3">
                     <div class="card-body">
                         <h5 class="mb-0" id="result-product-name"></h5>
                         <small class="text-muted" id="result-product-code"></small>
@@ -123,8 +123,8 @@
                 </div>
 
                 <!-- Detailed Breakdown -->
-                <div class="card shadow-sm mb-3">
-                    <div class="card-header bg-light d-flex justify-content-start align-items-center">
+                <div class="card  mb-3">
+                    <div class="card-header bg-primary d-flex justify-content-start align-items-center">
                         <h6 class="mb-0">Cost Breakdown</h6>
                     </div>
                     <div class="card-body">
@@ -142,8 +142,8 @@
                 </div>
 
                 <!-- Materials Table -->
-                <div class="card shadow-sm mb-3">
-                    <div class="card-header bg-light d-flex justify-content-start align-items-center">
+                <div class="card  mb-3">
+                    <div class="card-header bg-primary d-flex justify-content-start align-items-center">
                         <h6 class="mb-0">
                             <i class="fas fa-cubes me-2"></i> Materials (BOM)
                         </h6>
@@ -166,8 +166,8 @@
                 </div>
 
                 <!-- Operations Table -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light d-flex justify-content-start align-items-center">
+                <div class="card ">
+                    <div class="card-header bg-primary d-flex justify-content-start align-items-center">
                         <h6 class="mb-0">
                             <i class="fas fa-cogs me-2"></i> Operations (Routing)
                         </h6>
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const operationsBody = document.getElementById('operations-table-body');
         operationsBody.innerHTML = data.processing.operations.map(op => `
             <tr>
-                <td><span class="badge bg-primary">${op.sequence}</span></td>
+                <td><span class="text-white badge bg-primary">${op.sequence}</span></td>
                 <td>${op.name}</td>
                 <td><small class="text-muted">${op.work_center}</small></td>
                 <td class="text-end">$${op.setup_cost}</td>

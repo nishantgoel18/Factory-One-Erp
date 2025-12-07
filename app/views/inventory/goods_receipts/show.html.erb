@@ -31,7 +31,7 @@
       <%= render 'shared/status_badge', status: @goods_receipt.status %>
       
       <% if @goods_receipt.status == 'POSTED' %>
-        <span class="badge bg-success ms-2">
+        <span class="text-white badge bg-success ms-2">
           <i class="bi bi-check-circle me-1"></i>
           Posted on <%= @goods_receipt.posted_at.strftime('%b %d, %Y') %>
         </span>
@@ -78,7 +78,7 @@
     <div class="col-md-8">
       <!-- GRN Information -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Receipt Information</h5>
         </div>
         <div class="card-body">
@@ -142,7 +142,7 @@
 
       <!-- Received Items -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Received Items</h5>
         </div>
         <div class="card-body p-0">
@@ -175,14 +175,14 @@
                       <% end %>
                     </td>
                     <td>
-                      <span class="badge bg-secondary">
+                      <span class="text-white badge bg-secondary">
                         <%= line.location.code %>
                       </span>
                       <br><small class="text-muted"><%= line.location.name %></small>
                     </td>
                     <td>
                       <% if line.batch %>
-                        <span class="badge bg-info">
+                        <span class="text-white badge bg-primary">
                           <%= line.batch.batch_number %>
                         </span>
                       <% else %>
@@ -210,7 +210,7 @@
             </table>
           </div>
         </div>
-        <div class="card-footer bg-light">
+        <div class="card-footer bg-primary">
           <div class="row">
             <div class="col-md-8">
               <strong>Total Items Received:</strong> <%= @lines.count %> line items
@@ -225,7 +225,7 @@
       <!-- Stock Transactions (if posted) -->
       <% if @goods_receipt.status == 'POSTED' %>
         <div class="card">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-arrow-repeat me-2"></i>
               Stock Transactions Created
@@ -251,7 +251,7 @@
                       ).includes(:product, :to_location).each do |txn| %>
                     <tr>
                       <td>
-                        <span class="badge bg-success">
+                        <span class="text-white badge bg-success">
                           <%= txn.txn_type %>
                         </span>
                       </td>
@@ -273,7 +273,7 @@
     <div class="col-md-4">
       <!-- Status Info -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h6 class="mb-0">Status Information</h6>
         </div>
         <div class="card-body">
@@ -304,7 +304,7 @@
 
       <!-- Quick Stats -->
       <div class="card">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h6 class="mb-0">Receipt Summary</h6>
         </div>
         <div class="card-body">
@@ -331,7 +331,7 @@
 
       <% if @goods_receipt.warehouse %>
         <div class="card mt-4">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h6 class="mb-0">Warehouse Info</h6>
           </div>
           <div class="card-body">

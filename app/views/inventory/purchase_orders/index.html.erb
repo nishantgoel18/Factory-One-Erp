@@ -169,7 +169,7 @@
                       <%= po.expected_date&.strftime('%b %d, %Y') || 'N/A' %>
                       <% if po.expected_date && po.expected_date < Date.current && 
                             ['CONFIRMED', 'PARTIALLY_RECEIVED'].include?(po.status) %>
-                        <span class="badge bg-danger ms-1">Overdue</span>
+                        <span class="text-white badge bg-danger ms-1">Overdue</span>
                       <% end %>
                     </td>
                     <td>

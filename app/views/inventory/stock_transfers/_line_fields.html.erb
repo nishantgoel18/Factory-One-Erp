@@ -48,5 +48,15 @@
       </button>
       <%= f.input :_destroy, as: :hidden %>
     </div>
+
+    <div class="col-md-2">
+      <%= f.association :batch,
+          collection: StockBatch.non_deleted,
+          label_method: :batch_number,
+          value_method: :id,
+          label: 'Batch (if tracked)',
+          include_blank: 'No Batch',
+          input_html: { class: 'form-control form-control' } %>
+    </div>
   </div>
 </div>

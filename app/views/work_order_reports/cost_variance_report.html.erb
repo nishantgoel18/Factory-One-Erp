@@ -1,0 +1,316 @@
+<!-- app/views/reports/work_order_reports/cost_variance_report.html.erb -->
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Cost Variance Analysis Report</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>  Home</a>
+        <a class="breadcrumb-item" href="#">Reports</a>
+        <a class="breadcrumb-item" href="/reports/work_order">Work Orders</a>
+
+        <span class="breadcrumb-item active">Cost Variance Analysis Report</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-graph-up"></i> Cost Variance Analysis Report
+      </h2>
+      <p class="text-muted mb-0">
+        Period: <%= @start_date.strftime("%B %d, %Y") %> to <%= @end_date.strftime("%B %d, %Y") %>
+      </p>
+    </div>
+    <div>
+      <%= link_to "Export PDF", cost_variance_report_work_order_path(format: :pdf, 
+          start_date: @start_date, end_date: @end_date), 
+          class: "btn btn-danger me-2", target: "_blank" %>
+      <%= link_to "Export CSV", cost_variance_report_work_order_path(format: :csv, 
+          start_date: @start_date, end_date: @end_date), 
+          class: "btn btn-success" %>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card  mb-4">
+    <div class="card-body">
+      <%= form_with url: cost_variance_report_work_order_path, method: :get, class: "row g-3" do |f| %>
+        <div class="col-md-4">
+          <%= f.label :start_date, "Start Date", class: "form-label" %>
+          <%= f.date_field :start_date, value: @start_date, class: "form-control" %>
+        </div>
+        <div class="col-md-4">
+          <%= f.label :end_date, "End Date", class: "form-label" %>
+          <%= f.date_field :end_date, value: @end_date, class: "form-control" %>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <%= f.submit "Generate Report", class: "btn btn-primary w-100" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Overall Summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card  border-primary">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Total Planned Cost</h6>
+          <h3 class="mb-0">$<%= number_with_precision(@total_planned_cost, precision: 2) %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card  border-info">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Total Actual Cost</h6>
+          <h3 class="mb-0 text-info">$<%= number_with_precision(@total_actual_cost, precision: 2) %></h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card  border-<%= @total_variance >= 0 ? 'success' : 'danger' %>">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Total Variance</h6>
+          <h3 class="mb-0 text-<%= @total_variance >= 0 ? 'success' : 'danger' %>">
+            $<%= number_with_precision(@total_variance.abs, precision: 2) %>
+          </h3>
+          <small class="text-muted"><%= @total_variance >= 0 ? 'Under' : 'Over' %> Budget</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card  border-warning">
+        <div class="card-body">
+          <h6 class="text-muted mb-2 small">Variance %</h6>
+          <h3 class="mb-0 text-warning">
+            <%= @total_variance >= 0 ? '+' : '-' %><%= number_with_precision(@variance_percent.abs, precision: 2) %>%
+          </h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variance Breakdown -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card ">
+        <div class="card-header bg-primary text-white">
+          <h6 class="mb-0"><i class="bi bi-box-seam"></i> Material Variance</h6>
+        </div>
+        <div class="card-body">
+          <h4 class="text-<%= @material_variance >= 0 ? 'success' : 'danger' %>">
+            <%= @material_variance >= 0 ? '+' : '-' %>$<%= number_with_precision(@material_variance.abs, precision: 2) %>
+          </h4>
+          <small class="text-muted"><%= @material_variance >= 0 ? 'Saved' : 'Overspent' %></small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card ">
+        <div class="card-header bg-warning text-dark">
+          <h6 class="mb-0"><i class="bi bi-people"></i> Labor Variance</h6>
+        </div>
+        <div class="card-body">
+          <h4 class="text-<%= @labor_variance >= 0 ? 'success' : 'danger' %>">
+            <%= @labor_variance >= 0 ? '+' : '-' %>$<%= number_with_precision(@labor_variance.abs, precision: 2) %>
+          </h4>
+          <small class="text-muted"><%= @labor_variance >= 0 ? 'Saved' : 'Overspent' %></small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card ">
+        <div class="card-header bg-primary text-white">
+          <h6 class="mb-0"><i class="bi bi-gear"></i> Overhead Variance</h6>
+        </div>
+        <div class="card-body">
+          <h4 class="text-<%= @overhead_variance >= 0 ? 'success' : 'danger' %>">
+            <%= @overhead_variance >= 0 ? '+' : '-' %>$<%= number_with_precision(@overhead_variance.abs, precision: 2) %>
+          </h4>
+          <small class="text-muted"><%= @overhead_variance >= 0 ? 'Saved' : 'Overspent' %></small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 5 Over Budget -->
+  <% if @over_budget_wos.any? %>
+    <div class="card  mb-4">
+      <div class="card-header bg-danger text-white">
+        <h6 class="mb-0">
+          <i class="bi bi-exclamation-triangle"></i> Top 5 Over Budget Work Orders
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>WO Number</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Planned Cost</th>
+                <th>Actual Cost</th>
+                <th>Variance</th>
+                <th>Variance %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @over_budget_wos.each do |wo| %>
+                <tr>
+                  <td>
+                    <%= link_to wo.wo_number, work_order_path(wo), class: "fw-semibold text-decoration-none" %>
+                  </td>
+                  <td>
+                    <%= wo.product.sku %>
+                    <br>
+                    <small class="text-muted"><%= wo.product.name %></small>
+                  </td>
+                  <td>
+                    <%= number_with_precision(wo.quantity_completed, precision: 2) %> <%= wo.uom.symbol %>
+                  </td>
+                  <td>$<%= number_with_precision(wo.total_planned_cost, precision: 2) %></td>
+                  <td>$<%= number_with_precision(wo.total_actual_cost, precision: 2) %></td>
+                  <td class="text-danger">
+                    <strong>-$<%= number_with_precision(wo.cost_variance.abs, precision: 2) %></strong>
+                  </td>
+                  <td class="text-danger">
+                    <strong>-<%= number_with_precision(wo.cost_variance_percent.abs, precision: 2) %>%</strong>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Top 5 Under Budget -->
+  <% if @under_budget_wos.any? %>
+    <div class="card  mb-4">
+      <div class="card-header bg-success text-white">
+        <h6 class="mb-0">
+          <i class="bi bi-check-circle"></i> Top 5 Under Budget Work Orders
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>WO Number</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Planned Cost</th>
+                <th>Actual Cost</th>
+                <th>Variance</th>
+                <th>Variance %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @under_budget_wos.each do |wo| %>
+                <tr>
+                  <td>
+                    <%= link_to wo.wo_number, work_order_path(wo), class: "fw-semibold text-decoration-none" %>
+                  </td>
+                  <td>
+                    <%= wo.product.sku %>
+                    <br>
+                    <small class="text-muted"><%= wo.product.name %></small>
+                  </td>
+                  <td>
+                    <%= number_with_precision(wo.quantity_completed, precision: 2) %> <%= wo.uom.symbol %>
+                  </td>
+                  <td>$<%= number_with_precision(wo.total_planned_cost, precision: 2) %></td>
+                  <td>$<%= number_with_precision(wo.total_actual_cost, precision: 2) %></td>
+                  <td class="text-success">
+                    <strong>+$<%= number_with_precision(wo.cost_variance.abs, precision: 2) %></strong>
+                  </td>
+                  <td class="text-success">
+                    <strong>+<%= number_with_precision(wo.cost_variance_percent.abs, precision: 2) %>%</strong>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- All Work Orders Detailed Table -->
+  <div class="card ">
+    <div class="card-header">
+      <h6 class="mb-0">Complete Cost Variance Details</h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0" style="font-size: 0.9rem;">
+          <thead class="table-light">
+            <tr>
+              <th>WO Number</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Material</th>
+              <th>Labor</th>
+              <th>Overhead</th>
+              <th>Total Planned</th>
+              <th>Total Actual</th>
+              <th>Variance</th>
+              <th>%</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @work_orders.each do |wo| %>
+              <tr>
+                <td>
+                  <%= link_to wo.wo_number, work_order_path(wo), class: "text-decoration-none" %>
+                </td>
+                <td>
+                  <small><%= wo.product.sku %></small>
+                </td>
+                <td><%= number_with_precision(wo.quantity_completed, precision: 0) %></td>
+                <td>
+                  <small>
+                    $<%= number_with_precision(wo.planned_material_cost, precision: 0) %> / 
+                    $<%= number_with_precision(wo.actual_material_cost, precision: 0) %>
+                  </small>
+                </td>
+                <td>
+                  <small>
+                    $<%= number_with_precision(wo.planned_labor_cost, precision: 0) %> / 
+                    $<%= number_with_precision(wo.actual_labor_cost, precision: 0) %>
+                  </small>
+                </td>
+                <td>
+                  <small>
+                    $<%= number_with_precision(wo.planned_overhead_cost, precision: 0) %> / 
+                    $<%= number_with_precision(wo.actual_overhead_cost, precision: 0) %>
+                  </small>
+                </td>
+                <td><strong>$<%= number_with_precision(wo.total_planned_cost, precision: 2) %></strong></td>
+                <td><strong>$<%= number_with_precision(wo.total_actual_cost, precision: 2) %></strong></td>
+                <td class="text-<%= wo.cost_variance >= 0 ? 'success' : 'danger' %>">
+                  <strong>
+                    <%= wo.cost_variance >= 0 ? '+' : '-' %>$<%= number_with_precision(wo.cost_variance.abs, precision: 2) %>
+                  </strong>
+                </td>
+                <td class="text-<%= wo.cost_variance >= 0 ? 'success' : 'danger' %>">
+                  <strong>
+                    <%= wo.cost_variance >= 0 ? '+' : '-' %><%= number_with_precision(wo.cost_variance_percent.abs, precision: 1) %>%
+                  </strong>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

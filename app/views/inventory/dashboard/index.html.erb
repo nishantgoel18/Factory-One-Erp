@@ -58,7 +58,7 @@
             </div>
             <div class="m-l-15">
               <h2 class="m-b-0"><%= @low_stock_count %></h2>
-              <p class="m-b-0 text-muted"><%= link_to 'View Details', inventory_reports_low_stock_path %></p>
+              <p class="m-b-0 text-muted"><%= link_to 'View Details', low_stock_path %></p>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@
     <!-- Stock Movements Chart -->
     <div class="col-md-8 mb-3">
       <div class="card h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
             <i class="bi bi-graph-up me-2"></i>
             Stock Movements (Last 30 Days)
@@ -105,7 +105,7 @@
     <!-- Warehouse Distribution -->
     <div class="col-md-4 mb-3">
       <div class="card h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
             <i class="bi bi-pie-chart me-2"></i>
             Stock by Warehouse
@@ -123,7 +123,7 @@
     <!-- Recent Receipts -->
     <div class="col-md-4 mb-3">
       <div class="card h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <h6 class="mb-0">
             <i class="bi bi-box-arrow-in-down me-2 text-success"></i>
             Recent Receipts
@@ -167,7 +167,7 @@
     <!-- Recent Issues -->
     <div class="col-md-4 mb-3">
       <div class="card h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <h6 class="mb-0">
             <i class="bi bi-box-arrow-right me-2 text-danger"></i>
             Recent Issues
@@ -208,7 +208,7 @@
     <!-- Pending POs & Alerts -->
     <div class="col-md-4 mb-3">
       <div class="card h-100">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <h6 class="mb-0">
             <i class="bi bi-bell me-2 text-warning"></i>
             Alerts & Pending
@@ -230,7 +230,7 @@
             <div class="alert alert-warning mb-3">
               <i class="bi bi-box-seam me-2"></i>
               <strong><%= @low_stock_count %></strong> items below reorder point
-              <%= link_to 'View', inventory_reports_low_stock_path, 
+              <%= link_to 'View', low_stock_path, 
                   class: 'alert-link float-end' %>
             </div>
           <% end %>
@@ -269,7 +269,7 @@
   <div class="row">
     <div class="col-12">
       <div class="card">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
             <i class="bi bi-lightning me-2"></i>
             Quick Actions

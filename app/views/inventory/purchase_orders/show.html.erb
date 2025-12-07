@@ -95,7 +95,7 @@
     <div class="col-md-8">
       <!-- PO Information -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Purchase Order Information</h5>
         </div>
         <div class="card-body">
@@ -124,7 +124,7 @@
                     <%= @purchase_order.expected_date.strftime('%B %d, %Y') %>
                     <% if @purchase_order.expected_date < Date.current && 
                           ['CONFIRMED', 'PARTIALLY_RECEIVED'].include?(@purchase_order.status) %>
-                      <span class="badge bg-danger ms-1">Overdue</span>
+                      <span class="text-white badge bg-danger ms-1">Overdue</span>
                     <% end %>
                   <% else %>
                     <span class="text-muted">Not set</span>
@@ -183,7 +183,7 @@
 
       <!-- Line Items -->
       <div class="card mb-4">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h5 class="mb-0">Line Items</h5>
         </div>
         <div class="card-body p-0">
@@ -245,7 +245,7 @@
         </div>
 
         <!-- Totals Footer -->
-        <div class="card-footer bg-light">
+        <div class="card-footer">
           <div class="row">
             <div class="col-md-8"></div>
             <div class="col-md-4">
@@ -288,7 +288,7 @@
       <!-- Related Goods Receipts -->
       <% if @purchase_order.goods_receipts.any? %>
         <div class="card">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-box-seam me-2"></i>
               Goods Receipts (GRNs)
@@ -330,11 +330,11 @@
       <!-- Receiving Progress -->
       <% if ['CONFIRMED', 'PARTIALLY_RECEIVED', 'RECEIVED'].include?(@purchase_order.status) %>
         <div class="card mb-4">
-          <div class="card-header bg-info d-flex align-items-center">
+          <div class="card-header bg-primary d-flex align-items-center">
             <h6 class="mb-0">Receiving Progress</h6>
           </div>
           <div class="card-body">
-            <div class="progress mb-3" style="height: 30px; border-radius: 5px;">
+            <div class="progress mb-3" style="height: 30px;">
               <div class="progress-bar <%= @purchase_order.receiving_percentage == 100 ? 'bg-success' : 'bg-primary' %>" 
                    role="progressbar" 
                    style="width: <%= @purchase_order.receiving_percentage %>%">
@@ -362,7 +362,7 @@
 
       <!-- Supplier Info -->
       <div class="card">
-        <div class="card-header bg-info d-flex align-items-center">
+        <div class="card-header bg-primary d-flex align-items-center">
           <h6 class="mb-0">Supplier Information</h6>
         </div>
         <div class="card-body">
@@ -394,7 +394,7 @@
 
             <dt class="col-7">On-Time Delivery:</dt>
             <dd class="col-5 text-end">
-              <span class="badge <%= @purchase_order.supplier.on_time_delivery_rate >= 95 ? 'bg-success' : 'bg-warning' %>">
+              <span class="text-white badge <%= @purchase_order.supplier.on_time_delivery_rate >= 95 ? 'bg-success' : 'bg-warning' %>">
                 <%= @purchase_order.supplier.on_time_delivery_rate.round(0) %>%
               </span>
             </dd>

@@ -97,3 +97,4 @@ gem 'kaminari'
 
 gem 'wicked_pdf'         # PDF (optional)
 gem 'wkhtmltopdf-binary'
+gem 'whenever'

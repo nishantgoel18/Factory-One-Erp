@@ -80,10 +80,10 @@ class GoodsReceipt < ApplicationRecord
           note: "GRN: #{reference_no} - #{line.line_note}",
           created_by: user
         )
-      end
-
-      self.purchase_order.lines.find_by(product: line.product)&.update(:received_qty => line.qty)
       
+
+        self.purchase_order.lines.find_by(product: line.product)&.update(:received_qty => line.qty)
+      end
       # Update GRN status
       update!(
         status: STATUS_POSTED,

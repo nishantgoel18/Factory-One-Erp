@@ -163,8 +163,8 @@
               </div>
             </div>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-            <%= link_to "View All Routings", routings_path, class: "small text-decoration-none" %>
+          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
+            <%= link_to "View All Routings", routings_path, class: " text-decoration-none", style: 'color: white' %>
           </div>
         </div>
       </div>
@@ -190,8 +190,8 @@
               </div>
             </div>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-            <%= link_to "View Work Centers", work_centers_path, class: "small text-decoration-none" %>
+          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
+            <%= link_to "View Work Centers", work_centers_path, class: "text-decoration-none", style: 'color: white' %>
           </div>
         </div>
       </div>
@@ -217,8 +217,8 @@
               </div>
             </div>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-            <%= link_to "View Reports", 'reports/routing', class: "small text-decoration-none" %>
+          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
+            <%= link_to "View Reports", 'reports/routing', class: "text-decoration-none", style: 'color: white' %>
           </div>
         </div>
       </div>
@@ -244,8 +244,8 @@
               </div>
             </div>
           </div>
-          <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-            <%= link_to "Cost Analysis", routing_cost_analysis_routing_path, class: "small text-decoration-none" %>
+          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
+            <%= link_to "Cost Analysis", routing_cost_analysis_routing_path, class: "text-decoration-none", style: 'color: white' %>
           </div>
         </div>
       </div>
@@ -316,7 +316,7 @@
               
               <!-- Action Buttons -->
               <div class="col-md-4">
-                <div class="border rounded p-3 bg-light h-100">
+                <div class="border rounded p-3 h-100">
                   <h6 class="mb-3">Quick Actions</h6>
                   <%= link_to work_centers_path, class: "btn btn-outline-primary btn-sm w-100 mb-2" do %>
                     <i class="fas fa-industry me-2"></i> Manage Work Centers
@@ -373,16 +373,16 @@
                         <br><small class="text-muted"><%= routing.product.sku %></small>
                       </td>
                       <td>
-                        <span class="badge bg-info"><%= routing.routing_operations.count %> ops</span>
+                        <span class="text-white badge bg-primary"><%= routing.routing_operations.count %> ops</span>
                       </td>
                       <td>
                         <% case routing.status %>
                         <% when "ACTIVE" %>
-                          <span class="badge bg-success">Active</span>
+                          <span class="text-white badge bg-success">Active</span>
                         <% when "DRAFT" %>
-                          <span class="badge bg-warning">Draft</span>
+                          <span class="text-white badge bg-warning">Draft</span>
                         <% else %>
-                          <span class="badge bg-secondary"><%= routing.status %></span>
+                          <span class="text-white badge bg-secondary"><%= routing.status %></span>
                         <% end %>
                       </td>
                       <td>$<%= number_with_precision(routing.total_cost_per_unit, precision: 2) %></td>

@@ -17,9 +17,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-book me-2"></i> Chart of Accounts</h2>
         <div>
-            <span style="color: white;" class="badge bg-success me-2">Assets: $<%= total_assets.round(2) %></span>
-            <span style="color: white;" class="badge bg-warning me-2">Liabilities: $<%= total_liabilities.round(2) %></span>
-            <span style="color: white;" class="badge bg-info">Equity: $<%= total_equity.round(2) %></span>
+            <span style="color: white;" class="text-white badge bg-success me-2">Assets: $<%= total_assets.round(2) %></span>
+            <span style="color: white;" class="text-white badge bg-warning me-2">Liabilities: $<%= total_liabilities.round(2) %></span>
+            <span style="color: white;" class="text-white badge bg-primary">Equity: $<%= total_equity.round(2) %></span>
         </div>
     </div>
     <div class="row">
@@ -70,11 +70,11 @@
                                                 <% end %>    
                                             </td>
                                             <td><%= account.name %></td>
-                                            <td><span style="color: white;" class="badge <%= badge_color_on_account_type(account) %>"><%= account.account_type %></span></td>
+                                            <td><span style="color: white;" class="text-white badge <%= badge_color_on_account_type(account) %>"><%= account.account_type %></span></td>
                                             <td><%= account.sub_type %></td>
                                             <td><%= account.is_active ? "Yes" : "No" %></td>
                                             <td class="text-end">
-                                                <span style="color: white;" class="badge <% if account.current_balance.to_f >= 0 %>bg-success<% else %>bg-danger<% end %>">
+                                                <span style="color: white;" class="text-white badge <% if account.current_balance.to_f >= 0 %>bg-success<% else %>bg-danger<% end %>">
                                                     $<%= account.current_balance.to_f.round(2) %>
                                                 </span>
                                             </td>

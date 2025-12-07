@@ -1,4 +1,6 @@
 class Location < ApplicationRecord
+  LOCATION_TYPES = %w[RAW_MATERIALS WIP FINISHED_GOODS QUARANTINE SCRAP STAGING GENERAL].freeze
+
   belongs_to :warehouse
   has_many :stock_issue_lines, foreign_key: :from_location_id
   
@@ -16,4 +18,9 @@ class Location < ApplicationRecord
 
   validates :is_pickable, inclusion: { in: [true, false] }
   validates :is_receivable, inclusion: { in: [true, false] }
+
+  validates :location_type, inclusion: { in: LOCATION_TYPES }
+
+  scope :raw_materials, -> { where(location_type: 'RAW_MATERIALS') }
+  scope :finished_goods, -> { where(location_type: 'FINISHED_GOODS') }
 end
