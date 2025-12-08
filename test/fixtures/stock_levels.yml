@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  product: one
+  location: one
+  batch: one
+  on_hand_qty: 9.99
+  reserved_qty: 9.99
+  deleted: false
+
+two:
+  product: two
+  location: two
+  batch: two
+  on_hand_qty: 9.99
+  reserved_qty: 9.99
+  deleted: false

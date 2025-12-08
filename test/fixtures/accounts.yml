@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  code: MyString
+  name: MyString
+  sub_type: MyString
+  account_type: MyString
+  is_active: false
+  deleted: false
+
+two:
+  code: MyString
+  name: MyString
+  sub_type: MyString
+  account_type: MyString
+  is_active: false
+  deleted: false

@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  routing_id: 1
+  operation_sequence: 1
+  operation_name: MyString
+  work_center_id: 1
+  description: MyText
+  setup_time_minutes: 9.99
+  run_time_minutes_per_unit: 9.99
+  wait_time_minutes: 9.99
+  move_time_minutes: 9.99
+  labor_hours_per_unit: 9.99
+  is_quality_check_required: false
+  notes: MyText
+
+two:
+  routing_id: 1
+  operation_sequence: 1
+  operation_name: MyString
+  work_center_id: 1
+  description: MyText
+  setup_time_minutes: 9.99
+  run_time_minutes_per_unit: 9.99
+  wait_time_minutes: 9.99
+  move_time_minutes: 9.99
+  labor_hours_per_unit: 9.99
+  is_quality_check_required: false
+  notes: MyText

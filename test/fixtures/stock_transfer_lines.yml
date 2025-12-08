@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  stock_transfer: one
+  product: one
+  uom: one
+  from_location: one
+  to_location: one
+  batch: one
+  qty: 9.99
+  line_note: MyText
+  deleted: false
+
+two:
+  stock_transfer: two
+  product: two
+  uom: two
+  from_location: two
+  to_location: two
+  batch: two
+  qty: 9.99
+  line_note: MyText
+  deleted: false

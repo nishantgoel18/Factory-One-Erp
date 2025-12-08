@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  stock_issue: one
+  product: one
+  stock_batch: one
+  from_location: one
+  quantity: 9.99
+  deleted: false
+
+two:
+  stock_issue: two
+  product: two
+  stock_batch: two
+  from_location: two
+  quantity: 9.99
+  deleted: false

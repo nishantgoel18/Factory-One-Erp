@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  product: one
+  uom: one
+  txn_type: MyString
+  quantity: 9.99
+  from_location: one
+  to_location: one
+  batch: one
+  reference_type: MyString
+  reference_id: MyString
+  note: MyText
+  created_by: one
+  deleted: false
+
+two:
+  product: two
+  uom: two
+  txn_type: MyString
+  quantity: 9.99
+  from_location: two
+  to_location: two
+  batch: two
+  reference_type: MyString
+  reference_id: MyString
+  note: MyText
+  created_by: two
+  deleted: false

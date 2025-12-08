@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  warehouse: one
+  code: MyString
+  name: MyString
+  is_pickable: false
+  is_receivable: false
+  deleted: false
+
+two:
+  warehouse: two
+  code: MyString
+  name: MyString
+  is_pickable: false
+  is_receivable: false
+  deleted: false

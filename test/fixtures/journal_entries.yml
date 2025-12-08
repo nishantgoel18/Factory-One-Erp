@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  entry_number: MyString
+  entry_date: 2025-11-27
+  reference_type: MyString
+  reference_id: MyString
+  description: MyText
+  total_debit: 9.99
+  total_credit: 9.99
+  posted_by: 1
+  posted_at: 2025-11-27 16:55:58
+  deleted: false
+  accounting_period: MyString
+
+two:
+  entry_number: MyString
+  entry_date: 2025-11-27
+  reference_type: MyString
+  reference_id: MyString
+  description: MyText
+  total_debit: 9.99
+  total_credit: 9.99
+  posted_by: 1
+  posted_at: 2025-11-27 16:55:58
+  deleted: false
+  accounting_period: MyString

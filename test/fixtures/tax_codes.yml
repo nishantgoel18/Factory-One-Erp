@@ -1,0 +1,39 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  code: MyString
+  name: MyString
+  jurisdiction: MyString
+  tax_type: MyString
+  country: MyString
+  state_province: MyString
+  county: MyString
+  city: MyString
+  rate: 9.99
+  is_compound: false
+  compounds_on: MyString
+  effective_from: 2025-11-28
+  effective_to: 2025-11-28
+  tax_authority_id: MyString
+  filing_frequency: MyString
+  is_active: false
+  deleted: false
+
+two:
+  code: MyString
+  name: MyString
+  jurisdiction: MyString
+  tax_type: MyString
+  country: MyString
+  state_province: MyString
+  county: MyString
+  city: MyString
+  rate: 9.99
+  is_compound: false
+  compounds_on: MyString
+  effective_from: 2025-11-28
+  effective_to: 2025-11-28
+  tax_authority_id: MyString
+  filing_frequency: MyString
+  is_active: false
+  deleted: false
