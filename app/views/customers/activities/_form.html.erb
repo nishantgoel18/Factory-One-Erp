@@ -1,0 +1,242 @@
+<%= form_with model: activity, url: activity.new_record? ? customer_activities_path(customer) : customer_activity_path(customer, activity),
+              method: activity.new_record? ? :post : :patch,
+              id: "activityForm",
+              data: { remote: true } do |f| %>
+
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="bi bi-activity me-2"></i>
+      <%= activity.new_record? ? "Log Activity" : "Edit Activity" %>
+    </h5>
+    <button type="button" class="btn-close" data-dismiss="modal"></button>
+  </div>
+
+  <div class="modal-body">
+    <!-- Error Messages -->
+    <div id="activityFormErrors" class="alert alert-danger d-none"></div>
+
+    <div class="row g-3">
+      <!-- Activity Type -->
+      <div class="col-md-6">
+        <%= f.label :activity_type, "Activity Type *", class: "form-label" %>
+        <%= f.select :activity_type,
+                    options_for_select([
+                      ['Phone Call', 'CALL'],
+                      ['Email', 'EMAIL'],
+                      ['Meeting', 'MEETING'],
+                      ['Note/Memo', 'NOTE'],
+                      ['Quote Sent', 'QUOTE'],
+                      ['Order Placed', 'ORDER'],
+                      ['Complaint', 'COMPLAINT'],
+                      ['Site Visit', 'VISIT'],
+                      ['Follow-up', 'FOLLOWUP']
+                    ], activity.activity_type),
+                    { include_blank: "Select type..." },
+                    class: "form-select",
+                    required: true %>
+      </div>
+
+      <!-- Activity Status -->
+      <div class="col-md-6">
+        <%= f.label :activity_status, "Status *", class: "form-label" %>
+        <%= f.select :activity_status,
+                    options_for_select([
+                      ['Completed', 'COMPLETED'],
+                      ['Scheduled', 'SCHEDULED'],
+                      ['Cancelled', 'CANCELLED'],
+                      ['Overdue', 'OVERDUE']
+                    ], activity.activity_status || 'COMPLETED'),
+                    {},
+                    class: "form-select",
+                    required: true %>
+      </div>
+
+      <!-- Subject -->
+      <div class="col-12">
+        <%= f.label :subject, "Subject *", class: "form-label" %>
+        <%= f.text_field :subject, class: "form-control", required: true,
+                        placeholder: "Brief subject of the activity" %>
+      </div>
+
+      <!-- Description -->
+      <div class="col-12">
+        <%= f.label :description, "Description", class: "form-label" %>
+        <%= f.text_area :description, class: "form-control", rows: 3,
+                       placeholder: "Detailed notes about the activity..." %>
+      </div>
+
+      <!-- Activity Date -->
+      <div class="col-md-8">
+        <%= f.label :activity_date, "Activity Date & Time *", class: "form-label" %>
+        <%= f.datetime_local_field :activity_date, class: "form-control", required: true %>
+      </div>
+
+      <!-- Duration -->
+      <div class="col-md-4">
+        <%= f.label :duration_minutes, "Duration (mins)", class: "form-label" %>
+        <%= f.number_field :duration_minutes, class: "form-control", min: 0, step: 5 %>
+      </div>
+
+      <!-- Contact Person -->
+      <div class="col-md-6">
+        <%= f.label :customer_contact_id, "Contact Person", class: "form-label" %>
+        <%= f.select :customer_contact_id,
+                    options_from_collection_for_select(contacts, :id, :full_name, activity.customer_contact_id),
+                    { include_blank: "Select contact..." },
+                    class: "form-select" %>
+      </div>
+
+      <!-- Priority -->
+      <div class="col-md-6">
+        <%= f.label :priority, "Priority", class: "form-label" %>
+        <%= f.select :priority,
+                    options_for_select([
+                      ['Normal', 'NORMAL'],
+                      ['Low', 'LOW'],
+                      ['High', 'HIGH'],
+                      ['Urgent', 'URGENT']
+                    ], activity.priority || 'NORMAL'),
+                    {},
+                    class: "form-select" %>
+      </div>
+
+      <!-- Communication Method -->
+      <div class="col-md-6">
+        <%= f.label :communication_method, "Communication Method", class: "form-label" %>
+        <%= f.select :communication_method,
+                    options_for_select([
+                      ['Phone', 'PHONE'],
+                      ['Email', 'EMAIL'],
+                      ['In Person', 'IN_PERSON'],
+                      ['Video Call', 'VIDEO'],
+                      ['Text/SMS', 'SMS']
+                    ], activity.communication_method),
+                    { include_blank: "Select method..." },
+                    class: "form-select" %>
+      </div>
+
+      <!-- Direction -->
+      <div class="col-md-6">
+        <%= f.label :direction, "Direction", class: "form-label" %>
+        <%= f.select :direction,
+                    options_for_select([
+                      ['Outbound', 'OUTBOUND'],
+                      ['Inbound', 'INBOUND']
+                    ], activity.direction),
+                    { include_blank: "Select..." },
+                    class: "form-select" %>
+      </div>
+
+      <!-- Customer Sentiment -->
+      <div class="col-md-6">
+        <%= f.label :customer_sentiment, "Customer Sentiment", class: "form-label" %>
+        <%= f.select :customer_sentiment,
+                    options_for_select([
+                      ['Positive', 'POSITIVE'],
+                      ['Neutral', 'NEUTRAL'],
+                      ['Negative', 'NEGATIVE'],
+                      ['Urgent Issue', 'URGENT']
+                    ], activity.customer_sentiment),
+                    { include_blank: "Select..." },
+                    class: "form-select" %>
+      </div>
+
+      <!-- Category -->
+      <div class="col-md-6">
+        <%= f.label :category, "Category", class: "form-label" %>
+        <%= f.select :category,
+                    options_for_select([
+                      ['General', 'GENERAL'],
+                      ['Sales', 'SALES'],
+                      ['Support', 'SUPPORT'],
+                      ['Technical', 'TECHNICAL'],
+                      ['Billing', 'BILLING'],
+                      ['Quality', 'QUALITY']
+                    ], activity.category || 'GENERAL'),
+                    {},
+                    class: "form-select" %>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Outcome & Next Steps</h6>
+      </div>
+
+      <!-- Outcome -->
+      <div class="col-12">
+        <%= f.label :outcome, "Outcome", class: "form-label" %>
+        <%= f.text_area :outcome, class: "form-control", rows: 2,
+                       placeholder: "What was the result of this activity?" %>
+      </div>
+
+      <!-- Next Action -->
+      <div class="col-12">
+        <%= f.label :next_action, "Next Action", class: "form-label" %>
+        <%= f.text_field :next_action, class: "form-control",
+                        placeholder: "What needs to happen next?" %>
+      </div>
+
+      <!-- Follow-up Required -->
+      <div class="col-md-6">
+        <div class="form-check mt-4">
+          <%= f.check_box :followup_required, class: "form-check-input" %>
+          <%= f.label :followup_required, "Follow-up Required", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <!-- Follow-up Date -->
+      <div class="col-md-6" id="followupDateField" style="<%= 'display: none;' unless activity.followup_required? %>">
+        <%= f.label :followup_date, "Follow-up Date", class: "form-label" %>
+        <%= f.date_field :followup_date, class: "form-control" %>
+      </div>
+
+      <!-- Tags -->
+      <div class="col-12">
+        <%= f.label :tags, "Tags", class: "form-label" %>
+        <%= f.text_field :tags, class: "form-control",
+                        placeholder: "Enter comma-separated tags (e.g., pricing, contract, technical)" %>
+        <div class="form-text">Separate tags with commas</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+    <%= f.submit activity.new_record? ? "Log Activity" : "Update Activity",
+                class: "btn btn-primary",
+                data: { disable_with: "Saving..." } %>
+  </div>
+<% end %>
+
+<script>
+  // Toggle follow-up date field
+  document.getElementById('customer_activity_followup_required')?.addEventListener('change', function() {
+    document.getElementById('followupDateField').style.display = this.checked ? 'block' : 'none';
+  });
+
+  // Handle form submission via AJAX
+  document.getElementById('activityForm').addEventListener('ajax:success', function(event) {
+    const [data, status, xhr] = event.detail;
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('dynamicModal')).hide();
+    
+    // Show success message
+    showNotification('success', data.message || 'Activity logged successfully');
+    
+    // Reload activities list
+    reloadActivitiesList();
+  });
+
+  document.getElementById('activityForm').addEventListener('ajax:error', function(event) {
+    const [data, status, xhr] = event.detail;
+    
+    // Show errors
+    const errorDiv = document.getElementById('activityFormErrors');
+    errorDiv.classList.remove('d-none');
+    errorDiv.innerHTML = '<ul class="mb-0">' +
+                        data.errors.map(err => '<li>' + err + '</li>').join('') +
+                        '</ul>';
+  });
+</script>

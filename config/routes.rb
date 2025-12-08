@@ -58,7 +58,40 @@ Rails.application.routes.draw do
   
   resources :customers do
     member do
-      get '/delete', to: 'customers#destroy', as: :delete
+      get :dashboard              # Analytics dashboard view
+      get :statement              # Customer statement PDF
+      post :credit_hold           # Place/remove credit hold
+      get '/delete', to: 'customers#destroy', as: :delete  # Soft delete (keep your pattern)
+    end
+    
+    collection do
+      get :autocomplete           # For search autocomplete
+      post :bulk_action           # Bulk operations (activate, deactivate, export, delete)
+    end
+    
+    resources :addresses, controller: 'customers/addresses', only: [:new, :create, :edit, :update, :destroy] do
+      member do
+        post :make_default        # Set as default address
+      end
+    end
+    
+    resources :contacts, controller: 'customers/contacts', only: [:new, :create, :edit, :update, :destroy] do
+      member do
+        post :make_primary        # Set as primary contact
+      end
+    end
+    
+    resources :documents, controller: 'customers/documents', only: [:index, :new, :create, :edit, :update, :destroy] do
+      member do
+        get :download             # Download document file
+      end
+    end
+    
+    resources :activities, controller: 'customers/activities', only: [:index, :new, :create, :show, :edit, :update, :destroy] do
+      member do
+        post :complete            # Mark activity as completed
+        post :reschedule          # Reschedule activity
+      end
     end
   end
 

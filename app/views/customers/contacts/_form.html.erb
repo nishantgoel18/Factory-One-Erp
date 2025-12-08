@@ -1,0 +1,261 @@
+<%= form_with model: contact, url: contact.new_record? ? customer_contacts_path(customer) : customer_contact_path(customer, contact),
+              method: contact.new_record? ? :post : :patch,
+              id: "contactForm",
+              data: { remote: true } do |f| %>
+
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="bi bi-person me-2"></i>
+      <%= contact.new_record? ? "Add New Contact" : "Edit Contact" %>
+    </h5>
+    <button type="button" class="btn-close" data-dismiss="modal"></button>
+  </div>
+
+  <div class="modal-body">
+    <!-- Error Messages -->
+    <div id="contactFormErrors" class="alert alert-danger d-none"></div>
+
+    <div class="row g-3">
+      <!-- First Name -->
+      <div class="col-md-6">
+        <%= f.label :first_name, "First Name *", class: "form-label" %>
+        <%= f.text_field :first_name, class: "form-control", required: true, placeholder: "Enter first name" %>
+        <br />
+      </div>
+
+      <!-- Last Name -->
+      <div class="col-md-6">
+        <%= f.label :last_name, "Last Name *", class: "form-label" %>
+        <%= f.text_field :last_name, class: "form-control", required: true, placeholder: "Enter last name" %>
+        <br />
+      </div>
+
+      <!-- Title -->
+      <div class="col-md-6">
+        <%= f.label :title, "Job Title", class: "form-label" %>
+        <%= f.text_field :title, class: "form-control", placeholder: "e.g., Purchasing Manager" %>
+        <br />
+      </div>
+
+      <!-- Department -->
+      <div class="col-md-6">
+        <%= f.label :department, "Department", class: "form-label" %>
+        <%= f.text_field :department, class: "form-control", placeholder: "e.g., Purchasing, Finance" %>
+        <br />
+      </div>
+
+      <!-- Contact Role -->
+      <div class="col-md-12">
+        <%= f.label :contact_role, "Role *", class: "form-label" %>
+        <%= f.select :contact_role,
+                    options_for_select([
+                      ['Primary Contact', 'PRIMARY'],
+                      ['Purchasing', 'PURCHASING'],
+                      ['Finance/Accounting', 'FINANCE'],
+                      ['Technical', 'TECHNICAL'],
+                      ['Shipping/Receiving', 'SHIPPING'],
+                      ['Decision Maker', 'DECISION_MAKER'],
+                      ['Quality Control', 'QUALITY'],
+                      ['Management', 'MANAGEMENT'],
+                      ['Other', 'OTHER']
+                    ], contact.contact_role),
+                    { include_blank: "Select role..." },
+                    class: "form-control",
+                    required: true %>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Contact Information</h6>
+      </div>
+
+      <!-- Email -->
+      <div class="col-md-6">
+        <%= f.label :email, "Email *", class: "form-label" %>
+        <%= f.email_field :email, class: "form-control", required: true, placeholder: "email@example.com" %>
+        <br />
+      </div>
+
+      <!-- Phone -->
+      <div class="col-md-6">
+        <%= f.label :phone, "Phone *", class: "form-label" %>
+        <div class="input-group">
+          <%= f.text_field :phone, class: "form-control", required: true, placeholder: "(555) 123-4567" %>
+          <span class="input-group-text">Ext</span>
+          <%= f.text_field :extension, class: "form-control", style: "max-width: 80px;", placeholder: "123" %>
+        </div>
+      </div>
+
+      <!-- Mobile -->
+      <div class="col-md-6">
+        <%= f.label :mobile, "Mobile", class: "form-label" %>
+        <%= f.text_field :mobile, class: "form-control", placeholder: "(555) 123-4567" %>
+        <br />
+      </div>
+
+      <!-- Fax -->
+      <div class="col-md-6">
+        <%= f.label :fax, "Fax", class: "form-label" %>
+        <%= f.text_field :fax, class: "form-control", placeholder: "(555) 123-4567" %>
+        <br />
+      </div>
+
+      <!-- Preferred Contact Method -->
+      <div class="col-md-12">
+        <%= f.label :preferred_contact_method, "Preferred Contact Method", class: "form-label" %>
+        <%= f.select :preferred_contact_method,
+                    options_for_select([
+                      ['Email', 'EMAIL'],
+                      ['Phone', 'PHONE'],
+                      ['Mobile', 'MOBILE'],
+                      ['Text/SMS', 'SMS']
+                    ], contact.preferred_contact_method),
+                    { include_blank: "Select method..." },
+                    class: "form-control" %>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Communication Preferences</h6>
+      </div>
+
+      <!-- Communication Checkboxes -->
+      <div class="col-md-6">
+        <div class="form-check">
+          <%= f.check_box :receive_order_confirmations, class: "form-check-input" %>
+          <%= f.label :receive_order_confirmations, "Order Confirmations", class: "form-check-label" %>
+        </div>
+        <div class="form-check">
+          <%= f.check_box :receive_shipping_notifications, class: "form-check-input" %>
+          <%= f.label :receive_shipping_notifications, "Shipping Notifications", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="form-check">
+          <%= f.check_box :receive_invoice_copies, class: "form-check-input" %>
+          <%= f.label :receive_invoice_copies, "Invoice Copies", class: "form-check-label" %>
+        </div>
+        <div class="form-check">
+          <%= f.check_box :receive_marketing_emails, class: "form-check-input" %>
+          <%= f.label :receive_marketing_emails, "Marketing Emails", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Additional Information (Optional)</h6>
+      </div>
+
+      <!-- LinkedIn URL -->
+      <div class="col-md-6">
+        <%= f.label :linkedin_url, "LinkedIn Profile", class: "form-label" %>
+        <%= f.url_field :linkedin_url, class: "form-control", placeholder: "https://linkedin.com/in/..." %>
+        <br />
+      </div>
+
+      <!-- Skype ID -->
+      <div class="col-md-6">
+        <%= f.label :skype_id, "Skype ID", class: "form-label" %>
+        <%= f.text_field :skype_id, class: "form-control", placeholder: "skype_username" %>
+        <br />
+      </div>
+
+      <!-- Birthday -->
+      <div class="col-md-6">
+        <%= f.label :birthday, "Birthday", class: "form-label" %>
+        <%= f.date_field :birthday, class: "form-control" %>
+        <br />
+      </div>
+
+      <!-- Anniversary -->
+      <div class="col-md-6">
+        <%= f.label :anniversary, "Anniversary", class: "form-label" %>
+        <%= f.date_field :anniversary, class: "form-control" %>
+        <br />
+      </div>
+
+      <!-- Contact Notes -->
+      <div class="col-12">
+        <%= f.label :contact_notes, "Contact Notes", class: "form-label" %>
+        <%= f.text_area :contact_notes, class: "form-control", rows: 2,
+                       placeholder: "Professional notes about this contact..." %>
+        <br />
+      </div>
+
+      <!-- Personal Notes -->
+      <div class="col-12">
+        <%= f.label :personal_notes, "Personal Notes", class: "form-label" %>
+        <%= f.text_area :personal_notes, class: "form-control", rows: 2,
+                       placeholder: "Personal information (hobbies, interests, family, etc.)" %>
+        <div class="form-text">Use for relationship building (birthdays, interests, etc.)</div>
+        <br />
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Status & Designation</h6>
+      </div>
+
+      <!-- Status Checkboxes -->
+      <div class="col-md-4">
+        <div class="form-check form-switch">
+          <%= f.check_box :is_primary_contact, class: "form-check-input", role: "switch" %>
+          <%= f.label :is_primary_contact, "Primary Contact", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-check form-switch">
+          <%= f.check_box :is_decision_maker, class: "form-check-input", role: "switch" %>
+          <%= f.label :is_decision_maker, "Decision Maker", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-check form-switch">
+          <%= f.check_box :is_active, class: "form-check-input", role: "switch" %>
+          <%= f.label :is_active, "Active", class: "form-check-label" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+    <%= f.submit contact.new_record? ? "Add Contact" : "Update Contact",
+                class: "btn btn-primary",
+                data: { disable_with: "Saving..." } %>
+  </div>
+<% end %>
+
+<script>
+  // Handle form submission via AJAX
+  document.getElementById('contactForm').addEventListener('ajax:success', function(event) {
+    const [data, status, xhr] = event.detail;
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('dynamicModal')).hide();
+    
+    // Show success message
+    showNotification('success', data.message || 'Contact saved successfully');
+    
+    // Reload contacts list
+    reloadContactsList();
+  });
+
+  document.getElementById('contactForm').addEventListener('ajax:error', function(event) {
+    const [data, status, xhr] = event.detail;
+    
+    // Show errors
+    const errorDiv = document.getElementById('contactFormErrors');
+    errorDiv.classList.remove('d-none');
+    errorDiv.innerHTML = '<ul class="mb-0">' +
+                        data.errors.map(err => '<li>' + err + '</li>').join('') +
+                        '</ul>';
+  });
+</script>

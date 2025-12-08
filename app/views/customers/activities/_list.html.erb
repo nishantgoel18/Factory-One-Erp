@@ -1,0 +1,161 @@
+<% if customer.activities.any? %>
+  <div class="activity-timeline">
+    <% customer.activities.order(activity_date: :desc).limit(50).each do |activity| %>
+      <div class="timeline-item mb-3 pb-3 border-start border-3 ps-3" id="activity_<%= activity.id %>">
+        <div class="d-flex justify-content-between align-items-start">
+          <!-- Activity Content -->
+          <div class="flex-grow-1">
+            <!-- Header -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+              
+              <div>
+                <h6 class="mb-0">
+                  <%= activity.subject %>
+                  <span class="badge bg-<%= activity.status_badge_class %> ms-2">
+                    <%= activity.activity_status %>
+                  </span>
+                  <% if activity.priority == 'URGENT' || activity.priority == 'HIGH' %>
+                    <span class="badge bg-<%= activity.priority_badge_class %> ms-1">
+                      <%= activity.priority %>
+                    </span>
+                  <% end %>
+                </h6>
+                <p class="mb-0 text-muted small">
+                  <i class="bi bi-calendar me-1"></i>
+                  <%= activity.activity_date.strftime("%B %d, %Y at %I:%M %p") %>
+                  <% if activity.duration_minutes.present? && activity.duration_minutes > 0 %>
+                    | <i class="bi bi-clock me-1"></i><%= activity.duration_minutes %> minutes
+                  <% end %>
+                  <% if activity.related_user.present? %>
+                    | <i class="bi bi-person me-1"></i><%= activity.related_user.email %>
+                  <% end %>
+                </p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <% if activity.description.present? %>
+              <div class="mt-2">
+                <p class="mb-0"><%= simple_format(activity.description) %></p>
+              </div>
+            <% end %>
+
+            <!-- Activity Details -->
+            <div class="mt-2 d-flex flex-wrap gap-2">
+              <span class="badge bg-info text-white">
+                <i class="bi bi-tag me-1"></i><%= activity.activity_type %>
+              </span>
+              
+              <% if activity.communication_method.present? %>
+                <span class="badge bg-light text-dark border">
+                  <%= activity.communication_method %>
+                </span>
+              <% end %>
+
+              <% if activity.customer_sentiment.present? %>
+                <span class="badge bg-<%= activity.sentiment_badge_class %>">
+                  <%= activity.customer_sentiment %>
+                </span>
+              <% end %>
+
+              <% if activity.category.present? %>
+                <span class="badge bg-secondary">
+                  <%= activity.category %>
+                </span>
+              <% end %>
+
+              <% if activity.tags.present? && activity.tags.any? %>
+                <% activity.tags.each do |tag| %>
+                  <span class="badge bg-light text-dark border">
+                    #<%= tag %>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+
+            <!-- Outcome & Next Action -->
+            <% if activity.outcome.present? || activity.next_action.present? %>
+              <div class="mt-2 bg-light p-2 rounded">
+                <% if activity.outcome.present? %>
+                  <div class="small">
+                    <strong class="text-success">
+                      <i class="bi bi-check-circle me-1"></i>Outcome:
+                    </strong>
+                    <%= activity.outcome %>
+                  </div>
+                <% end %>
+                <% if activity.next_action.present? %>
+                  <div class="small mt-1">
+                    <strong class="text-primary">
+                      <i class="bi bi-arrow-right-circle me-1"></i>Next Action:
+                    </strong>
+                    <%= activity.next_action %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <!-- Follow-up Required -->
+            <% if activity.followup_required? && activity.followup_date.present? %>
+              <div class="mt-2">
+                <div class="alert alert-warning py-2 mb-0">
+                  <i class="bi bi-bell-fill me-1"></i>
+                  <strong>Follow-up required:</strong>
+                  <%= activity.followup_date.strftime("%B %d, %Y") %>
+                  <% if activity.is_overdue? %>
+                    <span class="badge bg-danger ms-1">OVERDUE</span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+            <!-- Contact Person -->
+            <% if activity.customer_contact.present? %>
+              <div class="mt-2 small text-muted">
+                <i class="bi bi-person-circle me-1"></i>
+                Contact: <%= activity.customer_contact.full_name %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="btn-group btn-group-sm ms-3">
+            <button type="button" class="btn btn-outline-primary"
+                    onclick="viewActivity(<%= customer.id %>, <%= activity.id %>)"
+                    title="View Details">
+              <i class="anticon anticon-eye"></i>
+            </button>
+            <% if activity.activity_status == 'SCHEDULED' %>
+              <button type="button" class="btn btn-outline-success"
+                      onclick="completeActivity(<%= customer.id %>, <%= activity.id %>)"
+                      title="Mark Complete">
+                <i class="anticon anticon-check-o"></i>
+              </button>
+            <% end %>
+            <button type="button" class="btn btn-outline-secondary"
+                    onclick="editActivity(<%= customer.id %>, <%= activity.id %>)"
+                    title="Edit">
+              <i class="anticon anticon-edit"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger"
+                    onclick="deleteActivity(<%= customer.id %>, <%= activity.id %>)"
+                    title="Delete">
+              <i class="anticon anticon-user-delete"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <!-- Empty State -->
+  <div class="text-center py-5">
+    <i class="bi bi-activity display-3 text-muted"></i>
+    <p class="mt-3 text-muted">No activities logged yet</p>
+    <button type="button" class="btn btn-primary" onclick="addActivity()">
+      <i class="bi bi-plus-circle me-1"></i>Log First Activity
+    </button>
+  </div>
+<% end %>
+
+<!-- Helper Method for Activity Type Icons -->

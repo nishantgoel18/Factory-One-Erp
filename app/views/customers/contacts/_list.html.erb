@@ -1,0 +1,170 @@
+<% if customer.contacts.any? %>
+  <div class="list-group" id="contactsList">
+    <% customer.contacts.order(is_primary_contact: :desc, created_at: :asc).each do |contact| %>
+      <div class="list-group-item <%= 'border-primary' if contact.is_primary_contact? %>" 
+           id="contact_<%= contact.id %>">
+        
+        <div class="d-flex justify-content-between align-items-start">
+          <!-- Contact Info -->
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              
+              <div>
+                <h6 class="mb-0">
+                  <%= contact.full_name %>
+                  <% if contact.is_primary_contact? %>
+                    <span class="badge bg-primary ms-1">
+                      <i class="anticon anticon-star me-1"></i>Primary
+                    </span>
+                  <% end %>
+                  <% if contact.is_decision_maker? %>
+                    <span class="badge bg-success ms-1">Decision Maker</span>
+                  <% end %>
+                  <% unless contact.is_active? %>
+                    <span class="badge bg-secondary ms-1">Inactive</span>
+                  <% end %>
+                </h6>
+                <p class="mb-0 text-muted small">
+                  <%= contact.title %> 
+                  <% if contact.department.present? %>
+                    | <%= contact.department %>
+                  <% end %>
+                  <span class="badge bg-info text-white ms-1"><%= contact.contact_role %></span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Contact Details -->
+            <div class="row g-2 mt-2">
+              <% if contact.email.present? %>
+                <div class="col-md-6">
+                  <small class="text-muted">
+                    <%= mail_to contact.email, contact.email, class: "text-decoration-none" %>
+                  </small>
+                </div>
+              <% end %>
+
+              <% if contact.phone.present? %>
+                <div class="col-md-6">
+                  <small class="text-muted">
+                    <i class="bi bi-telephone me-1"></i>
+                    <%= contact.phone %>
+                    <% if contact.extension.present? %>
+                      ext. <%= contact.extension %>
+                    <% end %>
+                  </small>
+                </div>
+              <% end %>
+
+              <% if contact.mobile.present? %>
+                <div class="col-md-6">
+                  <small class="text-muted">
+                    <i class="bi bi-phone me-1"></i>
+                    <%= contact.mobile %>
+                  </small>
+                </div>
+              <% end %>
+
+              <% if contact.preferred_contact_method.present? %>
+                <div class="col-md-6">
+                  <small class="text-muted">
+                    <i class="bi bi-chat-dots me-1"></i>
+                    Prefers: <%= contact.preferred_contact_method %>
+                  </small>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Communication Preferences -->
+            <% if contact.receive_order_confirmations? || contact.receive_shipping_notifications? || 
+                  contact.receive_invoice_copies? || contact.receive_marketing_emails? %>
+              <div class="mt-2 d-flex gap-1 flex-wrap">
+                <% if contact.receive_order_confirmations? %>
+                  <span class="badge bg-info text-dark border" title="Receives Order Confirmations">
+                    <i class="anticon anticon-shopping-cart"></i>
+                  </span>
+                <% end %>
+                <% if contact.receive_shipping_notifications? %>
+                  <span class="badge bg-info text-dark border" title="Receives Shipping Notifications">
+                    <i class="anticon anticon-mail"></i>
+                  </span>
+                <% end %>
+                <% if contact.receive_invoice_copies? %>
+                  <span class="badge bg-info text-dark border" title="Receives Invoice Copies">
+                    <i class="bi bi-receipt"></i>
+                  </span>
+                <% end %>
+                <% if contact.receive_marketing_emails? %>
+                  <span class="badge bg-info text-dark border" title="Receives Marketing Emails">
+                    <i class="bi bi-envelope-heart"></i>
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
+
+            <!-- Last Contacted -->
+            <% if contact.last_contacted_at.present? %>
+              <div class="mt-2">
+                <small class="text-muted">
+                  <i class="bi bi-clock-history me-1"></i>
+                  Last contacted <%= time_ago_in_words(contact.last_contacted_at) %> ago
+                  <% if contact.last_contacted_by.present? %>
+                    by <%= contact.last_contacted_by.email %>
+                  <% end %>
+                </small>
+              </div>
+            <% end %>
+
+            <!-- Personal Info -->
+            <% if contact.birthday.present? || contact.anniversary.present? %>
+              <div class="mt-2 d-flex gap-2">
+                <% if contact.birthday.present? %>
+                  <small class="text-muted">
+                    <i class="bi bi-cake me-1"></i>
+                    Birthday: <%= contact.birthday.strftime("%B %d") %>
+                  </small>
+                <% end %>
+                <% if contact.anniversary.present? %>
+                  <small class="text-muted">
+                    <i class="bi bi-gift me-1"></i>
+                    Anniversary: <%= contact.anniversary.strftime("%B %d") %>
+                  </small>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-primary"
+                    onclick="editContact(<%= customer.id %>, <%= contact.id %>)"
+                    title="Edit">
+              <i class="anticon anticon-edit"></i>
+            </button>
+            <% unless contact.is_primary_contact? %>
+              <button type="button" class="btn btn-outline-success"
+                      onclick="makePrimaryContact(<%= customer.id %>, <%= contact.id %>)"
+                      title="Make Primary">
+                <i class="anticon anticon-star"></i>
+              </button>
+            <% end %>
+            <button type="button" class="btn btn-outline-danger"
+                    onclick="deleteContact(<%= customer.id %>, <%= contact.id %>)"
+                    title="Delete">
+              <i class="anticon anticon-user-delete"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <!-- Empty State -->
+  <div class="text-center py-5">
+    <i class="bi bi-person display-3 text-muted"></i>
+    <p class="mt-3 text-muted">No contacts added yet</p>
+    <button type="button" class="btn btn-primary" onclick="addContact()">
+      <i class="bi bi-plus-circle me-1"></i>Add First Contact
+    </button>
+  </div>
+<% end %>

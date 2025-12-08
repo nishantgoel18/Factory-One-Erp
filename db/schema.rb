@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_08_090757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,34 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
     t.string "name"
     t.string "sub_type"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "bill_of_materials", force: :cascade do |t|
@@ -59,8 +87,177 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
     t.index ["uom_id"], name: "index_bom_items_on_uom_id"
   end
 
+  create_table "customer_activities", force: :cascade do |t|
+    t.datetime "activity_date", null: false
+    t.string "activity_status", limit: 20, default: "COMPLETED"
+    t.string "activity_type", limit: 30, null: false
+    t.string "category", limit: 50
+    t.string "communication_method", limit: 30
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "customer_contact_id"
+    t.bigint "customer_id", null: false
+    t.string "customer_sentiment", limit: 20
+    t.boolean "deleted", default: false, null: false
+    t.text "description"
+    t.string "direction", limit: 10
+    t.integer "duration_minutes"
+    t.datetime "followup_date"
+    t.boolean "followup_required", default: false
+    t.string "next_action", limit: 255
+    t.string "outcome", limit: 50
+    t.string "priority", limit: 20, default: "NORMAL"
+    t.bigint "related_entity_id"
+    t.string "related_entity_type"
+    t.bigint "related_user_id"
+    t.boolean "reminder_sent", default: false
+    t.datetime "reminder_sent_at"
+    t.string "subject", limit: 255, null: false
+    t.string "tags", default: [], array: true
+    t.datetime "updated_at", null: false
+    t.index ["activity_status"], name: "index_customer_activities_on_activity_status"
+    t.index ["created_by_id"], name: "index_customer_activities_on_created_by_id"
+    t.index ["customer_contact_id"], name: "index_customer_activities_on_customer_contact_id"
+    t.index ["customer_id", "activity_date"], name: "index_customer_activities_on_customer_id_and_activity_date", order: { activity_date: :desc }
+    t.index ["customer_id", "activity_type"], name: "index_customer_activities_on_customer_id_and_activity_type"
+    t.index ["customer_id", "deleted"], name: "index_customer_activities_on_customer_id_and_deleted"
+    t.index ["customer_id"], name: "index_customer_activities_on_customer_id"
+    t.index ["customer_sentiment"], name: "index_customer_activities_on_customer_sentiment"
+    t.index ["followup_date", "followup_required"], name: "index_customer_activities_on_followup"
+    t.index ["followup_date"], name: "index_customer_activities_on_followup_date"
+    t.index ["priority"], name: "index_customer_activities_on_priority"
+    t.index ["related_entity_type", "related_entity_id"], name: "index_customer_activities_on_related_entity"
+    t.index ["related_user_id"], name: "index_customer_activities_on_related_user_id"
+    t.index ["tags"], name: "index_customer_activities_on_tags", using: :gin
+  end
+
+  create_table "customer_addresses", force: :cascade do |t|
+    t.string "access_code", limit: 50
+    t.string "address_label", limit: 100
+    t.string "address_type", limit: 20, null: false
+    t.string "attention_to", limit: 100
+    t.string "city", limit: 100, null: false
+    t.string "contact_email"
+    t.string "contact_phone", limit: 20
+    t.string "country", limit: 2, default: "US", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "customer_id", null: false
+    t.boolean "deleted", default: false, null: false
+    t.string "delivery_hours"
+    t.text "delivery_instructions"
+    t.string "dock_gate_info", limit: 100
+    t.boolean "is_active", default: true
+    t.boolean "is_default", default: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.string "postal_code", limit: 20, null: false
+    t.boolean "requires_appointment", default: false
+    t.boolean "residential_address", default: false
+    t.string "state_province", limit: 100
+    t.string "street_address_1", limit: 255, null: false
+    t.string "street_address_2", limit: 255
+    t.datetime "updated_at", null: false
+    t.index ["country"], name: "index_customer_addresses_on_country"
+    t.index ["created_by_id"], name: "index_customer_addresses_on_created_by_id"
+    t.index ["customer_id", "address_type"], name: "index_customer_addresses_on_customer_id_and_address_type"
+    t.index ["customer_id", "deleted"], name: "index_customer_addresses_on_customer_id_and_deleted"
+    t.index ["customer_id", "is_default"], name: "index_customer_addresses_on_customer_id_and_is_default"
+    t.index ["customer_id"], name: "index_customer_addresses_on_customer_id"
+    t.index ["is_active"], name: "index_customer_addresses_on_is_active"
+    t.index ["postal_code"], name: "index_customer_addresses_on_postal_code"
+  end
+
+  create_table "customer_contacts", force: :cascade do |t|
+    t.date "anniversary"
+    t.date "birthday"
+    t.text "contact_notes"
+    t.string "contact_role", limit: 30, null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "customer_id", null: false
+    t.boolean "deleted", default: false, null: false
+    t.string "department", limit: 100
+    t.string "email", limit: 255
+    t.string "extension", limit: 10
+    t.string "fax", limit: 20
+    t.string "first_name", limit: 100, null: false
+    t.boolean "is_active", default: true
+    t.boolean "is_decision_maker", default: false
+    t.boolean "is_primary_contact", default: false
+    t.datetime "last_contacted_at"
+    t.string "last_contacted_by", limit: 100
+    t.text "last_interaction_notes"
+    t.string "last_name", limit: 100, null: false
+    t.string "linkedin_url"
+    t.string "mobile", limit: 20
+    t.text "personal_notes"
+    t.string "phone", limit: 20
+    t.string "preferred_contact_method", limit: 20, default: "EMAIL"
+    t.boolean "receive_invoice_copies", default: false
+    t.boolean "receive_marketing_emails", default: false
+    t.boolean "receive_order_confirmations", default: true
+    t.boolean "receive_shipping_notifications", default: true
+    t.string "skype_id", limit: 100
+    t.string "title", limit: 100
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_customer_contacts_on_created_by_id"
+    t.index ["customer_id", "contact_role"], name: "index_customer_contacts_on_customer_id_and_contact_role"
+    t.index ["customer_id", "deleted"], name: "index_customer_contacts_on_customer_id_and_deleted"
+    t.index ["customer_id", "is_primary_contact"], name: "index_customer_contacts_on_customer_id_and_is_primary_contact"
+    t.index ["customer_id"], name: "index_customer_contacts_on_customer_id"
+    t.index ["email"], name: "index_customer_contacts_on_email"
+    t.index ["is_active"], name: "index_customer_contacts_on_is_active"
+    t.index ["last_name", "first_name"], name: "index_customer_contacts_on_last_name_and_first_name"
+  end
+
+  create_table "customer_documents", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "customer_can_view", default: false
+    t.bigint "customer_id", null: false
+    t.boolean "deleted", default: false, null: false
+    t.text "description"
+    t.string "document_category", limit: 50
+    t.string "document_title", limit: 255, null: false
+    t.string "document_type", limit: 50, null: false
+    t.date "effective_date"
+    t.date "expiry_date"
+    t.string "file_name", limit: 255
+    t.integer "file_size"
+    t.string "file_type", limit: 50
+    t.string "file_url", limit: 500
+    t.boolean "is_active", default: true
+    t.boolean "is_confidential", default: false
+    t.boolean "is_latest_version", default: true
+    t.text "notes"
+    t.integer "renewal_reminder_days", default: 30
+    t.boolean "requires_renewal", default: false
+    t.bigint "superseded_by_id"
+    t.datetime "updated_at", null: false
+    t.bigint "uploaded_by_id"
+    t.string "version", limit: 20, default: "1.0"
+    t.index ["customer_id", "deleted"], name: "index_customer_documents_on_customer_id_and_deleted"
+    t.index ["customer_id", "document_type"], name: "index_customer_documents_on_customer_id_and_document_type"
+    t.index ["customer_id"], name: "index_customer_documents_on_customer_id"
+    t.index ["expiry_date", "requires_renewal"], name: "index_customer_docs_on_expiry_and_renewal"
+    t.index ["expiry_date"], name: "index_customer_documents_on_expiry_date"
+    t.index ["is_active"], name: "index_customer_documents_on_is_active"
+    t.index ["superseded_by_id"], name: "index_customer_documents_on_superseded_by_id"
+    t.index ["uploaded_by_id"], name: "index_customer_documents_on_uploaded_by_id"
+  end
+
   create_table "customers", force: :cascade do |t|
     t.boolean "allow_backorders", default: true
+    t.decimal "annual_revenue_potential", precision: 15, scale: 2
+    t.datetime "approved_at"
+    t.integer "approved_by_id"
+    t.boolean "auto_invoice_email", default: true
+    t.decimal "available_credit", precision: 15, scale: 2, default: "0.0"
+    t.integer "average_days_to_pay", default: 0
+    t.decimal "average_order_value", precision: 15, scale: 2, default: "0.0"
+    t.string "bank_account_number"
+    t.string "bank_name"
+    t.string "bank_routing_number"
     t.text "billing_address"
     t.string "billing_city"
     t.string "billing_country", default: "US"
@@ -69,10 +266,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
     t.string "billing_street"
     t.string "business_number"
     t.string "code", limit: 20
+    t.string "company_logo_url"
     t.datetime "created_at", null: false
     t.integer "created_by_id"
+    t.boolean "credit_hold", default: false
+    t.date "credit_hold_date"
+    t.text "credit_hold_reason"
     t.decimal "credit_limit", precision: 15, scale: 2, default: "0.0"
     t.decimal "current_balance", precision: 15, scale: 2, default: "0.0"
+    t.string "customer_acquisition_source", limit: 50
+    t.string "customer_category", limit: 20
+    t.decimal "customer_lifetime_value", precision: 15, scale: 2, default: "0.0"
+    t.date "customer_since"
     t.string "customer_tax_region"
     t.string "customer_type", limit: 20
     t.string "dba_name"
@@ -84,20 +289,41 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
     t.integer "default_warehouse_id"
     t.boolean "deleted", default: false
     t.text "delivery_instructions"
+    t.decimal "discount_percentage", precision: 5, scale: 2, default: "0.0"
+    t.decimal "early_payment_discount", precision: 5, scale: 2, default: "0.0"
     t.string "ein_number"
     t.string "email"
+    t.string "expected_order_frequency", limit: 30
+    t.string "facebook_url"
     t.string "fax", limit: 20
     t.string "freight_terms", limit: 20
     t.string "full_name", limit: 255
+    t.string "industry_type", limit: 50
     t.text "internal_notes"
     t.boolean "is_active", default: false
+    t.datetime "last_activity_date"
+    t.integer "last_modified_by_id"
+    t.decimal "last_order_amount", precision: 15, scale: 2, default: "0.0"
+    t.date "last_order_date"
+    t.boolean "late_fee_applicable", default: true
     t.string "legal_name"
+    t.string "linkedin_url"
+    t.boolean "mailing_address_same_as_billing", default: true
+    t.boolean "marketing_emails_allowed", default: true
     t.string "mobile", limit: 20
+    t.decimal "on_time_payment_rate", precision: 5, scale: 2, default: "100.0"
+    t.decimal "orders_per_month", precision: 5, scale: 2, default: "0.0"
     t.string "payment_terms", limit: 20
     t.string "phone_number"
+    t.string "preferred_communication_method", limit: 20
+    t.string "preferred_delivery_method", limit: 50
     t.string "primary_contact_email"
     t.string "primary_contact_name"
     t.string "primary_contact_phone", limit: 20
+    t.boolean "require_po_number", default: false
+    t.integer "returns_count", default: 0
+    t.decimal "returns_rate", precision: 5, scale: 2, default: "0.0"
+    t.string "sales_territory", limit: 50
     t.string "secondary_contact_email"
     t.string "secondary_contact_name"
     t.string "secondary_contact_phone", limit: 20
@@ -108,13 +334,30 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
     t.string "shipping_postal_code"
     t.string "shipping_state"
     t.string "shipping_street"
+    t.text "special_handling_requirements"
     t.boolean "tax_exempt", default: false
     t.string "tax_exempt_number"
+    t.integer "total_orders_count", default: 0
+    t.decimal "total_revenue_all_time", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_revenue_mtd", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_revenue_ytd", precision: 15, scale: 2, default: "0.0"
+    t.string "twitter_url"
     t.datetime "updated_at", null: false
     t.string "website"
+    t.index ["approved_by_id"], name: "index_customers_on_approved_by_id"
     t.index ["created_by_id"], name: "index_customers_on_created_by_id"
+    t.index ["credit_hold"], name: "index_customers_on_credit_hold"
+    t.index ["customer_category"], name: "index_customers_on_customer_category"
+    t.index ["customer_since"], name: "index_customers_on_customer_since"
     t.index ["default_ar_account_id"], name: "index_customers_on_default_ar_account_id"
     t.index ["default_tax_code_id"], name: "index_customers_on_default_tax_code_id"
+    t.index ["industry_type"], name: "index_customers_on_industry_type"
+    t.index ["is_active", "deleted"], name: "index_customers_on_is_active_and_deleted"
+    t.index ["last_modified_by_id"], name: "index_customers_on_last_modified_by_id"
+    t.index ["last_order_date"], name: "index_customers_on_last_order_date"
+    t.index ["on_time_payment_rate"], name: "index_customers_on_on_time_payment_rate"
+    t.index ["sales_territory"], name: "index_customers_on_sales_territory"
+    t.index ["total_revenue_all_time"], name: "index_customers_on_total_revenue_all_time"
   end
 
   create_table "cycle_count_lines", force: :cascade do |t|
@@ -830,10 +1073,25 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_07_164130) do
     t.index ["wo_number"], name: "index_work_orders_on_wo_number", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "bill_of_materials", "products"
   add_foreign_key "bom_items", "bill_of_materials"
   add_foreign_key "bom_items", "products", column: "component_id"
   add_foreign_key "bom_items", "unit_of_measures", column: "uom_id"
+  add_foreign_key "customer_activities", "customer_contacts"
+  add_foreign_key "customer_activities", "customers"
+  add_foreign_key "customer_activities", "users", column: "created_by_id"
+  add_foreign_key "customer_activities", "users", column: "related_user_id"
+  add_foreign_key "customer_addresses", "customers"
+  add_foreign_key "customer_addresses", "users", column: "created_by_id"
+  add_foreign_key "customer_contacts", "customers"
+  add_foreign_key "customer_contacts", "users", column: "created_by_id"
+  add_foreign_key "customer_documents", "customer_documents", column: "superseded_by_id"
+  add_foreign_key "customer_documents", "customers"
+  add_foreign_key "customer_documents", "users", column: "uploaded_by_id"
+  add_foreign_key "customers", "users", column: "approved_by_id", on_delete: :nullify
+  add_foreign_key "customers", "users", column: "last_modified_by_id", on_delete: :nullify
   add_foreign_key "cycle_count_lines", "cycle_counts"
   add_foreign_key "cycle_count_lines", "locations"
   add_foreign_key "cycle_count_lines", "products"

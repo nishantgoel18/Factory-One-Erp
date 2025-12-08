@@ -1,0 +1,242 @@
+<%= form_with model: address, url: address.new_record? ? customer_addresses_path(customer) : customer_address_path(customer, address), 
+              method: address.new_record? ? :post : :patch,
+              id: "addressForm",
+              data: { remote: true } do |f| %>
+  
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <i class="bi bi-geo-alt me-2"></i>
+      <%= address.new_record? ? "Add New Address" : "Edit Address" %>
+    </h5>
+  </div>
+
+  <div class="modal-body">
+    <!-- Error Messages -->
+    <div id="addressFormErrors" class="alert alert-danger d-none"></div>
+
+    <div class="row g-3">
+      <!-- Address Type -->
+      <div class="col-md-6">
+        <%= f.label :address_type, "Address Type *", class: "form-label" %>
+        <%= f.select :address_type,
+                    options_for_select([
+                      ['Billing', 'BILLING'],
+                      ['Shipping', 'SHIPPING'],
+                      ['Both (Billing & Shipping)', 'BOTH'],
+                      ['Warehouse', 'WAREHOUSE'],
+                      ['Other', 'OTHER']
+                    ], address.address_type),
+                    { include_blank: "Select type..." },
+                    class: "form-control",
+                    required: true %>
+      </div>
+
+      <!-- Address Label -->
+      <div class="col-md-6">
+        <%= f.label :address_label, "Address Label", class: "form-label" %>
+        <%= f.text_field :address_label, 
+                        class: "form-control",
+                        placeholder: "e.g., Main Office, West Warehouse" %>
+        <div class="form-text">Optional friendly name for this address</div>
+      </div>
+
+      <!-- Street Address 1 -->
+      <div class="col-12">
+        <%= f.label :street_address_1, "Street Address 1 *", class: "form-label" %>
+        <%= f.text_field :street_address_1,
+                        class: "form-control",
+                        required: true,
+                        placeholder: "Enter street address" %>
+      </div>
+
+      <!-- Street Address 2 -->
+      <div class="col-12">
+        <%= f.label :street_address_2, "Street Address 2", class: "form-label" %>
+        <%= f.text_field :street_address_2,
+                        class: "form-control",
+                        placeholder: "Apartment, suite, unit, building, floor, etc." %>
+      </div>
+
+      <!-- City -->
+      <div class="col-md-6">
+        <%= f.label :city, "City *", class: "form-label" %>
+        <%= f.text_field :city,
+                        class: "form-control",
+                        required: true,
+                        placeholder: "Enter city" %>
+      </div>
+
+      <!-- State/Province -->
+      <div class="col-md-6">
+        <%= f.label :state_province, "State/Province", class: "form-label" %>
+        <%= f.text_field :state_province,
+                        class: "form-control",
+                        placeholder: "e.g., NY, CA, ON" %>
+      </div>
+
+      <!-- Postal Code -->
+      <div class="col-md-6">
+        <%= f.label :postal_code, "Postal/ZIP Code *", class: "form-label" %>
+        <%= f.text_field :postal_code,
+                        class: "form-control",
+                        required: true,
+                        placeholder: "Enter postal code" %>
+      </div>
+
+      <!-- Country -->
+      <div class="col-md-6">
+        <%= f.label :country, "Country *", class: "form-label" %>
+        <%= f.select :country,
+                    options_for_select([
+                      ['United States', 'US'],
+                      ['Canada', 'CA'],
+                      ['Mexico', 'MX'],
+                      ['United Kingdom', 'GB'],
+                      ['Other', 'OTHER']
+                    ], address.country || 'US'),
+                    {},
+                    class: "form-control",
+                    required: true %>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Contact Information (Optional)</h6>
+      </div>
+
+      <!-- Attention To -->
+      <div class="col-md-6">
+        <%= f.label :attention_to, "Attention To", class: "form-label" %>
+        <%= f.text_field :attention_to,
+                        class: "form-control",
+                        placeholder: "Contact person name" %>
+      </div>
+
+      <!-- Contact Phone -->
+      <div class="col-md-6">
+        <%= f.label :contact_phone, "Contact Phone", class: "form-label" %>
+        <%= f.text_field :contact_phone,
+                        class: "form-control",
+                        placeholder: "(555) 123-4567" %>
+      </div>
+
+      <!-- Contact Email -->
+      <div class="col-12">
+        <%= f.label :contact_email, "Contact Email", class: "form-label" %>
+        <%= f.email_field :contact_email,
+                         class: "form-control",
+                         placeholder: "contact@example.com" %>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Delivery Information (Optional)</h6>
+      </div>
+
+      <!-- Delivery Instructions -->
+      <div class="col-12">
+        <%= f.label :delivery_instructions, "Delivery Instructions", class: "form-label" %>
+        <%= f.text_area :delivery_instructions,
+                       class: "form-control",
+                       rows: 2,
+                       placeholder: "Special delivery instructions..." %>
+      </div>
+
+      <!-- Dock/Gate Info -->
+      <div class="col-md-6">
+        <%= f.label :dock_gate_info, "Dock/Gate Information", class: "form-label" %>
+        <%= f.text_field :dock_gate_info,
+                        class: "form-control",
+                        placeholder: "e.g., Dock 5, Gate B" %>
+      </div>
+
+      <!-- Delivery Hours -->
+      <div class="col-md-6">
+        <%= f.label :delivery_hours, "Delivery Hours", class: "form-label" %>
+        <%= f.text_field :delivery_hours,
+                        class: "form-control",
+                        placeholder: "e.g., 8am-5pm Mon-Fri" %>
+      </div>
+
+      <!-- Access Code -->
+      <div class="col-md-6">
+        <%= f.label :access_code, "Access/Gate Code", class: "form-label" %>
+        <%= f.text_field :access_code,
+                        class: "form-control",
+                        placeholder: "Security code if applicable" %>
+      </div>
+
+      <!-- Checkboxes -->
+      <div class="col-md-6">
+        <label class="form-label">&nbsp;</label>
+        <div>
+          <div class="form-check">
+            <%= f.check_box :residential_address, class: "form-check-input" %>
+            <%= f.label :residential_address, "Residential Address", class: "form-check-label" %>
+          </div>
+          <div class="form-check">
+            <%= f.check_box :requires_appointment, class: "form-check-input" %>
+            <%= f.label :requires_appointment, "Requires Appointment", class: "form-check-label" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="col-12">
+        <hr class="my-2">
+        <h6 class="text-muted">Status</h6>
+      </div>
+
+      <!-- Status Checkboxes -->
+      <div class="col-md-6">
+        <div class="form-check form-switch">
+          <%= f.check_box :is_default, class: "form-check-input", role: "switch" %>
+          <%= f.label :is_default, "Set as Default Address", class: "form-check-label" %>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="form-check form-switch">
+          <%= f.check_box :is_active, class: "form-check-input", role: "switch" %>
+          <%= f.label :is_active, "Active", class: "form-check-label" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+    <%= f.submit address.new_record? ? "Add Address" : "Update Address", 
+                class: "btn btn-primary",
+                data: { disable_with: "Saving..." } %>
+  </div>
+<% end %>
+
+<script>
+  // Handle form submission via AJAX
+  document.getElementById('addressForm').addEventListener('ajax:success', function(event) {
+    const [data, status, xhr] = event.detail;
+    
+    // Close modal
+    bootstrap.Modal.getInstance(document.getElementById('dynamicModal')).hide();
+    
+    // Show success message
+    showNotification('success', data.message || 'Address saved successfully');
+    
+    // Reload addresses list
+    reloadAddressesList();
+  });
+
+  document.getElementById('addressForm').addEventListener('ajax:error', function(event) {
+    const [data, status, xhr] = event.detail;
+    
+    // Show errors
+    const errorDiv = document.getElementById('addressFormErrors');
+    errorDiv.classList.remove('d-none');
+    errorDiv.innerHTML = '<ul class="mb-0">' + 
+                        data.errors.map(err => '<li>' + err + '</li>').join('') + 
+                        '</ul>';
+  });
+</script>

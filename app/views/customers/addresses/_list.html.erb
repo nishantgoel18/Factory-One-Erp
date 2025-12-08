@@ -1,0 +1,125 @@
+<% if customer.addresses.any? %>
+  <div class="row g-3" id="addressesList">
+    <% customer.addresses.each do |address| %>
+      <div class="col-md-6" id="address_<%= address.id %>">
+        <div class="card h-100 <%= 'border-primary' if address.is_default? %>">
+          <div class="card-body">
+            <!-- Header with Type and Actions -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="mb-1">
+                  <i class="bi bi-geo-alt-fill text-primary me-1"></i>
+                  <%= address.display_label %>
+                </h6>
+                <div class="d-flex gap-1 flex-wrap">
+                  <span class="badge bg-info text-white">
+                    <%= address.address_type %>
+                  </span>
+                  <% if address.is_default? %>
+                    <span class="badge bg-success">
+                      <i class="bi bi-star-fill me-1"></i>Default
+                    </span>
+                  <% end %>
+                  <% unless address.is_active? %>
+                    <span class="badge bg-secondary">Inactive</span>
+                  <% end %>
+                </div>
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-primary" 
+                        onclick="editAddress(<%= customer.id %>, <%= address.id %>)"
+                        title="Edit">
+                  <i class="anticon anticon-edit"></i>
+                </button>
+                <% unless address.is_default? %>
+                  <button type="button" class="btn btn-outline-success"
+                          onclick="makeDefaultAddress(<%= customer.id %>, <%= address.id %>)"
+                          title="Make Default">
+                    <i class="anticon anticon-star"></i>
+                  </button>
+                <% end %>
+                <button type="button" class="btn btn-outline-danger"
+                        onclick="deleteAddress(<%= customer.id %>, <%= address.id %>)"
+                        title="Delete">
+                  <i class="anticon anticon-user-delete"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Address Details -->
+            <address class="mb-2 small">
+              <%= simple_format(address.full_address) %>
+            </address>
+
+            <!-- Contact Information -->
+            <% if address.attention_to.present? || address.contact_phone.present? %>
+              <div class="border-top pt-2 mt-2 small text-muted">
+                <% if address.attention_to.present? %>
+                  <div>
+                    <i class="bi bi-person me-1"></i>
+                    <strong>Attn:</strong> <%= address.attention_to %>
+                  </div>
+                <% end %>
+                <% if address.contact_phone.present? %>
+                  <div>
+                    <i class="bi bi-telephone me-1"></i>
+                    <%= address.contact_phone %>
+                  </div>
+                <% end %>
+                <% if address.contact_email.present? %>
+                  <div>
+                    <i class="bi bi-envelope me-1"></i>
+                    <%= address.contact_email %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <!-- Delivery Instructions -->
+            <% if address.delivery_instructions.present? %>
+              <div class="border-top pt-2 mt-2 small">
+                <strong class="text-muted">
+                  <i class="bi bi-info-circle me-1"></i>Delivery Notes:
+                </strong>
+                <p class="mb-0 text-muted"><%= address.delivery_instructions %></p>
+              </div>
+            <% end %>
+
+            <!-- Special Indicators -->
+            <% if address.residential_address? || address.requires_appointment? %>
+              <div class="mt-2 d-flex gap-1 flex-wrap">
+                <% if address.residential_address? %>
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-house me-1"></i>Residential
+                  </span>
+                <% end %>
+                <% if address.requires_appointment? %>
+                  <span class="badge bg-light text-dark border">
+                    <i class="bi bi-calendar-check me-1"></i>Appointment Required
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Card Footer with Meta Info -->
+          <div class="card-footer bg-light small text-muted">
+            <i class="bi bi-clock-history me-1"></i>
+            Added <%= time_ago_in_words(address.created_at) %> ago
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <!-- Empty State -->
+  <div class="text-center py-5">
+    <i class="bi bi-geo-alt display-3 text-muted"></i>
+    <p class="mt-3 text-muted">No addresses added yet</p>
+    <button type="button" class="btn btn-primary" onclick="addAddress()">
+      <i class="bi bi-plus-circle me-1"></i>Add First Address
+    </button>
+  </div>
+<% end %>
