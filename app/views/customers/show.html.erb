@@ -542,42 +542,4 @@
   </div>
 </div>
 
-<script>
-  // Functions for adding nested resources (will be implemented with JavaScript)
-  function addAddress() {
-    // Load form via AJAX
-    fetch('<%= new_customer_address_path(@customer) %>')
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('modalContent').innerHTML = html;
-        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
-      });
-  }
-
-  function addContact() {
-    fetch('<%= new_customer_contact_path(@customer) %>')
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('modalContent').innerHTML = html;
-        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
-      });
-  }
-
-  function addDocument() {
-    fetch('<%= new_customer_document_path(@customer) %>')
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('modalContent').innerHTML = html;
-        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
-      });
-  }
-
-  function addActivity() {
-    fetch('<%= new_customer_activity_path(@customer) %>')
-      .then(response => response.text())
-      .then(html => {
-        document.getElementById('modalContent').innerHTML = html;
-        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
-      });
-  }
-</script>
+<%= render 'scripts' %>

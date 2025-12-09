@@ -4,50 +4,54 @@ module Customers
     before_action :set_customer
     before_action :set_document, only: [:edit, :update, :destroy, :download]
     
-    # GET /customers/:customer_id/documents
-    def index
-      @documents = @customer.documents.order(created_at: :desc)
-      render partial: "customers/documents/list", locals: { documents: @documents }
-    end
-    
-    # GET /customers/:customer_id/documents/new
     def new
-      @document = @customer.documents.build
-      render partial: "customers/documents/form", locals: { customer: @customer, document: @document }
+      @document = @customer.documents.build(is_active: true)
+      respond_to do |format|
+        format.html { render partial: "customers/documents/form", locals: { customer: @customer, document: @document }, layout: false }
+      end
     end
     
     # POST /customers/:customer_id/documents
     def create
       @document = @customer.documents.build(document_params)
-      @document.uploaded_by = current_user
+      @document.created_by = current_user
       
-      if @document.save
-        render json: { success: true, message: "Document uploaded successfully", document: @document }
-      else
-        render json: { success: false, errors: @document.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @document.save
+          format.html { redirect_to @customer, notice: "Document added successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # GET /customers/:customer_id/documents/:id/edit
     def edit
-      render partial: "customers/documents/form", locals: { customer: @customer, document: @document }
+      respond_to do |format|
+        format.html { render partial: "customers/documents/form", locals: { customer: @customer, document: @document }, layout: false }
+      end
     end
     
     # PATCH /customers/:customer_id/documents/:id
     def update
-      if @document.update(document_params)
-        render json: { success: true, message: "Document updated successfully" }
-      else
-        render json: { success: false, errors: @document.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @document.update(document_params)
+          format.html { redirect_to @customer, notice: "Document updated successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # DELETE /customers/:customer_id/documents/:id
     def destroy
       @document.destroy!
-      render json: { success: true, message: "Document deleted successfully" }
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Document deleted successfully." }
+      end
     end
-    
+
     # GET /customers/:customer_id/documents/:id/download
     def download
       if @document.file.attached?

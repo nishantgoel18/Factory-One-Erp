@@ -6,8 +6,11 @@ module Customers
     
     # GET /customers/:customer_id/addresses/new
     def new
-      @address = @customer.addresses.build
-      render partial: "customers/addresses/form", locals: { customer: @customer, address: @address }
+      @address = @customer.addresses.build(is_active: true)
+      
+      respond_to do |format|
+        format.html { render partial: "customers/addresses/form", locals: { customer: @customer, address: @address }, layout: false }
+      end
     end
     
     # POST /customers/:customer_id/addresses
@@ -15,37 +18,49 @@ module Customers
       @address = @customer.addresses.build(address_params)
       @address.created_by = current_user
       
-      if @address.save
-        render json: { success: true, message: "Address added successfully", address: @address }
-      else
-        render json: { success: false, errors: @address.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @address.save
+          format.html { redirect_to @customer, notice: "Address added successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # GET /customers/:customer_id/addresses/:id/edit
     def edit
-      render partial: "customers/addresses/form", locals: { customer: @customer, address: @address }
+      respond_to do |format|
+        format.html { render partial: "customers/addresses/form", locals: { customer: @customer, address: @address }, layout: false }
+      end
     end
     
     # PATCH /customers/:customer_id/addresses/:id
     def update
-      if @address.update(address_params)
-        render json: { success: true, message: "Address updated successfully", address: @address }
-      else
-        render json: { success: false, errors: @address.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @address.update(address_params)
+          format.html { redirect_to @customer, notice: "Address updated successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # DELETE /customers/:customer_id/addresses/:id
     def destroy
       @address.destroy!
-      render json: { success: true, message: "Address deleted successfully" }
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Address deleted successfully." }
+      end
     end
     
     # POST /customers/:customer_id/addresses/:id/make_default
     def make_default
       @address.make_default!
-      render json: { success: true, message: "Set as default address" }
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Set as default address." }
+      end
     end
     
     private

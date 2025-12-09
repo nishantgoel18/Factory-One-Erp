@@ -6,8 +6,10 @@ module Customers
     
     # GET /customers/:customer_id/contacts/new
     def new
-      @contact = @customer.contacts.build
-      render partial: "customers/contacts/form", locals: { customer: @customer, contact: @contact }
+      @contact = @customer.contacts.build(is_active: true)
+      respond_to do |format|
+        format.html { render partial: "customers/contacts/form", locals: { customer: @customer, contact: @contact }, layout: false }
+      end
     end
     
     # POST /customers/:customer_id/contacts
@@ -15,31 +17,40 @@ module Customers
       @contact = @customer.contacts.build(contact_params)
       @contact.created_by = current_user
       
-      if @contact.save
-        render json: { success: true, message: "Contact added successfully", contact: @contact }
-      else
-        render json: { success: false, errors: @contact.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @contact.save
+          format.html { redirect_to @customer, notice: "Contact added successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # GET /customers/:customer_id/contacts/:id/edit
     def edit
-      render partial: "customers/contacts/form", locals: { customer: @customer, contact: @contact }
+      respond_to do |format|
+        format.html { render partial: "customers/contacts/form", locals: { customer: @customer, contact: @contact }, layout: false }
+      end
     end
     
     # PATCH /customers/:customer_id/contacts/:id
     def update
-      if @contact.update(contact_params)
-        render json: { success: true, message: "Contact updated successfully", contact: @contact }
-      else
-        render json: { success: false, errors: @contact.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @contact.update(contact_params)
+          format.html { redirect_to @customer, notice: "Contact updated successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # DELETE /customers/:customer_id/contacts/:id
     def destroy
       @contact.destroy!
-      render json: { success: true, message: "Contact deleted successfully" }
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Contact deleted successfully." }
+      end
     end
     
     # POST /customers/:customer_id/contacts/:id/make_primary

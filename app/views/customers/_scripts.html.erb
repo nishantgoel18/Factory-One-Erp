@@ -1,0 +1,660 @@
+<script>
+  // Functions for adding nested resources (will be implemented with JavaScript)
+  function addAddress() {
+    // Load form via AJAX
+    fetch('<%= new_customer_address_path(@customer) %>')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('modalContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
+      });
+  }
+
+  function addContact() {
+    fetch('<%= new_customer_contact_path(@customer) %>')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('modalContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
+      });
+  }
+
+  function addDocument() {
+    fetch('<%= new_customer_document_path(@customer) %>')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('modalContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
+      });
+  }
+
+  function addActivity() {
+    fetch('<%= new_customer_activity_path(@customer) %>')
+      .then(response => response.text())
+      .then(html => {
+        document.getElementById('modalContent').innerHTML = html;
+        new bootstrap.Modal(document.getElementById('dynamicModal')).show();
+      });
+  }
+</script>
+
+<script>
+  // ============================================================================
+  // JAVASCRIPT: customers.js
+  // Customer Management Module - All JavaScript Functionality
+  // ============================================================================
+  // Place this file in: app/javascript/customers.js
+  // Or include directly in customer views
+  // ============================================================================
+
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeCustomerManagement();
+  });
+
+  function initializeCustomerManagement() {
+    // Initialize tooltips
+    initializeTooltips();
+    
+    // Initialize form validations
+    initializeFormValidations();
+    
+    // Initialize search
+    initializeSearch();
+    
+    // Initialize filters
+    initializeFilters();
+  }
+
+  // ============================================================================
+  // TOOLTIPS & POPOVERS
+  // ============================================================================
+  function initializeTooltips() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  }
+
+  // ============================================================================
+  // FORM VALIDATIONS
+  // ============================================================================
+  function initializeFormValidations() {
+    // Bootstrap form validation
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }
+
+  // ============================================================================
+  // SEARCH & AUTOCOMPLETE
+  // ============================================================================
+  function initializeSearch() {
+    const searchInput = document.getElementById('customerSearch');
+    if (searchInput) {
+      let debounceTimer;
+      searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          performSearch(this.value);
+        }, 300);
+      });
+    }
+  }
+
+  function performSearch(query) {
+    if (query.length < 2) return;
+    
+    fetch(`/customers/autocomplete?term=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(data => {
+        displaySearchResults(data);
+      })
+      .catch(error => {
+        console.error('Search error:', error);
+      });
+  }
+
+  function displaySearchResults(results) {
+    // Implementation depends on your UI
+    console.log('Search results:', results);
+  }
+
+  // ============================================================================
+  // FILTERS
+  // ============================================================================
+  function initializeFilters() {
+    // Auto-submit filter form when select changes
+    const filterSelects = document.querySelectorAll('.auto-submit-filter');
+    filterSelects.forEach(select => {
+      select.addEventListener('change', function() {
+        this.closest('form').submit();
+      });
+    });
+  }
+
+  function clearFilters() {
+    window.location.href = window.location.pathname;
+  }
+
+  // ============================================================================
+  // BULK ACTIONS
+  // ============================================================================
+  function updateBulkActionBar() {
+    const selected = document.querySelectorAll('.customer-checkbox:checked').length;
+    const bar = document.getElementById('bulkActionBar');
+    const count = document.getElementById('selectedCount');
+    
+    if (selected > 0) {
+      bar.style.display = 'block';
+      count.textContent = selected;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
+
+  function clearSelection() {
+    document.querySelectorAll('.customer-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateBulkActionBar();
+  }
+
+  // Select All
+  document.getElementById('selectAll')?.addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.customer-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    updateBulkActionBar();
+  });
+
+  // Individual checkboxes
+  document.querySelectorAll('.customer-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateBulkActionBar);
+  });
+
+  // ============================================================================
+  // ADDRESS MANAGEMENT
+  // ============================================================================
+  function addAddress() {
+    const customerId = getCustomerId();
+    loadModal(`/customers/${customerId}/addresses/new`, 'lg');
+  }
+
+  function editAddress(customerId, addressId) {
+    loadModal(`/customers/${customerId}/addresses/${addressId}/edit`, 'lg');
+  }
+
+  function deleteAddress(customerId, addressId) {
+    if (!confirm('Are you sure you want to delete this address?')) return;
+    
+    fetch(`/customers/${customerId}/addresses/${addressId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadAddressesList();
+      } else {
+        showNotification('error', 'Failed to delete address');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification('error', 'An error occurred');
+    });
+  }
+
+  function makeDefaultAddress(customerId, addressId) {
+    fetch(`/customers/${customerId}/addresses/${addressId}/make_default`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadAddressesList();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function reloadAddressesList() {
+    const customerId = getCustomerId();
+    const container = document.getElementById('addressesList');
+    if (!container) return;
+    
+    fetch(`/customers/${customerId}`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('#addressesList');
+        if (newContent) {
+          container.innerHTML = newContent.innerHTML;
+        }
+      })
+      .catch(error => console.error('Error reloading addresses:', error));
+  }
+
+  // ============================================================================
+  // CONTACT MANAGEMENT
+  // ============================================================================
+  function addContact() {
+    const customerId = getCustomerId();
+    loadModal(`/customers/${customerId}/contacts/new`, 'lg');
+  }
+
+  function editContact(customerId, contactId) {
+    loadModal(`/customers/${customerId}/contacts/${contactId}/edit`, 'lg');
+  }
+
+  function deleteContact(customerId, contactId) {
+    if (!confirm('Are you sure you want to delete this contact?')) return;
+    
+    fetch(`/customers/${customerId}/contacts/${contactId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadContactsList();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function makePrimaryContact(customerId, contactId) {
+    fetch(`/customers/${customerId}/contacts/${contactId}/make_primary`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadContactsList();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function reloadContactsList() {
+    const customerId = getCustomerId();
+    const container = document.getElementById('contactsList');
+    if (!container) return;
+    
+    fetch(`/customers/${customerId}`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('#contactsList');
+        if (newContent) {
+          container.innerHTML = newContent.innerHTML;
+        }
+      })
+      .catch(error => console.error('Error reloading contacts:', error));
+  }
+
+  // ============================================================================
+  // DOCUMENT MANAGEMENT
+  // ============================================================================
+  function addDocument() {
+    const customerId = getCustomerId();
+    loadModal(`/customers/${customerId}/documents/new`, 'lg');
+  }
+
+  function editDocument(customerId, documentId) {
+    loadModal(`/customers/${customerId}/documents/${documentId}/edit`, 'lg');
+  }
+
+  function deleteDocument(customerId, documentId) {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+    
+    fetch(`/customers/${customerId}/documents/${documentId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadDocumentsList();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function reloadDocumentsList() {
+    const customerId = getCustomerId();
+    const container = document.getElementById('documentsList');
+    if (!container) return;
+    
+    fetch(`/customers/${customerId}`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('#documentsList');
+        if (newContent) {
+          container.innerHTML = newContent.innerHTML;
+        }
+      })
+      .catch(error => console.error('Error reloading documents:', error));
+  }
+
+  // ============================================================================
+  // ACTIVITY MANAGEMENT
+  // ============================================================================
+  function addActivity() {
+    const customerId = getCustomerId();
+    loadModal(`/customers/${customerId}/activities/new`, 'lg');
+  }
+
+  function viewActivity(customerId, activityId) {
+    loadModal(`/customers/${customerId}/activities/${activityId}`, 'md');
+  }
+
+  function editActivity(customerId, activityId) {
+    loadModal(`/customers/${customerId}/activities/${activityId}/edit`, 'lg');
+  }
+
+  function deleteActivity(customerId, activityId) {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
+    
+    fetch(`/customers/${customerId}/activities/${activityId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadActivitiesList();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function completeActivity(customerId, activityId) {
+    const outcome = prompt('Enter outcome (optional):');
+    
+    fetch(`/customers/${customerId}/activities/${activityId}/complete`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ outcome: outcome })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification('success', data.message);
+        reloadActivitiesList();
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function reloadActivitiesList() {
+    const customerId = getCustomerId();
+    const container = document.getElementById('activitiesList');
+    if (!container) return;
+    
+    fetch(`/customers/${customerId}`)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('#activitiesList');
+        if (newContent) {
+          container.innerHTML = newContent.innerHTML;
+        }
+      })
+      .catch(error => console.error('Error reloading activities:', error));
+  }
+
+  // ============================================================================
+  // MODAL MANAGEMENT
+  // ============================================================================
+  function loadModal(url, size = 'lg') {
+    const modal = document.getElementById('dynamicModal');
+    const modalDialog = modal.querySelector('.modal-dialog');
+    
+    // Set size
+    modalDialog.className = `modal-dialog modal-${size}`;
+    
+    // Load content
+    fetch(url)
+      .then(response => response.text())
+      .then(html => {
+        const modalContent = modal.querySelector('#modalContent');
+        modalContent.innerHTML = html;
+        new bootstrap.Modal(modal).show();
+      })
+      .catch(error => {
+        console.error('Error loading modal:', error);
+        showNotification('error', 'Failed to load form');
+      });
+  }
+
+  // ============================================================================
+  // NOTIFICATIONS
+  // ============================================================================
+  function showNotification(type, message) {
+    // Create toast element
+    const toastHtml = `
+      <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    `;
+    
+    // Get or create toast container
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toastContainer';
+      container.className = 'toast-container position-fixed top-0 end-0 p-3';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+    }
+    
+    // Add toast
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = toastHtml;
+    const toastElement = tempDiv.firstElementChild;
+    container.appendChild(toastElement);
+    
+    // Show toast
+    const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+    toast.show();
+    
+    // Remove after hide
+    toastElement.addEventListener('hidden.bs.toast', function() {
+      toastElement.remove();
+    });
+  }
+
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
+  function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.content || '';
+  }
+
+  function getCustomerId() {
+    const path = window.location.pathname;
+    const match = path.match(/\/customers\/(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  // ============================================================================
+  // EXPORT FUNCTIONS (for use in Rails UJS/Turbo)
+  // ============================================================================
+  window.customerManagement = {
+    // Address functions
+    addAddress,
+    editAddress,
+    deleteAddress,
+    makeDefaultAddress,
+    reloadAddressesList,
+    
+    // Contact functions
+    addContact,
+    editContact,
+    deleteContact,
+    makePrimaryContact,
+    reloadContactsList,
+    
+    // Document functions
+    addDocument,
+    editDocument,
+    deleteDocument,
+    reloadDocumentsList,
+    
+    // Activity functions
+    addActivity,
+    viewActivity,
+    editActivity,
+    deleteActivity,
+    completeActivity,
+    reloadActivitiesList,
+    
+    // Utility functions
+    showNotification,
+    clearFilters,
+    clearSelection
+  };
+
+  // ============================================================================
+  // ANALYTICS & CHARTS (If Chart.js is loaded)
+  // ============================================================================
+  if (typeof Chart !== 'undefined') {
+    window.initializeCustomerCharts = function(data) {
+      // Revenue Chart
+      if (document.getElementById('revenueChart')) {
+        new Chart(document.getElementById('revenueChart'), {
+          type: 'line',
+          data: {
+            labels: data.revenue.labels,
+            datasets: [{
+              label: 'Revenue',
+              data: data.revenue.values,
+              borderColor: 'rgb(13, 110, 253)',
+              backgroundColor: 'rgba(13, 110, 253, 0.1)',
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value => '$' + value.toLocaleString()
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Order Trend Chart
+      if (document.getElementById('orderTrendChart')) {
+        new Chart(document.getElementById('orderTrendChart'), {
+          type: 'bar',
+          data: {
+            labels: data.orders.labels,
+            datasets: [{
+              label: 'Orders',
+              data: data.orders.values,
+              backgroundColor: 'rgba(25, 135, 84, 0.8)'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      }
+      
+      // Payment Performance Chart
+      if (document.getElementById('paymentChart')) {
+        new Chart(document.getElementById('paymentChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['On Time', 'Late'],
+            datasets: [{
+              data: [data.payment.on_time, data.payment.late],
+              backgroundColor: [
+                'rgba(25, 135, 84, 0.8)',
+                'rgba(220, 53, 69, 0.8)'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom' }
+            }
+          }
+        });
+      }
+    };
+  }
+
+  // ============================================================================
+  // CONSOLE INFO
+  // ============================================================================
+  console.log('Customer Management JavaScript loaded successfully');
+  console.log('Available functions:', Object.keys(window.customerManagement));
+</script>

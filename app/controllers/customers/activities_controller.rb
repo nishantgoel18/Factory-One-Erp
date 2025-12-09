@@ -2,23 +2,14 @@ module Customers
   class ActivitiesController < ApplicationController
     before_action :authenticate_user!
     before_action :set_customer
-    before_action :set_activity, only: [:show, :edit, :update, :destroy, :complete, :reschedule]
+    before_action :set_activity, only: [:edit, :update, :destroy, :complete, :reschedule]
     
-    # GET /customers/:customer_id/activities
-    def index
-      @activities = @customer.activities.order(activity_date: :desc).page(params[:page]).per(20)
-      
-      respond_to do |format|
-        format.html { render partial: "customers/activities/list", locals: { activities: @activities } }
-        format.json { render json: @activities }
-      end
-    end
-    
-    # GET /customers/:customer_id/activities/new
     def new
-      @activity = @customer.activities.build(activity_date: Time.current)
+      @activity = @customer.activities.build()
       @contacts = @customer.contacts.active
-      render partial: "customers/activities/form", locals: { customer: @customer, activity: @activity, contacts: @contacts }
+      respond_to do |format|
+        format.html { render partial: "customers/activities/form", locals: { customer: @customer, activity: @activity, contacts: @contacts }, layout: false }
+      end
     end
     
     # POST /customers/:customer_id/activities
@@ -27,16 +18,13 @@ module Customers
       @activity.related_user = current_user
       @activity.created_by = current_user
       
-      if @activity.save
-        render json: { success: true, message: "Activity logged successfully", activity: @activity }
-      else
-        render json: { success: false, errors: @activity.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @activity.save
+          format.html { redirect_to @customer, notice: "Activity added successfully." }
+        else
+          format.html {  }
+        end
       end
-    end
-    
-    # GET /customers/:customer_id/activities/:id
-    def show
-      render partial: "customers/activities/detail", locals: { activity: @activity }
     end
     
     # GET /customers/:customer_id/activities/:id/edit
@@ -47,18 +35,34 @@ module Customers
     
     # PATCH /customers/:customer_id/activities/:id
     def update
-      if @activity.update(activity_params)
-        render json: { success: true, message: "Activity updated successfully" }
-      else
-        render json: { success: false, errors: @activity.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @activity.update(activity_params)
+          format.html { redirect_to @customer, notice: "Activity updated successfully." }
+        else
+          format.html {  }
+        end
       end
     end
     
     # DELETE /customers/:customer_id/activities/:id
     def destroy
       @activity.destroy!
-      render json: { success: true, message: "Activity deleted successfully" }
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Activity deleted successfully." }
+      end
     end
+
+    # GET /customers/:customer_id/activities
+    def index
+      @activities = @customer.activities.order(activity_date: :desc).page(params[:page]).per(20)
+      
+      respond_to do |format|
+        format.html { render partial: "customers/activities/list", locals: { activities: @activities } }
+        format.json { render json: @activities }
+      end
+    end
+    
     
     # POST /customers/:customer_id/activities/:id/complete
     def complete

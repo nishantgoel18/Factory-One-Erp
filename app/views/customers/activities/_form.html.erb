@@ -32,8 +32,9 @@
                       ['Follow-up', 'FOLLOWUP']
                     ], activity.activity_type),
                     { include_blank: "Select type..." },
-                    class: "form-select",
+                    class: "form-control",
                     required: true %>
+        <br>
       </div>
 
       <!-- Activity Status -->
@@ -47,8 +48,9 @@
                       ['Overdue', 'OVERDUE']
                     ], activity.activity_status || 'COMPLETED'),
                     {},
-                    class: "form-select",
+                    class: "form-control",
                     required: true %>
+        <br>
       </div>
 
       <!-- Subject -->
@@ -56,6 +58,7 @@
         <%= f.label :subject, "Subject *", class: "form-label" %>
         <%= f.text_field :subject, class: "form-control", required: true,
                         placeholder: "Brief subject of the activity" %>
+        <br>
       </div>
 
       <!-- Description -->
@@ -63,18 +66,21 @@
         <%= f.label :description, "Description", class: "form-label" %>
         <%= f.text_area :description, class: "form-control", rows: 3,
                        placeholder: "Detailed notes about the activity..." %>
+        <br>
       </div>
 
       <!-- Activity Date -->
       <div class="col-md-8">
         <%= f.label :activity_date, "Activity Date & Time *", class: "form-label" %>
         <%= f.datetime_local_field :activity_date, class: "form-control", required: true %>
+        <br>
       </div>
 
       <!-- Duration -->
       <div class="col-md-4">
         <%= f.label :duration_minutes, "Duration (mins)", class: "form-label" %>
         <%= f.number_field :duration_minutes, class: "form-control", min: 0, step: 5 %>
+        <br>
       </div>
 
       <!-- Contact Person -->
@@ -83,7 +89,8 @@
         <%= f.select :customer_contact_id,
                     options_from_collection_for_select(contacts, :id, :full_name, activity.customer_contact_id),
                     { include_blank: "Select contact..." },
-                    class: "form-select" %>
+                    class: "form-control" %>
+        <br>
       </div>
 
       <!-- Priority -->
@@ -97,7 +104,8 @@
                       ['Urgent', 'URGENT']
                     ], activity.priority || 'NORMAL'),
                     {},
-                    class: "form-select" %>
+                    class: "form-control" %>
+        <br>
       </div>
 
       <!-- Communication Method -->
@@ -112,7 +120,8 @@
                       ['Text/SMS', 'SMS']
                     ], activity.communication_method),
                     { include_blank: "Select method..." },
-                    class: "form-select" %>
+                    class: "form-control" %>
+        <br>
       </div>
 
       <!-- Direction -->
@@ -124,7 +133,8 @@
                       ['Inbound', 'INBOUND']
                     ], activity.direction),
                     { include_blank: "Select..." },
-                    class: "form-select" %>
+                    class: "form-control" %>
+        <br>
       </div>
 
       <!-- Customer Sentiment -->
@@ -138,7 +148,8 @@
                       ['Urgent Issue', 'URGENT']
                     ], activity.customer_sentiment),
                     { include_blank: "Select..." },
-                    class: "form-select" %>
+                    class: "form-control" %>
+        <br>
       </div>
 
       <!-- Category -->
@@ -154,13 +165,15 @@
                       ['Quality', 'QUALITY']
                     ], activity.category || 'GENERAL'),
                     {},
-                    class: "form-select" %>
+                    class: "form-control" %>
+        <br>
       </div>
 
       <!-- Divider -->
       <div class="col-12">
         <hr class="my-2">
         <h6 class="text-muted">Outcome & Next Steps</h6>
+        <br>
       </div>
 
       <!-- Outcome -->
@@ -168,6 +181,7 @@
         <%= f.label :outcome, "Outcome", class: "form-label" %>
         <%= f.text_area :outcome, class: "form-control", rows: 2,
                        placeholder: "What was the result of this activity?" %>
+        <br>
       </div>
 
       <!-- Next Action -->
@@ -175,20 +189,23 @@
         <%= f.label :next_action, "Next Action", class: "form-label" %>
         <%= f.text_field :next_action, class: "form-control",
                         placeholder: "What needs to happen next?" %>
+        <br>
       </div>
 
       <!-- Follow-up Required -->
       <div class="col-md-6">
-        <div class="form-check mt-4">
+        <div class="form-check">
           <%= f.check_box :followup_required, class: "form-check-input" %>
           <%= f.label :followup_required, "Follow-up Required", class: "form-check-label" %>
         </div>
+        <br />
       </div>
 
       <!-- Follow-up Date -->
       <div class="col-md-6" id="followupDateField" style="<%= 'display: none;' unless activity.followup_required? %>">
         <%= f.label :followup_date, "Follow-up Date", class: "form-label" %>
         <%= f.date_field :followup_date, class: "form-control" %>
+        <br>
       </div>
 
       <!-- Tags -->

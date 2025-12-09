@@ -47,6 +47,7 @@
                         class: "form-control",
                         required: true,
                         placeholder: "Enter street address" %>
+        <br />
       </div>
 
       <!-- Street Address 2 -->
@@ -55,6 +56,7 @@
         <%= f.text_field :street_address_2,
                         class: "form-control",
                         placeholder: "Apartment, suite, unit, building, floor, etc." %>
+       <br /> 
       </div>
 
       <!-- City -->
@@ -72,6 +74,7 @@
         <%= f.text_field :state_province,
                         class: "form-control",
                         placeholder: "e.g., NY, CA, ON" %>
+        <br />
       </div>
 
       <!-- Postal Code -->
@@ -81,6 +84,7 @@
                         class: "form-control",
                         required: true,
                         placeholder: "Enter postal code" %>
+        <br />
       </div>
 
       <!-- Country -->
@@ -97,12 +101,14 @@
                     {},
                     class: "form-control",
                     required: true %>
+        <br />
       </div>
 
       <!-- Divider -->
       <div class="col-12">
         <hr class="my-2">
         <h6 class="text-muted">Contact Information (Optional)</h6>
+        <br />
       </div>
 
       <!-- Attention To -->
@@ -111,6 +117,7 @@
         <%= f.text_field :attention_to,
                         class: "form-control",
                         placeholder: "Contact person name" %>
+        <br />
       </div>
 
       <!-- Contact Phone -->
@@ -119,6 +126,7 @@
         <%= f.text_field :contact_phone,
                         class: "form-control",
                         placeholder: "(555) 123-4567" %>
+        <br />
       </div>
 
       <!-- Contact Email -->
@@ -127,12 +135,14 @@
         <%= f.email_field :contact_email,
                          class: "form-control",
                          placeholder: "contact@example.com" %>
+        <br />
       </div>
 
       <!-- Divider -->
       <div class="col-12">
         <hr class="my-2">
         <h6 class="text-muted">Delivery Information (Optional)</h6>
+        <br />
       </div>
 
       <!-- Delivery Instructions -->
@@ -142,6 +152,7 @@
                        class: "form-control",
                        rows: 2,
                        placeholder: "Special delivery instructions..." %>
+        <br />
       </div>
 
       <!-- Dock/Gate Info -->
@@ -158,6 +169,7 @@
         <%= f.text_field :delivery_hours,
                         class: "form-control",
                         placeholder: "e.g., 8am-5pm Mon-Fri" %>
+        <br />
       </div>
 
       <!-- Access Code -->
@@ -166,6 +178,7 @@
         <%= f.text_field :access_code,
                         class: "form-control",
                         placeholder: "Security code if applicable" %>
+        <br />
       </div>
 
       <!-- Checkboxes -->
