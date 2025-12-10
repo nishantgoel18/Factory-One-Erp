@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_08_090757) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -534,6 +534,86 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_08_090757) do
     t.index ["parent_id"], name: "index_product_categories_on_parent_id"
   end
 
+  create_table "product_suppliers", force: :cascade do |t|
+    t.boolean "available_for_order", default: true
+    t.decimal "average_purchase_price", precision: 15, scale: 4
+    t.text "buyer_notes"
+    t.date "contract_expiry_date"
+    t.string "contract_reference"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.decimal "current_unit_price", precision: 15, scale: 4, null: false
+    t.integer "days_since_last_order"
+    t.decimal "delivery_performance_rating", precision: 5, scale: 2, default: "100.0"
+    t.string "discontinuation_reason"
+    t.date "discontinued_date"
+    t.text "engineering_notes"
+    t.date "first_purchase_date"
+    t.boolean "is_active", default: true
+    t.boolean "is_approved_supplier", default: true
+    t.boolean "is_preferred_supplier", default: false
+    t.boolean "is_sole_source", default: false
+    t.boolean "is_strategic_item", default: false
+    t.date "last_purchase_date"
+    t.decimal "last_purchase_price", precision: 15, scale: 4
+    t.decimal "last_purchase_quantity", precision: 15, scale: 2
+    t.date "last_quality_issue_date"
+    t.integer "late_deliveries_count", default: 0
+    t.integer "lead_time_days", null: false
+    t.string "manufacturer_part_number"
+    t.integer "maximum_order_quantity"
+    t.integer "minimum_order_quantity", default: 1
+    t.integer "order_multiple"
+    t.string "packaging_type"
+    t.decimal "previous_unit_price", precision: 15, scale: 4
+    t.decimal "price_break_1_price", precision: 15, scale: 4
+    t.decimal "price_break_1_qty", precision: 15, scale: 2
+    t.decimal "price_break_2_price", precision: 15, scale: 4
+    t.decimal "price_break_2_qty", precision: 15, scale: 2
+    t.decimal "price_break_3_price", precision: 15, scale: 4
+    t.decimal "price_break_3_qty", precision: 15, scale: 2
+    t.decimal "price_change_percentage", precision: 5, scale: 2
+    t.date "price_effective_date"
+    t.date "price_expiry_date"
+    t.string "price_trend"
+    t.string "price_uom"
+    t.bigint "product_id", null: false
+    t.integer "quality_issues_count", default: 0
+    t.text "quality_notes"
+    t.decimal "quality_rating", precision: 5, scale: 2, default: "100.0"
+    t.text "quality_requirements"
+    t.string "replacement_product_code"
+    t.boolean "requires_coc", default: false
+    t.boolean "requires_msds", default: false
+    t.boolean "requires_quality_cert", default: false
+    t.string "sourcing_strategy"
+    t.bigint "supplier_id", null: false
+    t.string "supplier_item_code"
+    t.string "supplier_item_description"
+    t.integer "supplier_rank"
+    t.text "technical_specifications"
+    t.text "testing_requirements"
+    t.integer "total_orders_count", default: 0
+    t.decimal "total_quantity_purchased", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_value_purchased", precision: 15, scale: 2, default: "0.0"
+    t.integer "units_per_package"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_product_suppliers_on_created_by_id"
+    t.index ["current_unit_price"], name: "index_product_suppliers_on_current_unit_price"
+    t.index ["is_active"], name: "index_product_suppliers_on_is_active"
+    t.index ["is_approved_supplier"], name: "index_product_suppliers_on_is_approved_supplier"
+    t.index ["is_preferred_supplier"], name: "index_product_suppliers_on_is_preferred_supplier"
+    t.index ["lead_time_days"], name: "index_product_suppliers_on_lead_time_days"
+    t.index ["product_id", "supplier_id"], name: "index_product_suppliers_on_product_id_and_supplier_id", unique: true
+    t.index ["product_id"], name: "index_product_suppliers_on_product_id"
+    t.index ["quality_rating"], name: "index_product_suppliers_on_quality_rating"
+    t.index ["supplier_id"], name: "index_product_suppliers_on_supplier_id"
+    t.index ["supplier_item_code"], name: "index_product_suppliers_on_supplier_item_code"
+    t.index ["supplier_rank"], name: "index_product_suppliers_on_supplier_rank"
+    t.index ["updated_by_id"], name: "index_product_suppliers_on_updated_by_id"
+  end
+
   create_table "products", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
@@ -848,20 +928,444 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_08_090757) do
     t.index ["transfer_number"], name: "index_stock_transfers_on_transfer_number", unique: true
   end
 
+  create_table "supplier_activities", force: :cascade do |t|
+    t.text "action_items"
+    t.datetime "activity_date", null: false
+    t.string "activity_status", default: "COMPLETED"
+    t.string "activity_type", null: false
+    t.text "attachments_description"
+    t.string "category"
+    t.string "communication_method"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "description"
+    t.string "direction"
+    t.integer "duration_minutes"
+    t.date "followup_date"
+    t.boolean "followup_required", default: false
+    t.boolean "is_overdue", default: false
+    t.text "next_steps"
+    t.text "outcome"
+    t.string "priority", default: "NORMAL"
+    t.bigint "related_record_id"
+    t.string "related_record_type"
+    t.bigint "related_user_id"
+    t.string "subject", null: false
+    t.bigint "supplier_contact_id"
+    t.bigint "supplier_id", null: false
+    t.string "supplier_sentiment"
+    t.text "tags"
+    t.datetime "updated_at", null: false
+    t.index ["activity_date"], name: "index_supplier_activities_on_activity_date"
+    t.index ["activity_status"], name: "index_supplier_activities_on_activity_status"
+    t.index ["activity_type"], name: "index_supplier_activities_on_activity_type"
+    t.index ["created_by_id"], name: "index_supplier_activities_on_created_by_id"
+    t.index ["followup_date"], name: "index_supplier_activities_on_followup_date"
+    t.index ["is_overdue"], name: "index_supplier_activities_on_is_overdue"
+    t.index ["related_record_type", "related_record_id"], name: "index_supplier_activities_on_related_record"
+    t.index ["related_user_id"], name: "index_supplier_activities_on_related_user_id"
+    t.index ["supplier_contact_id"], name: "index_supplier_activities_on_supplier_contact_id"
+    t.index ["supplier_id", "activity_date"], name: "index_supplier_activities_on_supplier_id_and_activity_date"
+    t.index ["supplier_id", "activity_type"], name: "index_supplier_activities_on_supplier_id_and_activity_type"
+    t.index ["supplier_id"], name: "index_supplier_activities_on_supplier_id"
+  end
+
+  create_table "supplier_addresses", force: :cascade do |t|
+    t.string "access_code"
+    t.string "address_label"
+    t.string "address_type", null: false
+    t.string "attention_to"
+    t.text "certifications_at_location"
+    t.string "city", null: false
+    t.string "contact_email"
+    t.string "contact_fax"
+    t.string "contact_phone"
+    t.string "country", default: "US", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "dock_gate_info"
+    t.text "equipment_available"
+    t.integer "facility_size_sqft"
+    t.boolean "is_active", default: true
+    t.boolean "is_default", default: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.string "operating_hours"
+    t.string "postal_code", null: false
+    t.string "receiving_hours"
+    t.boolean "requires_appointment", default: false
+    t.text "shipping_instructions"
+    t.text "special_instructions"
+    t.string "state_province"
+    t.string "street_address_1", null: false
+    t.string "street_address_2"
+    t.bigint "supplier_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.integer "warehouse_capacity_pallets"
+    t.index ["country"], name: "index_supplier_addresses_on_country"
+    t.index ["created_by_id"], name: "index_supplier_addresses_on_created_by_id"
+    t.index ["is_active"], name: "index_supplier_addresses_on_is_active"
+    t.index ["supplier_id", "address_type"], name: "index_supplier_addresses_on_supplier_id_and_address_type"
+    t.index ["supplier_id", "is_default"], name: "index_supplier_addresses_on_supplier_id_and_is_default"
+    t.index ["supplier_id"], name: "index_supplier_addresses_on_supplier_id"
+    t.index ["updated_by_id"], name: "index_supplier_addresses_on_updated_by_id"
+  end
+
+  create_table "supplier_contacts", force: :cascade do |t|
+    t.date "anniversary"
+    t.date "birthday"
+    t.text "communication_notes"
+    t.integer "contact_frequency_days"
+    t.string "contact_role", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "department"
+    t.string "direct_line"
+    t.string "email", null: false
+    t.string "extension"
+    t.string "fax"
+    t.string "first_name", null: false
+    t.boolean "is_active", default: true
+    t.boolean "is_after_hours_contact", default: false
+    t.boolean "is_decision_maker", default: false
+    t.boolean "is_escalation_contact", default: false
+    t.boolean "is_primary_contact", default: false
+    t.text "languages_spoken"
+    t.datetime "last_contacted_at"
+    t.bigint "last_contacted_by_id"
+    t.string "last_name", null: false
+    t.string "linkedin_url"
+    t.string "mobile"
+    t.date "out_of_office_from"
+    t.text "out_of_office_notes"
+    t.date "out_of_office_to"
+    t.text "personal_notes"
+    t.string "phone", null: false
+    t.string "preferred_contact_method"
+    t.text "professional_notes"
+    t.boolean "receive_general_updates", default: false
+    t.boolean "receive_payment_confirmations", default: false
+    t.boolean "receive_pos", default: true
+    t.boolean "receive_quality_alerts", default: false
+    t.boolean "receive_rfqs", default: true
+    t.integer "relationship_strength", default: 1
+    t.string "skype_id"
+    t.bigint "supplier_id", null: false
+    t.string "timezone"
+    t.string "title"
+    t.integer "total_interactions_count", default: 0
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.string "wechat_id"
+    t.string "whatsapp_number"
+    t.string "working_hours"
+    t.index ["created_by_id"], name: "index_supplier_contacts_on_created_by_id"
+    t.index ["email"], name: "index_supplier_contacts_on_email"
+    t.index ["is_active"], name: "index_supplier_contacts_on_is_active"
+    t.index ["is_decision_maker"], name: "index_supplier_contacts_on_is_decision_maker"
+    t.index ["last_contacted_by_id"], name: "index_supplier_contacts_on_last_contacted_by_id"
+    t.index ["supplier_id", "contact_role"], name: "index_supplier_contacts_on_supplier_id_and_contact_role"
+    t.index ["supplier_id", "is_primary_contact"], name: "index_supplier_contacts_on_supplier_id_and_is_primary_contact"
+    t.index ["supplier_id"], name: "index_supplier_contacts_on_supplier_id"
+    t.index ["updated_by_id"], name: "index_supplier_contacts_on_updated_by_id"
+  end
+
+  create_table "supplier_documents", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.text "description"
+    t.string "document_category"
+    t.string "document_title", null: false
+    t.string "document_type", null: false
+    t.date "effective_date"
+    t.date "expiry_date"
+    t.string "file_content_type"
+    t.string "file_name"
+    t.integer "file_size"
+    t.boolean "is_active", default: true
+    t.boolean "is_confidential", default: false
+    t.text "notes"
+    t.integer "renewal_reminder_days", default: 30
+    t.boolean "requires_renewal", default: false
+    t.bigint "superseded_by_id"
+    t.boolean "supplier_can_view", default: false
+    t.bigint "supplier_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "uploaded_by_id"
+    t.integer "version", default: 1
+    t.index ["created_by_id"], name: "index_supplier_documents_on_created_by_id"
+    t.index ["document_type"], name: "index_supplier_documents_on_document_type"
+    t.index ["expiry_date"], name: "index_supplier_documents_on_expiry_date"
+    t.index ["is_active"], name: "index_supplier_documents_on_is_active"
+    t.index ["superseded_by_id"], name: "index_supplier_documents_on_superseded_by_id"
+    t.index ["supplier_id", "document_type"], name: "index_supplier_documents_on_supplier_id_and_document_type"
+    t.index ["supplier_id"], name: "index_supplier_documents_on_supplier_id"
+    t.index ["uploaded_by_id"], name: "index_supplier_documents_on_uploaded_by_id"
+  end
+
+  create_table "supplier_performance_reviews", force: :cascade do |t|
+    t.text "action_items"
+    t.bigint "approved_by_id"
+    t.date "approved_date"
+    t.text "areas_for_improvement"
+    t.decimal "average_delay_days", precision: 8, scale: 2
+    t.decimal "average_order_value", precision: 15, scale: 2
+    t.decimal "cost_score", precision: 5, scale: 2
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.integer "critical_issues_count"
+    t.decimal "delivery_score", precision: 5, scale: 2
+    t.text "future_concerns"
+    t.text "future_opportunities"
+    t.decimal "innovation_score", precision: 5, scale: 2
+    t.text "internal_notes"
+    t.integer "late_deliveries_count"
+    t.date "next_review_date"
+    t.integer "on_time_deliveries_count"
+    t.decimal "on_time_delivery_rate", precision: 5, scale: 2
+    t.decimal "order_fill_rate", precision: 5, scale: 2
+    t.decimal "overall_score", precision: 5, scale: 2
+    t.string "performance_rating"
+    t.date "period_end_date", null: false
+    t.date "period_start_date", null: false
+    t.integer "price_decreases_count"
+    t.integer "price_increases_count"
+    t.decimal "price_variance_percentage", precision: 5, scale: 2
+    t.decimal "quality_acceptance_rate", precision: 5, scale: 2
+    t.integer "quality_issues_count"
+    t.decimal "quality_score", precision: 5, scale: 2
+    t.integer "receipts_rejected_count"
+    t.boolean "recommend_continuation", default: true
+    t.boolean "recommend_expansion", default: false
+    t.boolean "recommend_reduction", default: false
+    t.boolean "recommend_termination", default: false
+    t.text "recommendation_notes"
+    t.text "relationship_status"
+    t.decimal "responsiveness_score", precision: 5, scale: 2
+    t.date "review_date", null: false
+    t.string "review_period"
+    t.string "review_status", default: "DRAFT"
+    t.string "review_type", default: "QUARTERLY"
+    t.bigint "reviewed_by_id"
+    t.text "risk_assessment"
+    t.decimal "service_score", precision: 5, scale: 2
+    t.bigint "shared_by_id"
+    t.date "shared_date"
+    t.boolean "shared_with_supplier", default: false
+    t.text "strategic_importance"
+    t.text "strengths"
+    t.text "supplier_comments"
+    t.text "supplier_feedback"
+    t.bigint "supplier_id", null: false
+    t.integer "total_deliveries_count"
+    t.integer "total_orders_count"
+    t.integer "total_receipts_count"
+    t.decimal "total_spend_amount", precision: 15, scale: 2
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_supplier_performance_reviews_on_approved_by_id"
+    t.index ["created_by_id"], name: "index_supplier_performance_reviews_on_created_by_id"
+    t.index ["overall_score"], name: "index_supplier_performance_reviews_on_overall_score"
+    t.index ["period_start_date", "period_end_date"], name: "idx_on_period_start_date_period_end_date_3cca3f1623"
+    t.index ["review_date"], name: "index_supplier_performance_reviews_on_review_date"
+    t.index ["review_status"], name: "index_supplier_performance_reviews_on_review_status"
+    t.index ["reviewed_by_id"], name: "index_supplier_performance_reviews_on_reviewed_by_id"
+    t.index ["shared_by_id"], name: "index_supplier_performance_reviews_on_shared_by_id"
+    t.index ["supplier_id", "review_date"], name: "idx_on_supplier_id_review_date_f5dbe68289"
+    t.index ["supplier_id"], name: "index_supplier_performance_reviews_on_supplier_id"
+  end
+
+  create_table "supplier_quality_issues", force: :cascade do |t|
+    t.bigint "assigned_to_id"
+    t.text "attachments_description"
+    t.date "audit_completed_date"
+    t.date "audit_scheduled_date"
+    t.date "closed_date"
+    t.text "corrective_action_taken"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.decimal "credit_amount", precision: 15, scale: 2
+    t.boolean "credit_issued", default: false
+    t.date "credit_issued_date"
+    t.boolean "credit_requested", default: false
+    t.integer "days_to_resolve"
+    t.date "detected_date"
+    t.decimal "financial_impact", precision: 15, scale: 2
+    t.boolean "impacts_supplier_rating", default: true
+    t.boolean "is_repeat_issue", default: false
+    t.date "issue_date", null: false
+    t.text "issue_description", null: false
+    t.string "issue_number"
+    t.string "issue_title", null: false
+    t.string "issue_type"
+    t.integer "occurrence_count", default: 1
+    t.text "preventive_action_taken"
+    t.bigint "product_id"
+    t.text "purchasing_team_notes"
+    t.text "quality_team_notes"
+    t.decimal "quantity_affected", precision: 15, scale: 2
+    t.decimal "quantity_rejected", precision: 15, scale: 2
+    t.decimal "quantity_returned", precision: 15, scale: 2
+    t.decimal "quantity_reworked", precision: 15, scale: 2
+    t.decimal "rating_impact_points", precision: 5, scale: 2
+    t.bigint "related_issue_id"
+    t.bigint "reported_by_id"
+    t.boolean "requires_audit", default: false
+    t.boolean "requires_corrective_action_verification", default: false
+    t.date "resolution_date"
+    t.text "root_cause_analysis"
+    t.string "severity", null: false
+    t.string "status", default: "OPEN"
+    t.boolean "supplier_acknowledged", default: false
+    t.bigint "supplier_id", null: false
+    t.date "supplier_notified_date"
+    t.text "supplier_response"
+    t.date "supplier_response_date"
+    t.integer "supplier_response_time_days"
+    t.datetime "updated_at", null: false
+    t.date "verification_completed_date"
+    t.date "verification_due_date"
+    t.index ["assigned_to_id"], name: "index_supplier_quality_issues_on_assigned_to_id"
+    t.index ["created_by_id"], name: "index_supplier_quality_issues_on_created_by_id"
+    t.index ["is_repeat_issue"], name: "index_supplier_quality_issues_on_is_repeat_issue"
+    t.index ["issue_date"], name: "index_supplier_quality_issues_on_issue_date"
+    t.index ["issue_number"], name: "index_supplier_quality_issues_on_issue_number", unique: true
+    t.index ["product_id", "status"], name: "index_supplier_quality_issues_on_product_id_and_status"
+    t.index ["product_id"], name: "index_supplier_quality_issues_on_product_id"
+    t.index ["related_issue_id"], name: "index_supplier_quality_issues_on_related_issue_id"
+    t.index ["reported_by_id"], name: "index_supplier_quality_issues_on_reported_by_id"
+    t.index ["severity"], name: "index_supplier_quality_issues_on_severity"
+    t.index ["status"], name: "index_supplier_quality_issues_on_status"
+    t.index ["supplier_id", "status"], name: "index_supplier_quality_issues_on_supplier_id_and_status"
+    t.index ["supplier_id"], name: "index_supplier_quality_issues_on_supplier_id"
+  end
+
   create_table "suppliers", force: :cascade do |t|
+    t.decimal "actual_vs_promised_lead_time_ratio", precision: 5, scale: 2, default: "1.0"
+    t.decimal "advance_payment_percentage", precision: 5, scale: 2
+    t.bigint "approved_by_id"
+    t.date "approved_date"
+    t.decimal "average_delay_days", precision: 8, scale: 2, default: "0.0"
+    t.decimal "average_po_value", precision: 15, scale: 2, default: "0.0"
+    t.string "bank_account_number"
+    t.string "bank_branch"
+    t.string "bank_iban"
+    t.string "bank_name"
+    t.string "bank_routing_number"
+    t.string "bank_swift_code"
     t.text "billing_address"
+    t.string "business_registration_number"
+    t.boolean "can_receive_pos", default: true
+    t.boolean "can_receive_rfqs", default: true
+    t.text "certifications"
     t.string "code"
+    t.text "company_profile"
     t.datetime "created_at", null: false
     t.integer "created_by"
+    t.bigint "created_by_id"
+    t.decimal "credit_limit_extended", precision: 15, scale: 2, default: "0.0"
+    t.string "currency", default: "USD"
+    t.decimal "current_payable_balance", precision: 15, scale: 2, default: "0.0"
+    t.bigint "default_buyer_id"
+    t.integer "default_lead_time_days", default: 30
+    t.string "default_payment_terms", default: "NET_30"
     t.boolean "deleted"
+    t.datetime "deleted_at"
+    t.bigint "deleted_by_id"
+    t.decimal "delivery_score", precision: 5, scale: 2, default: "0.0"
+    t.string "display_name"
+    t.integer "early_payment_discount_days"
+    t.decimal "early_payment_discount_percentage", precision: 5, scale: 2
     t.string "email"
+    t.string "facebook_url"
+    t.text "factory_locations"
+    t.text "geographic_coverage"
+    t.string "gst_number"
+    t.text "internal_notes"
+    t.boolean "is_1099_vendor", default: false
     t.boolean "is_active"
+    t.boolean "is_deleted", default: false
+    t.boolean "is_local_supplier", default: false
+    t.boolean "is_minority_owned", default: false
+    t.boolean "is_preferred_supplier", default: false
+    t.boolean "is_strategic_supplier", default: false
+    t.boolean "is_veteran_owned", default: false
+    t.boolean "is_woman_owned", default: false
+    t.boolean "iso_14001_certified", default: false
+    t.date "iso_14001_expiry"
+    t.boolean "iso_45001_certified", default: false
+    t.date "iso_45001_expiry"
+    t.boolean "iso_9001_certified", default: false
+    t.date "iso_9001_expiry"
+    t.date "last_audit_date"
+    t.date "last_po_date"
+    t.integer "late_deliveries_count", default: 0
     t.integer "lead_time_days"
+    t.string "legal_name"
+    t.string "linkedin_url"
+    t.text "manufacturing_processes"
+    t.text "materials_specialization"
+    t.integer "maximum_order_quantity"
+    t.integer "minimum_order_quantity", default: 1
     t.string "name"
+    t.date "next_audit_due_date"
     t.decimal "on_time_delivery_rate", precision: 5, scale: 2, default: "100.0"
+    t.decimal "order_frequency_days", precision: 8, scale: 2
+    t.integer "order_multiple"
+    t.decimal "overall_rating", precision: 5, scale: 2, default: "0.0"
+    t.string "payment_method"
     t.string "phone"
+    t.integer "po_count_mtd", default: 0
+    t.integer "po_count_ytd", default: 0
+    t.decimal "price_score", precision: 5, scale: 2, default: "0.0"
+    t.string "primary_email"
+    t.string "primary_fax"
+    t.string "primary_phone"
+    t.integer "production_capacity_monthly"
+    t.decimal "purchase_value_mtd", precision: 15, scale: 2, default: "0.0"
+    t.decimal "purchase_value_ytd", precision: 15, scale: 2, default: "0.0"
+    t.text "purchasing_notes"
+    t.decimal "quality_acceptance_rate", precision: 5, scale: 2, default: "100.0"
+    t.text "quality_control_capabilities"
+    t.integer "quality_issues_count", default: 0
+    t.decimal "quality_rejection_rate", precision: 5, scale: 2, default: "0.0"
+    t.decimal "quality_score", precision: 5, scale: 2, default: "0.0"
+    t.string "rating_label"
+    t.date "rating_last_calculated_at"
+    t.boolean "requires_advance_payment", default: false
+    t.boolean "requires_tax_withholding", default: false
+    t.text "risk_factors"
+    t.integer "risk_level", default: 1
+    t.decimal "service_score", precision: 5, scale: 2, default: "0.0"
     t.text "shipping_address"
+    t.date "status_effective_date"
+    t.string "status_reason"
+    t.string "supplier_category"
+    t.date "supplier_since"
+    t.string "supplier_status", default: "PENDING"
+    t.string "supplier_territory"
+    t.string "supplier_type"
+    t.string "tax_id"
+    t.decimal "tax_withholding_percentage", precision: 5, scale: 2
+    t.text "testing_capabilities"
+    t.integer "total_po_count", default: 0
+    t.decimal "total_purchase_value", precision: 15, scale: 2, default: "0.0"
+    t.string "trade_name"
     t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.string "vat_number"
+    t.string "website"
+    t.index ["approved_by_id"], name: "index_suppliers_on_approved_by_id"
+    t.index ["created_by_id"], name: "index_suppliers_on_created_by_id"
+    t.index ["default_buyer_id"], name: "index_suppliers_on_default_buyer_id"
+    t.index ["deleted_by_id"], name: "index_suppliers_on_deleted_by_id"
+    t.index ["is_preferred_supplier"], name: "index_suppliers_on_is_preferred_supplier"
+    t.index ["legal_name"], name: "index_suppliers_on_legal_name"
+    t.index ["overall_rating"], name: "index_suppliers_on_overall_rating"
+    t.index ["supplier_category"], name: "index_suppliers_on_supplier_category"
+    t.index ["supplier_status"], name: "index_suppliers_on_supplier_status"
+    t.index ["supplier_type"], name: "index_suppliers_on_supplier_type"
+    t.index ["updated_by_id"], name: "index_suppliers_on_updated_by_id"
   end
 
   create_table "tax_codes", force: :cascade do |t|
@@ -1114,6 +1618,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_08_090757) do
   add_foreign_key "labor_time_entries", "users", column: "operator_id"
   add_foreign_key "labor_time_entries", "work_order_operations"
   add_foreign_key "locations", "warehouses"
+  add_foreign_key "product_suppliers", "products"
+  add_foreign_key "product_suppliers", "suppliers"
+  add_foreign_key "product_suppliers", "users", column: "created_by_id"
+  add_foreign_key "product_suppliers", "users", column: "updated_by_id"
   add_foreign_key "purchase_order_lines", "products"
   add_foreign_key "purchase_order_lines", "purchase_orders"
   add_foreign_key "purchase_order_lines", "tax_codes"
@@ -1162,6 +1670,37 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_08_090757) do
   add_foreign_key "stock_transfers", "users", column: "requested_by_id"
   add_foreign_key "stock_transfers", "warehouses", column: "from_warehouse_id"
   add_foreign_key "stock_transfers", "warehouses", column: "to_warehouse_id"
+  add_foreign_key "supplier_activities", "supplier_contacts"
+  add_foreign_key "supplier_activities", "suppliers"
+  add_foreign_key "supplier_activities", "users", column: "created_by_id"
+  add_foreign_key "supplier_activities", "users", column: "related_user_id"
+  add_foreign_key "supplier_addresses", "suppliers"
+  add_foreign_key "supplier_addresses", "users", column: "created_by_id"
+  add_foreign_key "supplier_addresses", "users", column: "updated_by_id"
+  add_foreign_key "supplier_contacts", "suppliers"
+  add_foreign_key "supplier_contacts", "users", column: "created_by_id"
+  add_foreign_key "supplier_contacts", "users", column: "last_contacted_by_id"
+  add_foreign_key "supplier_contacts", "users", column: "updated_by_id"
+  add_foreign_key "supplier_documents", "supplier_documents", column: "superseded_by_id"
+  add_foreign_key "supplier_documents", "suppliers"
+  add_foreign_key "supplier_documents", "users", column: "created_by_id"
+  add_foreign_key "supplier_documents", "users", column: "uploaded_by_id"
+  add_foreign_key "supplier_performance_reviews", "suppliers"
+  add_foreign_key "supplier_performance_reviews", "users", column: "approved_by_id"
+  add_foreign_key "supplier_performance_reviews", "users", column: "created_by_id"
+  add_foreign_key "supplier_performance_reviews", "users", column: "reviewed_by_id"
+  add_foreign_key "supplier_performance_reviews", "users", column: "shared_by_id"
+  add_foreign_key "supplier_quality_issues", "products"
+  add_foreign_key "supplier_quality_issues", "supplier_quality_issues", column: "related_issue_id"
+  add_foreign_key "supplier_quality_issues", "suppliers"
+  add_foreign_key "supplier_quality_issues", "users", column: "assigned_to_id"
+  add_foreign_key "supplier_quality_issues", "users", column: "created_by_id"
+  add_foreign_key "supplier_quality_issues", "users", column: "reported_by_id"
+  add_foreign_key "suppliers", "users", column: "approved_by_id"
+  add_foreign_key "suppliers", "users", column: "created_by_id"
+  add_foreign_key "suppliers", "users", column: "default_buyer_id"
+  add_foreign_key "suppliers", "users", column: "deleted_by_id"
+  add_foreign_key "suppliers", "users", column: "updated_by_id"
   add_foreign_key "work_centers", "locations"
   add_foreign_key "work_centers", "users", column: "created_by_id"
   add_foreign_key "work_centers", "warehouses"

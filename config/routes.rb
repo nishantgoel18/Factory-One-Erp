@@ -96,8 +96,66 @@ Rails.application.routes.draw do
   end
 
   resources :suppliers do
-    member do
-      get '/delete', to: 'suppliers#destroy', as: :delete
+  # Member routes (specific supplier)
+  member do
+    get 'dashboard'           # Analytics dashboard
+    post 'approve'            # Approve supplier
+    post 'suspend'            # Suspend supplier
+    post 'blacklist'          # Blacklist supplier
+    post 'reactivate'         # Reactivate supplier
+  end
+  
+  # Collection routes (all suppliers)
+  collection do
+    get 'autocomplete'        # For search/selection dropdowns
+    post 'bulk_action'        # Bulk operations
+    get 'comparison'          # Compare multiple suppliers
+  end
+  
+  # Nested resources
+  scope module: :supplier do
+    resources :addresses, except: [:index, :show] do
+      member do
+        post 'make_default'   # Set as default address
+      end
+    end
+    
+    resources :contacts, except: [:index, :show] do
+      member do
+        post 'make_primary'   # Set as primary contact
+      end
+    end
+    
+    resources :products do
+      member do
+        post 'update_price'   # Update product price
+      end
+    end
+    
+    resources :quality_issues do
+      member do
+        post 'resolve'        # Mark issue as resolved
+        post 'close'          # Close issue
+      end
+    end
+    
+    resources :activities, except: [:index] do
+      member do
+        post 'complete'       # Mark activity as completed
+      end
+    end
+    
+    resources :documents, only: [:index, :new, :create, :edit, :update, :destroy] do
+      member do
+        get 'download'        # Download document
+      end
+    end
+    
+    resources :performance_reviews, only: [:index, :show, :new, :create, :edit, :update] do
+      member do
+        post 'approve'        # Approve review
+        post 'share'          # Share with supplier
+      end
     end
   end
 
