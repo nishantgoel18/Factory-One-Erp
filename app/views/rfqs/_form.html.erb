@@ -1,0 +1,416 @@
+<!-- app/views/rfqs/_form.html.erb -->
+
+
+<%= simple_form_for @rfq do |f| %>
+
+  <%= render 'layouts/error_messages', object: @rfq %>
+
+  <!-- BASIC INFORMATION -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary d-flex align-items-center justify-content-start">
+      <h5 class="mb-0">Basic Information</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+
+        <div class="col-md-8">
+          <%= f.input :title,
+              label: 'RFQ Title',
+              required: true,
+              input_html: { class: 'form-control-lg' },
+              placeholder: 'e.g., Raw Materials for Q1 2024' %>
+        </div>
+
+        <div class="col-md-4">
+          <%= f.input :is_urgent,
+              as: :boolean,
+              label: 'Mark as Urgent' %>
+        </div>
+
+        <div class="col-12">
+          <%= f.input :description,
+              as: :text,
+              input_html: { rows: 4 },
+              placeholder: 'Detailed description of what you need...' %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORTANT DATES -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary d-flex align-items-center justify-content-start">
+      <h5 class="mb-0">Important Dates</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+
+        <div class="col-md-4">
+          <%= f.input :rfq_date,
+              as: :date,
+              required: true,
+              input_html: { value: f.object.rfq_date || Date.current, class:'form-control' } %>
+        </div>
+
+        <div class="col-md-4">
+          <%= f.input :due_date,
+              as: :date,
+              required: true,
+              input_html: { value: f.object.due_date || 14.days.from_now, class:'form-control' } %>
+        </div>
+
+        <div class="col-md-4">
+          <%= f.input :response_deadline,
+              as: :date,
+              required: true,
+              input_html: { value: f.object.response_deadline || 7.days.from_now, class:'form-control' } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- LINE ITEMS -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Line Items</h5>
+      <button type="button" class="btn btn-sm btn-success" id="addItemBtn">
+        Add Item
+      </button>
+    </div>
+
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Line</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>UOM</th>
+            <th>Target Price</th>
+            <th>Required Date</th>
+            <th>Critical</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="itemsTableBody">
+          <%= f.simple_fields_for :rfq_items do |item_form| %>
+            <%= render 'rfq_item_fields', f: item_form %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUPPLIERS -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary d-flex align-items-center justify-content-start">
+      <h5 class="mb-0">Invite Suppliers</h5>
+    </div>
+    <div class="card-body">
+
+      <%= f.simple_fields_for :rfq_suppliers do |supplier_form| %>
+        <div class="supplier-selection mb-3">
+          <div class="row align-items-center">
+
+            <div class="col-md-6">
+              <%= supplier_form.input :supplier_id,
+                  collection: Supplier.active.order(:display_name),
+                  label_method: :display_name,
+                  value_method: :id,
+                  prompt: 'Select Supplier', input_html: {class: 'form-control'} %>
+            </div>
+
+            <div class="col-md-5">
+              <%= supplier_form.input :supplier_contact_id,
+                  collection: SupplierContact.active.order(:first_name),
+                  label_method: :full_name,
+                  value_method: :id,
+                  prompt: 'Select Contact',
+                  input_html: {class: 'form-control'} %>
+            </div>
+
+            <div class="col-md-1">
+              <%= supplier_form.input :_destroy, as: :hidden %>
+              <button type="button" class="btn btn-sm btn-outline-danger remove-supplier">
+                ✕
+              </button>
+            </div>
+
+          </div>
+        </div>
+      <% end %>
+
+      <div id="suppliersContainer"></div>
+
+      <button type="button" class="btn btn-outline-primary btn-sm" id="addSupplierBtn">
+        Add Another Supplier
+      </button>
+    </div>
+  </div>
+
+  <!-- ADDITIONAL OPTIONS -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary d-flex align-items-center justify-content-start">
+      <h5 class="mb-0">Additional Options</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+
+        <div class="col-md-6">
+          <%= f.input :auto_email_enabled,
+              as: :boolean,
+              label: 'Auto-send email notifications' %>
+        </div>
+
+        <div class="col-md-6">
+          <%= f.input :estimated_budget,
+              wrapper: :input_group,
+              input_html: { step: 0.01, min: 0 } %>
+        </div>
+
+        <div class="col-md-6">
+          <%= f.input :requires_technical_drawings, as: :boolean %>
+          <%= f.input :requires_certifications, as: :boolean %>
+          <%= f.input :requires_samples, as: :boolean %>
+        </div>
+
+        <div class="col-md-6">
+          <%= f.input :internal_notes,
+              as: :text,
+              input_html: { rows: 3 } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="d-flex justify-content-between">
+    <%= link_to 'Cancel',
+        @rfq.new_record? ? rfqs_path : rfq_path(@rfq),
+        class: 'btn btn-outline-secondary' %>
+
+    <div>
+      <%#= f.button :submit, 'Save as Draft',
+          name: 'commit',
+          value: 'draft',
+          class: 'btn btn-outline-primary me-2' %>
+
+      <%= f.button :submit,
+          @rfq.new_record? ? 'Create RFQ' : 'Update RFQ',
+          class: 'btn btn-primary' %>
+    </div>
+  </div>
+
+<% end %>
+
+<!-- Item Row Template (hidden) -->
+<template id="itemTemplate">
+  <tr class="item-row">
+    <td>
+      <select name="rfq[rfq_items_attributes][NEW_RECORD][product_id]" 
+              class="form-control form-control-sm mb-1 product-select">
+        <option value="">Select Product (or enter description)</option>
+        <% Product.bom_item_components.non_deleted.order(:sku).each do |product| %>
+          <option value="<%= product.id %>"><%= product.name_with_sku %></option>
+        <% end %>
+      </select>
+    </td>
+    <td>
+      <input type="text" 
+             name="rfq[rfq_items_attributes][NEW_RECORD][item_description]"
+             class="form-control form-control-sm" 
+             placeholder="Item description" />
+      <input type="hidden" name="rfq[rfq_items_attributes][NEW_RECORD][line_number]" class="line-number-hidden" />
+    </td>
+    <td>
+      <input type="number" 
+             name="rfq[rfq_items_attributes][NEW_RECORD][quantity_requested]"
+             class="form-control form-control-sm" 
+             min="0" 
+             step="1"
+             placeholder="0"
+             required />
+    </td>
+    <td>
+      <select 
+        name="rfq[rfq_items_attributes][NEW_RECORD][unit_of_measure]"
+        class="form-control form-control-sm" 
+      >
+        <option value="">Select UOM</option>
+        <% UnitOfMeasure.non_deleted.each do |uom| %>
+          <option value="<%= uom.name %>"><%= uom.name %></option>
+        <% end -%>
+      </select>
+    </td>
+    <td>
+      <input type="number" 
+             name="rfq[rfq_items_attributes][NEW_RECORD][target_unit_price]"
+             class="form-control form-control-sm" 
+             min="0" 
+             step="0.01"
+             placeholder="0.00" />
+    </td>
+    <td>
+      <input type="date" 
+             name="rfq[rfq_items_attributes][NEW_RECORD][required_delivery_date]"
+             class="form-control form-control-sm" />
+    </td>
+    <td class="text-center">
+      <input type="checkbox" 
+             name="rfq[rfq_items_attributes][NEW_RECORD][is_critical_item]"
+             class="form-check-input" />
+    </td>
+    <td>
+      <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+        <i class="bi bi-trash"></i>
+      </button>
+      <input type="hidden" name="rfq[rfq_items_attributes][NEW_RECORD][_destroy]" value="false" class="destroy-flag" />
+    </td>
+  </tr>
+</template>
+
+<!-- Supplier Row Template (hidden) -->
+<template id="supplierTemplate">
+  <div class="supplier-selection mb-3">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <select name="rfq[rfq_suppliers_attributes][NEW_RECORD][supplier_id]" 
+                class="form-control supplier-select">
+          <option value="">Select Supplier</option>
+          <% Supplier.active.order(:legal_name).each do |supplier| %>
+            <option value="<%= supplier.id %>"><%= supplier.display_name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="col-md-5">
+        <select name="rfq[rfq_suppliers_attributes][NEW_RECORD][supplier_contact_id]"
+                class="form-control contact-select">
+          <option value="">Select Contact</option>
+
+          <% SupplierContact.active.order(:first_name).each do |supplier| %>
+           <option value="<%= supplier.id %>"><%= supplier.full_name %></option>
+          <% end -%>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-supplier">
+          <i class="bi bi-trash"></i>
+        </button>
+        <input type="hidden" name="rfq[rfq_suppliers_attributes][NEW_RECORD][_destroy]" value="false" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  let itemCounter = <%= @rfq.rfq_items.count %>;
+  let supplierCounter = <%= @rfq.rfq_suppliers.count %>;
+  
+  // Add Item
+  document.getElementById('addItemBtn').addEventListener('click', function() {
+    const template = document.getElementById('itemTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    // Update counter and line number
+    itemCounter++;
+    const lineNumber = itemCounter * 10;
+    
+    // Replace NEW_RECORD with timestamp
+    const timestamp = new Date().getTime();
+    clone.querySelectorAll('[name*="NEW_RECORD"]').forEach(input => {
+      input.name = input.name.replace('NEW_RECORD', timestamp);
+    });
+    
+    // Set line number
+    clone.querySelector('.line-number').value = lineNumber;
+    clone.querySelector('.line-number-hidden').value = lineNumber;
+    
+    document.getElementById('itemsTableBody').appendChild(clone);
+  });
+  
+  // Remove Item
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-item')) {
+      const row = e.target.closest('.item-row');
+      const destroyInput = row.querySelector('.destroy-flag');
+      
+      if (destroyInput) {
+        destroyInput.value = 'true';
+        row.style.display = 'none';
+      } else {
+        row.remove();
+      }
+    }
+  });
+  
+  // Add Supplier
+  document.getElementById('addSupplierBtn').addEventListener('click', function() {
+    const template = document.getElementById('supplierTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    // Replace NEW_RECORD with timestamp
+    const timestamp = new Date().getTime();
+    clone.querySelectorAll('[name*="NEW_RECORD"]').forEach(input => {
+      input.name = input.name.replace('NEW_RECORD', timestamp);
+    });
+    
+    document.getElementById('suppliersContainer').appendChild(clone);
+    supplierCounter++;
+  });
+  
+  // Remove Supplier
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-supplier')) {
+      const supplierDiv = e.target.closest('.supplier-selection');
+      supplierDiv.remove();
+    }
+  });
+  
+  // Load contacts when supplier is selected
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('supplier-select')) {
+      const supplierId = e.target.value;
+      const contactSelect = e.target.closest('.row').querySelector('.contact-select');
+      
+      if (supplierId) {
+        fetch(`/suppliers/${supplierId}/contacts.json`)
+          .then(response => response.json())
+          .then(contacts => {
+            contactSelect.innerHTML = '<option value="">Select Contact</option>';
+            contacts.forEach(contact => {
+              const option = document.createElement('option');
+              option.value = contact.id;
+              option.textContent = contact.full_name;
+              contactSelect.appendChild(option);
+            });
+          });
+      } else {
+        contactSelect.innerHTML = '<option value="">Select Contact</option>';
+      }
+    }
+  });
+  
+  // Form validation
+  (function() {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  })();
+</script>
+
+<style>
+  .item-row:hover { background-color: #f8f9fa; }
+  .supplier-selection { border: 1px solid #dee2e6; padding: 1rem; border-radius: 0.375rem; }
+  .supplier-selection:hover { background-color: #f8f9fa; }
+</style>

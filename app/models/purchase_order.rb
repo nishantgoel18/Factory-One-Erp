@@ -19,6 +19,8 @@ class PurchaseOrder < ApplicationRecord
   
   accepts_nested_attributes_for :lines, allow_destroy: true
   
+  belongs_to :rfq, optional: true
+
   # ===================================
   # CONSTANTS
   # ===================================
@@ -78,6 +80,10 @@ class PurchaseOrder < ApplicationRecord
   scope :by_supplier, ->(supplier_id) { where(supplier_id: supplier_id) }
   scope :by_status, ->(status) { where(status: status) }
   scope :recent, -> { order(order_date: :desc, created_at: :desc) }
+
+  scope :from_rfq, -> { where.not(rfq_id: nil) }
+  scope :manual_pos, -> { where(rfq_id: nil) }
+  scope :by_rfq, ->(rfq_id) { where(rfq_id: rfq_id) }
   
   # ===================================
   # CALLBACKS
@@ -205,6 +211,50 @@ class PurchaseOrder < ApplicationRecord
     self.subtotal = lines.sum(&:line_total_computed)
     self.tax_amount = lines.sum(&:tax_amount_computed)
     self.total_amount = subtotal + tax_amount + (shipping_cost || 0)
+  end
+
+  def from_rfq?
+    rfq_id.present?
+  end
+  
+  # Get source RFQ details (memoized)
+  def source_rfq_details
+    return nil unless from_rfq?
+    
+    @source_rfq_details ||= {
+      rfq_number: rfq.rfq_number,
+      rfq_description: rfq.description,
+      rfq_created_date: rfq.created_at.to_date,
+      rfq_award_date: rfq.award_date,
+      cost_savings: rfq.cost_savings,
+      rfq_path: Rails.application.routes.url_helpers.rfq_path(rfq)
+    }
+  end
+  
+  # Get RFQ traceability badge text
+  def rfq_badge_text
+    return nil unless from_rfq?
+    "From RFQ #{rfq.rfq_number}"
+  end
+  
+  # Check if all lines have RFQ item linkage
+  def fully_traceable_to_rfq?
+    return false unless from_rfq?
+    lines.all? { |line| line.rfq_item_id.present? }
+  end
+  
+  # Get cost savings summary (from RFQ comparison)
+  def rfq_cost_savings_summary
+    return nil unless from_rfq? && rfq.cost_savings.present?
+    
+    {
+      total_savings: rfq.cost_savings,
+      savings_percentage: rfq.cost_savings_percentage,
+      comparison_basis: rfq.comparison_basis,
+      lowest_quote: rfq.lowest_quote_amount,
+      highest_quote: rfq.highest_quote_amount,
+      awarded_amount: rfq.awarded_total_amount
+    }
   end
   
   private

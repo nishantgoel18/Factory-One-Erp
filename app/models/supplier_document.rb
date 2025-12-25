@@ -4,7 +4,7 @@ class SupplierDocument < ApplicationRecord
   belongs_to :created_by, class_name: 'User', optional: true
   belongs_to :superseded_by, class_name: 'SupplierDocument', optional: true
   
-  has_one_attached :file
+  mount_uploader :file, AttachmentUploader
   
   validates :document_type, presence: true
   validates :document_title, presence: true

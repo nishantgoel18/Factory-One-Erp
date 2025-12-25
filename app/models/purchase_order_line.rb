@@ -6,6 +6,9 @@ class PurchaseOrderLine < ApplicationRecord
   belongs_to :product
   belongs_to :uom, class_name: "UnitOfMeasure"
   belongs_to :tax_code, optional: true
+
+  belongs_to :rfq_item, optional: true
+  belongs_to :vendor_quote, optional: true
   
   # ===================================
   # CONSTANTS
@@ -49,6 +52,83 @@ class PurchaseOrderLine < ApplicationRecord
   # ===================================
   # INSTANCE METHODS
   # ===================================
+  def from_rfq?
+    rfq_item_id.present?
+  end
+  
+  # Get RFQ item details
+  def rfq_item_details
+    return nil unless from_rfq?
+    
+    @rfq_item_details ||= {
+      rfq_line_number: rfq_item.line_number,
+      target_unit_price: rfq_item.target_unit_price,
+      selected_unit_price: rfq_item.selected_unit_price,
+      quantity_requested: rfq_item.quantity_requested,
+      required_delivery_date: rfq_item.required_delivery_date,
+      is_critical_item: rfq_item.is_critical_item,
+      buyer_notes: rfq_item.buyer_notes
+    }
+  end
+  
+  # Get vendor quote details used for pricing
+  def vendor_quote_details
+    return nil unless vendor_quote.present?
+    
+    @vendor_quote_details ||= {
+      quoted_unit_price: vendor_quote.unit_price,
+      quoted_total_price: vendor_quote.total_price,
+      lead_time_days: vendor_quote.lead_time_days,
+      payment_terms: vendor_quote.payment_terms,
+      is_lowest_price: vendor_quote.is_lowest_price,
+      is_best_value: vendor_quote.is_best_value,
+      overall_score: vendor_quote.overall_score,
+      delivery_notes: vendor_quote.delivery_notes
+    }
+  end
+  
+  # Compare PO price with RFQ target price
+  def price_variance_from_target
+    return nil unless from_rfq? && rfq_item.target_unit_price.present?
+    
+    variance = unit_price - rfq_item.target_unit_price
+    percentage = ((variance / rfq_item.target_unit_price) * 100).round(2)
+    
+    {
+      variance_amount: variance,
+      variance_percentage: percentage,
+      over_under_target: variance > 0 ? 'OVER' : 'UNDER'
+    }
+  end
+  
+  # Get price comparison badge class
+  def price_badge_class
+    return 'secondary' unless from_rfq? && rfq_item.target_unit_price.present?
+    
+    variance = price_variance_from_target
+    return 'success' if variance[:variance_percentage] <= 0  # At or under target
+    return 'warning' if variance[:variance_percentage] <= 5  # Within 5% over
+    'danger'  # More than 5% over target
+  end
+  
+  # Traceability info for display
+  def traceability_summary
+    return nil unless from_rfq?
+    
+    summary = {
+      rfq_number: purchase_order.rfq.rfq_number,
+      rfq_line: rfq_item.line_number,
+      product_code: product.code,
+      product_name: product.name
+    }
+    
+    if vendor_quote.present?
+      summary[:vendor_quote_id] = vendor_quote.id
+      summary[:quote_score] = vendor_quote.overall_score
+    end
+    
+    summary
+  end
   
   def fully_received?
     received_qty >= ordered_qty

@@ -6,8 +6,8 @@ class SupplierAddress < ApplicationRecord
   validates :address_type, presence: true, inclusion: { in: %w[PRIMARY_OFFICE FACTORY WAREHOUSE BILLING RETURNS OTHER] }
   validates :street_address_1, :city, :postal_code, :country, presence: true
   
-  serialize :equipment_available, Array
-  serialize :certifications_at_location, Array
+  serialize :equipment_available, type: Array, coder: JSON
+  serialize :certifications_at_location, type: Array, coder: JSON
   
   scope :active, -> { where(is_active: true) }
   scope :default_addresses, -> { where(is_default: true) }

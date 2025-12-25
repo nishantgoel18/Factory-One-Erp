@@ -1,9 +1,4 @@
-# frozen_string_literal: true
-
-# ============================================================================
-# CONTROLLER: SuppliersController
-# Main controller for supplier management with comprehensive features
-# ============================================================================
+require 'csv'
 class SuppliersController < ApplicationController
   before_action :authenticate_user!
   before_action :set_supplier, only: [:show, :edit, :update, :destroy, :dashboard, 
@@ -14,7 +9,7 @@ class SuppliersController < ApplicationController
   # INDEX - List all suppliers with filtering, search, sorting
   # ============================================================================
   def index
-    @suppliers = Supplier.non_deleted.includes(:primary_contact, :primary_address, :default_buyer)
+    @suppliers = Supplier.non_deleted
     
     # Apply filters
     apply_filters
@@ -39,9 +34,9 @@ class SuppliersController < ApplicationController
   # SHOW - Supplier detail page with full information
   # ============================================================================
   def show
-    @addresses = @supplier.addresses.active.order(is_default: :desc)
-    @contacts = @supplier.contacts.active.order(is_primary_contact: :desc)
-    @product_catalog = @supplier.product_catalog.includes(:product).order('products.item_code')
+    @addresses = @supplier.addresses.non_deleted.active.order(is_default: :desc)
+    @contacts = @supplier.contacts.non_deleted.active.order(is_primary_contact: :desc)
+    @product_catalog = @supplier.product_catalog.non_deleted.includes(:product).order('products.sku')
     @quality_issues = @supplier.quality_issues.order(issue_date: :desc).limit(10)
     @recent_activities = @supplier.recent_activities(10)
     @documents = @supplier.active_documents.order(created_at: :desc)
@@ -106,10 +101,8 @@ class SuppliersController < ApplicationController
     respond_to do |format|
       if @supplier.update(supplier_params)
         format.html { redirect_to @supplier, notice: 'Supplier updated successfully.' }
-        format.json { render json: @supplier }
       else
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @supplier.errors, status: :unprocessable_entity }
       end
     end
   end
@@ -228,11 +221,138 @@ class SuppliersController < ApplicationController
     @common_products = find_common_products(@suppliers)
   end
   
-  private
+  def dashboard
+    @supplier = Supplier.non_deleted.find(params[:id])
+    
+    # Prepare all chart data
+    @chart_data = {
+      # Purchase volume trend (last 12 months)
+      months: last_12_months_labels,
+      purchase_amounts: calculate_monthly_purchases(@supplier),
+      
+      # Quality issues breakdown
+      quality_issue_types: quality_issue_type_labels,
+      quality_issue_counts: quality_issue_type_counts(@supplier),
+      
+      # Order status distribution
+      order_statuses: order_status_labels,
+      order_counts: calculate_order_status_counts(@supplier)
+    }
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: { supplier: @supplier, chart_data: @chart_data } }
+    end
+  end
   
+  private
   # ============================================================================
   # PRIVATE METHODS
   # ============================================================================
+
+  # ============================================================================
+  # CHART DATA HELPER METHODS
+  # ============================================================================
+  
+  # Last 12 months labels for charts
+  def last_12_months_labels
+    (0..11).map { |i| i.months.ago.strftime('%b %y') }.reverse
+  end
+  
+  # Calculate monthly purchase amounts for last 12 months
+  def calculate_monthly_purchases(supplier)
+    # Get purchase orders for this supplier for last 12 months
+    start_date = 12.months.ago.beginning_of_month
+    
+    monthly_data = (0..11).map do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = i.months.ago.end_of_month
+      
+      # Calculate total purchase amount for this month
+      # Adjust based on your PurchaseOrder model structure
+      if defined?(PurchaseOrder)
+        total = PurchaseOrder.where(supplier: supplier)
+                            .where(order_date: month_start..month_end)
+                            .sum(:total_amount)
+      else
+        # Fallback: Use supplier's total_purchase_value divided by 12
+        (supplier.total_purchase_value || 0) / 12.0
+      end
+      
+      total.to_f.round(2)
+    end
+    
+    monthly_data.reverse
+  end
+  
+  # Quality issue type labels
+  def quality_issue_type_labels
+    [
+      'Material Defect',
+      'Manufacturing',
+      'Dimensional',
+      'Finish/Surface',
+      'Packaging',
+      'Documentation',
+      'Delivery',
+      'Other'
+    ]
+  end
+  
+  # Count quality issues by type
+  def quality_issue_type_counts(supplier)
+    defect_types = [
+      'MATERIAL_DEFECT',
+      'MANUFACTURING_DEFECT',
+      'DIMENSIONAL',
+      'FINISH',
+      'PACKAGING',
+      'DOCUMENTATION',
+      'DELIVERY',
+      'OTHER'
+    ]
+    
+    defect_types.map do |type|
+      supplier.quality_issues.where(issue_type: type).count
+    end
+  end
+  
+  # Order status labels
+  def order_status_labels
+    ['Pending', 'Confirmed', 'In Transit', 'Received', 'Cancelled']
+  end
+  
+  # Calculate order counts by status
+  def calculate_order_status_counts(supplier)
+    # Adjust based on your PurchaseOrder model structure
+    if defined?(PurchaseOrder)
+      statuses = ['PENDING', 'CONFIRMED', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED']
+      
+      statuses.map do |status|
+        PurchaseOrder.where(supplier: supplier)
+                    .where(status: status)
+                    .count
+      end
+    else
+      # Fallback: Return sample data
+      total_orders = supplier.total_orders_count || 0
+      
+      if total_orders > 0
+        # Distribute orders across statuses (sample distribution)
+        [
+          (total_orders * 0.10).to_i,  # Pending: 10%
+          (total_orders * 0.15).to_i,  # Confirmed: 15%
+          (total_orders * 0.25).to_i,  # In Transit: 25%
+          (total_orders * 0.45).to_i,  # Received: 45%
+          (total_orders * 0.05).to_i   # Cancelled: 5%
+        ]
+      else
+        [0, 0, 0, 0, 0]
+      end
+    end
+  end
+  
+  
   def set_supplier
     @supplier = Supplier.non_deleted.find(params[:id])
   end

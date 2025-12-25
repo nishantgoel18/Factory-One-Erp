@@ -1,0 +1,324 @@
+<!-- ========================================================================== -->
+<!-- RFQ TO PURCHASE ORDER CONVERSION FORM                                    -->
+<!-- Location: app/views/rfqs/conversions/new.html.erb                        -->
+<!-- ========================================================================== -->
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">New RFQ Conversion to Purchase Order</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="/rfqs">RFQs</a>
+        <a class="breadcrumb-item" href="<%= rfq_path(@rfq) %>">RFQ</a>
+        <span class="breadcrumb-item active">New RFQ Conversion to Purchase Order</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">
+            <i class="bi bi-arrow-right-circle text-primary"></i>
+            Convert RFQ to Purchase Order
+          </h2>
+          <p class="text-muted mb-0">
+            RFQ: <strong><%= @rfq.rfq_number %></strong> - <%= @rfq.description %>
+          </p>
+        </div>
+        <%= link_to rfq_path(@rfq), class: "btn btn-outline-secondary" do %>
+          <i class="bi bi-arrow-left"></i> Back to RFQ
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%= form_with url: create_rfq_conversion_path(@rfq), method: :post, local: true, class: "needs-validation", novalidate: true do |f| %>
+    
+    <!-- Conversion Settings Card -->
+    <div class="row mb-4">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">
+              <i class="bi bi-gear"></i> Purchase Order Settings
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Warehouse Selection -->
+              <div class="col-md-6 mb-3">
+                <label for="warehouse_id" class="form-label required">
+                  <i class="bi bi-building"></i> Receiving Warehouse
+                </label>
+                <%= select_tag :warehouse_id, 
+                    options_from_collection_for_select(@warehouses, :id, :name), 
+                    class: "form-select", 
+                    required: true %>
+                <div class="form-text">Where materials will be received</div>
+              </div>
+
+              <!-- Payment Terms -->
+              <div class="col-md-6 mb-3">
+                <label for="payment_terms" class="form-label">
+                  <i class="bi bi-credit-card"></i> Payment Terms
+                </label>
+                <%= select_tag :payment_terms,
+                    options_for_select(PurchaseOrder::PAYMENT_TERMS, @rfq.payment_terms),
+                    { include_blank: "Use Supplier Default", class: "form-select" } %>
+                <div class="form-text">Leave blank to use supplier's default terms</div>
+              </div>
+
+              <!-- Expected Delivery Date -->
+              <div class="col-md-6 mb-3">
+                <label for="expected_date" class="form-label">
+                  <i class="bi bi-calendar-event"></i> Expected Delivery Date
+                </label>
+                <%= date_field_tag :expected_date, nil, 
+                    class: "form-control", 
+                    min: Date.current %>
+                <div class="form-text">Leave blank to calculate from supplier lead time</div>
+              </div>
+
+              <!-- Additional Notes -->
+              <div class="col-12 mb-3">
+                <label for="additional_notes" class="form-label">
+                  <i class="bi bi-card-text"></i> Additional PO Notes
+                </label>
+                <%= text_area_tag :additional_notes, nil,
+                    class: "form-control",
+                    rows: 3,
+                    placeholder: "Any additional instructions or notes for this purchase order..." %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Card -->
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-primary">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+              <i class="bi bi-clipboard-check"></i> Conversion Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-sm table-borderless mb-0">
+              <tbody>
+                <tr>
+                  <td class="text-muted">
+                    <i class="bi bi-file-earmark-text"></i> Purchase Orders:
+                  </td>
+                  <td class="text-end">
+                    <span class="badge bg-primary fs-6">
+                      <%= @conversion_preview[:total_pos_to_create] %>
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="text-muted">
+                    <i class="bi bi-list-ul"></i> Total Line Items:
+                  </td>
+                  <td class="text-end">
+                    <strong><%= @conversion_preview[:total_line_items] %></strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="text-muted">
+                    <i class="bi bi-building"></i> Suppliers:
+                  </td>
+                  <td class="text-end">
+                    <strong><%= @conversion_preview[:suppliers].count %></strong>
+                  </td>
+                </tr>
+                <tr class="border-top">
+                  <td class="text-muted fw-bold">
+                    <i class="bi bi-currency-dollar"></i> Grand Total:
+                  </td>
+                  <td class="text-end">
+                    <strong class="text-success fs-5">
+                      <%= number_to_currency(@conversion_preview[:grand_total]) %>
+                    </strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <% if @rfq.cost_savings.present? && @rfq.cost_savings > 0 %>
+              <div class="alert alert-success mt-3 mb-0 py-2">
+                <small>
+                  <i class="bi bi-piggy-bank"></i> 
+                  <strong>Cost Savings:</strong><br>
+                  <%= number_to_currency(@rfq.cost_savings) %>
+                  (<%= number_to_percentage(@rfq.cost_savings_percentage, precision: 2) %>)
+                </small>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items by Supplier Preview -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h4 class="mb-3">
+          <i class="bi bi-box-seam"></i> Items to be Purchased
+        </h4>
+
+        <% @conversion_preview[:suppliers].each_with_index do |supplier_data, index| %>
+          <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-0">
+                  <i class="bi bi-building"></i>
+                  PO #<%= index + 1 %>: <%= supplier_data[:supplier].name %>
+                </h5>
+                <small class="text-muted">
+                  <%= supplier_data[:item_count] %> items - 
+                  Subtotal: <strong class="text-success"><%= number_to_currency(supplier_data[:subtotal]) %></strong>
+                </small>
+              </div>
+              <span class="badge bg-info">
+                <%= supplier_data[:supplier].code %>
+              </span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="8%">Line #</th>
+                      <th width="12%">Product Code</th>
+                      <th>Product Description</th>
+                      <th width="10%" class="text-center">Quantity</th>
+                      <th width="12%" class="text-end">Unit Price</th>
+                      <th width="12%" class="text-end">Line Total</th>
+                      <th width="10%">Delivery</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% supplier_data[:items].each do |item| %>
+                      <% line_total = (item.selected_unit_price || 0) * (item.quantity_requested || 0) %>
+                      <tr>
+                        <td class="text-center">
+                          <span class="badge bg-secondary"><%= item.line_number %></span>
+                        </td>
+                        <td>
+                          <code><%= item.product.sku %></code>
+                        </td>
+                        <td>
+                          <%= item.product.name %>
+                          <% if item.is_critical_item? %>
+                            <span class="badge bg-danger ms-1">Critical</span>
+                          <% end %>
+                        </td>
+                        <td class="text-center">
+                          <strong><%= number_with_delimiter(item.quantity_requested) %></strong>
+                          <%= item.unit_of_measure %>
+                        </td>
+                        <td class="text-end">
+                          <%= number_to_currency(item.selected_unit_price) %>
+                          
+                          <% if item.target_unit_price.present? %>
+                            <% variance_pct = ((item.selected_unit_price - item.target_unit_price) / item.target_unit_price * 100).round(1) %>
+                            <% badge_class = variance_pct <= 0 ? 'success' : (variance_pct <= 5 ? 'warning' : 'danger') %>
+                            <br>
+                            <small class="badge bg-<%= badge_class %>">
+                              <%= variance_pct > 0 ? '+' : '' %><%= number_to_percentage(variance_pct, precision: 1) %> vs target
+                            </small>
+                          <% end %>
+                        </td>
+                        <td class="text-end">
+                          <strong><%= number_to_currency(line_total) %></strong>
+                        </td>
+                        <td>
+                          <small class="text-muted">
+                            <% if item.required_delivery_date.present? %>
+                              <%= item.required_delivery_date.strftime('%b %d, %Y') %>
+                            <% else %>
+                              <em>TBD</em>
+                            <% end %>
+                          </small>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                  <tfoot class="table-light">
+                    <tr>
+                      <th colspan="5" class="text-end">Subtotal:</th>
+                      <th class="text-end">
+                        <%= number_to_currency(supplier_data[:subtotal]) %>
+                      </th>
+                      <th></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow-sm border-warning">
+          <div class="card-body bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-1">
+                  <i class="bi bi-exclamation-triangle text-warning"></i>
+                  Confirm Conversion
+                </h5>
+                <p class="text-muted mb-0">
+                  This will create <strong><%= @conversion_preview[:total_pos_to_create] %></strong> 
+                  Purchase Order<%= @conversion_preview[:total_pos_to_create] > 1 ? 's' : '' %> 
+                  in DRAFT status.
+                </p>
+              </div>
+              <div>
+                <%= link_to rfq_path(@rfq), class: "btn btn-outline-secondary me-2" do %>
+                  <i class="bi bi-x-circle"></i> Cancel
+                <% end %>
+                
+                <%= button_tag type: :submit, class: "btn btn-primary btn-lg", 
+                    data: { confirm: "Create #{@conversion_preview[:total_pos_to_create]} Purchase Order(s) from this RFQ?" } do %>
+                  <i class="bi bi-check-circle"></i>
+                  Create Purchase Order<%= @conversion_preview[:total_pos_to_create] > 1 ? 's' : '' %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <% end %>
+</div>
+
+<style>
+  .required::after {
+    content: " *";
+    color: #dc3545;
+  }
+  
+  .card {
+    border-radius: 0.5rem;
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+</style>
+
+<%= render 'scripts' %>
+<%= render 'stylesheets' %>
+
+

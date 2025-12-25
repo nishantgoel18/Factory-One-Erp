@@ -1,0 +1,178 @@
+<%= simple_form_for quality_issue,
+    url: quality_issue.new_record? ?
+         supplier_quality_issues_path(@supplier) :
+         supplier_quality_issue_path(@supplier, quality_issue) do |f|
+%>
+<%= render 'layouts/error_messages', object: @quality_issue %>
+<% unless quality_issue.new_record? %>
+    <div class="alert alert-info mb-3">
+      <strong>Issue Number:</strong> <%= quality_issue.issue_number %><br>
+      <strong>Status:</strong>
+      <span class="badge bg-<%= quality_issue.status == 'OPEN' ? 'danger' : 'success' %>">
+        <%= quality_issue.status %>
+      </span>
+    </div>
+  <% end %>
+  <div class="row">
+
+      <!-- LEFT COLUMN -->
+      <div class="col-md-6">
+        <h6 class="text-primary mb-3">
+          <i class="bi bi-clipboard-data me-2"></i>Issue Details
+        </h6>
+
+        <%= f.input :issue_title,
+                    required: true,
+                    placeholder: 'e.g., Defective Parts Received',
+                    hint: 'Brief description of the quality issue' %>
+
+        <%= f.input :severity,
+                    collection: [
+                      ['CRITICAL - Production stopped', 'CRITICAL'],
+                      ['MAJOR - Significant impact', 'MAJOR'],
+                      ['MINOR - Low impact', 'MINOR']
+                    ],
+                    required: true,
+                    prompt: 'Select Severity', input_html: {class: 'form-control'} %>
+
+        <%= f.input :issue_date,
+                    as: :date,
+                    required: true,
+                    input_html: { value: quality_issue.issue_date || Date.current, class: 'form-control' } %>
+
+        <%= f.input :product_id,
+                    collection: Product.non_deleted.order(:sku),
+                    label_method: :name_with_sku,
+                    value_method: :id,
+                    include_blank: 'Not product-specific', input_html: {class: 'form-control'}%>
+
+        <%= f.input :related_po_number,
+                    placeholder: 'e.g., PO-2024-00123' %>
+
+        <%= f.input :lot_batch_number,
+                    placeholder: 'e.g., LOT-24A-001' %>
+
+        <%= f.input :quantity_affected,
+                    input_html: { min: 0 } %>
+
+        <%= f.input :financial_impact,
+                    wrapper: :input_group,
+                    # prepend: '$',
+                    input_html: { min: 0, step: 0.01 },
+                    hint: 'Estimated cost impact' %>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="col-md-6">
+        <h6 class="text-primary mb-3">
+          <i class="bi bi-search me-2"></i>Analysis & Resolution
+        </h6>
+
+        <%= f.input :issue_type,
+                    collection: [
+                      ['Material Defect', 'MATERIAL_DEFECT'],
+                      ['Manufacturing Defect', 'MANUFACTURING_DEFECT'],
+                      ['Dimensional Issue', 'DIMENSIONAL'],
+                      ['Finish/Surface Issue', 'FINISH'],
+                      ['Packaging Issue', 'PACKAGING'],
+                      ['Documentation Issue', 'DOCUMENTATION'],
+                      ['Delivery Issue', 'DELIVERY'],
+                      ['Other', 'OTHER']
+                    ],
+                    include_blank: 'Select Type', input_html: {class: 'form-control'} %>
+
+        <%= f.input :root_cause_category,
+                    collection: [
+                      ['Material', 'MATERIAL'],
+                      ['Process', 'PROCESS'],
+                      ['Equipment', 'EQUIPMENT'],
+                      ['Human Error', 'HUMAN_ERROR'],
+                      ['Design', 'DESIGN'],
+                      ['Supplier Issue', 'SUPPLIER'],
+                      ['Unknown', 'UNKNOWN']
+                    ],
+                    include_blank: 'To Be Determined', input_html: {class: 'form-control'} %>
+
+        <%= f.input :expected_resolution_date, as: :date, input_html: {class: 'form-control'} %>
+
+        <% unless quality_issue.new_record? %>
+          <%= f.input :resolution_date, as: :date, input_html: {class: 'form-control'} %>
+        <% end %>
+
+        <%= f.input :rating_impact_points,
+                    input_html: { min: 0, max: 20 },
+                    hint: 'Points deducted from supplier rating (0–20)' %>
+
+        <div class="card bg-light mb-3">
+          <div class="card-body">
+            <h6 class="card-title mb-3">Recurrence Tracking</h6>
+
+            <%= f.input :is_repeat_issue, as: :boolean %>
+            <%= f.input :supplier_notified, as: :boolean %>
+          </div>
+        </div>
+
+        <%= f.input :supplier_notified_date, as: :date, input_html: {class: 'form-control'} %>
+      </div>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- FULL WIDTH -->
+    <%= f.input :issue_description,
+                as: :text,
+                required: true,
+                input_html: { rows: 4 },
+                placeholder: 'Expected vs received, defect details, impact...' %>
+
+    <%= f.input :root_cause_analysis,
+                as: :text,
+                input_html: { rows: 3 } %>
+
+    <%= f.input :corrective_action_taken,
+                as: :text,
+                input_html: { rows: 3 } %>
+
+    <%= f.input :preventive_action_taken,
+                as: :text,
+                input_html: { rows: 3 } %>
+
+    <%= f.input :supplier_response,
+                as: :text,
+                input_html: { rows: 3 } %>
+
+    <%= f.input :quality_team_notes,
+                as: :text,
+                input_html: { rows: 2 } %>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="row">
+    <div class="col-lg-12">
+      <% unless quality_issue.new_record? || quality_issue.status == 'CLOSED' %>
+        <% if quality_issue.status == 'OPEN' %>
+          <%#= button_to mark_in_progress_supplier_quality_issue_path(@supplier, quality_issue),
+                        method: :post,
+                        class: 'btn btn-warning',
+                        data: { confirm: 'Mark this issue as In Progress?' } do %>
+            <%# Mark In Progress %>
+          <%# end %>
+        <% end %>
+
+        <% if quality_issue.status == 'IN_PROGRESS' %>
+          <%= button_to resolve_supplier_quality_issue_path(@supplier, quality_issue),
+                        method: :post,
+                        class: 'btn btn-success',
+                        data: { confirm: 'Mark this issue as Resolved?' } do %>
+            Mark Resolved
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <%= f.button :submit,
+                   quality_issue.new_record? ? 'Log Issue' : 'Update Issue',
+                   class: 'btn btn-primary' %>
+    </div>
+  </div>
+<% end %>

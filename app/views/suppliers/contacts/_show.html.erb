@@ -1,0 +1,70 @@
+<div class="tab-pane fade" id="contacts">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Contacts</h5>
+    <a href="<%= new_supplier_contact_url(@supplier) %>" class="btn btn-sm btn-primary">
+      <i class="bi bi-plus-circle"></i> Add Contact
+    </a>
+  </div>
+  
+  <div id="contactsList">
+    <% if @contacts.any? %>
+      <div class="row">
+        <% @contacts.each do |contact| %>
+          <div class="col-md-6 mb-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <h6 class="mb-0"><%= contact.full_name %></h6>
+                    <% if contact.title.present? %>
+                      <small class="text-muted"><%= contact.title %></small>
+                    <% end %>
+                  </div>
+                  <div class="btn-group btn-group-sm">
+                    <a class="btn btn-outline-primary" href="<%= edit_supplier_contact_url(@supplier, contact) %>">
+                      <i class="anticon anticon-edit"></i>
+                    </a>
+                    <a class="btn btn-outline-danger" onclick="deleteContact(<%= contact.id %>)">
+                      <i class="anticon anticon-delete"></i>
+                    </a>
+                  </div>
+                </div>
+                
+                <div class="mb-2">
+                  <span class="badge bg-info"><%= contact.contact_role.titleize %></span>
+                  <% if contact.is_decision_maker %>
+                    <span class="badge bg-warning">Decision Maker</span>
+                  <% end %>
+                </div>
+                
+                <p class="mb-1 small">
+                  <i class="anticon anticon-envelope"></i> 
+                  <a href="mailto:<%= contact.email %>"><%= contact.email %></a>
+                </p>
+                <p class="mb-1 small">
+                  <i class="anticon anticon-telephone"></i> <%= contact.phone %>
+                </p>
+                <% if contact.mobile.present? %>
+                  <p class="mb-1 small">
+                    <i class="bi bi-phone"></i> <%= contact.mobile %>
+                  </p>
+                <% end %>
+                
+                <% unless contact.is_primary_contact %>
+                  <button class="btn btn-sm btn-outline-success mt-2" onclick="makePrimaryContact(<%= contact.id %>)">
+                    Make Primary
+                  </button>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-5 text-muted">
+        <i class="bi bi-person" style="font-size: 3rem;"></i>
+        <p class="mt-3">No contacts added yet</p>
+      </div>
+    <% end %>
+  </div>
+</div>

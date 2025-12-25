@@ -1,0 +1,476 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Supplier Details</h2>
+
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <%= link_to raw('<i class="anticon anticon-home m-r-5"></i>Home'), root_path, class: "breadcrumb-item" %>
+        <%= link_to "Masters", "#", class: "breadcrumb-item" %>
+        <%= link_to "Suppliers", suppliers_path, class: "breadcrumb-item" %>
+        <span class="breadcrumb-item active">Supplier Details</span>
+      </nav>
+    </div>
+  </div>
+<!-- Breadcrumb -->
+  
+  
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-graph-up me-2 text-primary"></i>
+        <%= @supplier.display_name %>
+      </h2>
+      <p class="text-muted mb-0">Supplier Performance Dashboard & Analytics</p>
+    </div>
+    <div>
+      <%= link_to supplier_path(@supplier), class: 'btn btn-outline-secondary' do %>
+        <i class="bi bi-arrow-left me-1"></i>Back to Supplier
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- KPI Cards Row 1 -->
+  <div class="row g-3 mb-4">
+    <!-- Overall Rating -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Overall Rating</span>
+            <i class="bi bi-star-fill fs-4 text-warning"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.overall_rating || 0 %>
+            <small class="text-muted fs-6">/100</small>
+          </h2>
+          <div class="progress mt-2" style="height: 8px;">
+            <div class="progress-bar <%= rating_color_class(@supplier.overall_rating) %>" 
+                 style="width: <%= @supplier.overall_rating || 0 %>%"></div>
+          </div>
+          <small class="text-muted mt-1 d-block">
+            <%= rating_label(@supplier.overall_rating) %>
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Total Spend YTD -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Total Spend (YTD)</span>
+            <i class="bi bi-currency-dollar fs-4 text-success"></i>
+          </div>
+          <h2 class="mb-0">
+            $<%= number_with_delimiter(@supplier.total_purchase_value || 0, delimiter: ',') %>
+          </h2>
+          <small class="text-muted mt-1 d-block">
+            <%#= @supplier.total_orders_count || 0 %> orders this year
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- On-Time Delivery -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">On-Time Delivery</span>
+            <i class="bi bi-truck fs-4 text-info"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.on_time_delivery_rate || 0 %>%
+          </h2>
+          <div class="progress mt-2" style="height: 8px;">
+            <div class="progress-bar bg-info" 
+                 style="width: <%= @supplier.on_time_delivery_rate || 0 %>%"></div>
+          </div>
+          <small class="text-muted mt-1 d-block">
+            Target: 95%
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quality Acceptance -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Quality Acceptance</span>
+            <i class="bi bi-shield-check fs-4 text-primary"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.quality_acceptance_rate || 0 %>%
+          </h2>
+          <div class="progress mt-2" style="height: 8px;">
+            <div class="progress-bar bg-primary" 
+                 style="width: <%= @supplier.quality_acceptance_rate || 0 %>%"></div>
+          </div>
+          <small class="text-muted mt-1 d-block">
+            Target: 98%
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- KPI Cards Row 2 -->
+  <div class="row g-3 mb-4">
+    <!-- Quality Issues -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Open Quality Issues</span>
+            <i class="bi bi-exclamation-triangle fs-4 <%= @supplier.open_quality_issues.any? ? 'text-danger' : 'text-success' %>"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.open_quality_issues.count %>
+          </h2>
+          <small class="text-muted mt-1 d-block">
+            <%= @supplier.quality_issues.count %> total issues logged
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Products Supplied -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Products in Catalog</span>
+            <i class="bi bi-box-seam fs-4 text-secondary"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.product_suppliers.count %>
+          </h2>
+          <small class="text-muted mt-1 d-block">
+            <%= @supplier.product_suppliers.where(is_preferred_supplier: true).count %> preferred items
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Average Lead Time -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Avg. Lead Time</span>
+            <i class="bi bi-clock-history fs-4 text-warning"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.lead_time_days || 0 %>
+            <small class="text-muted fs-6">days</small>
+          </h2>
+          <small class="text-muted mt-1 d-block">
+            Standard delivery time
+          </small>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Credit Utilization -->
+    <div class="col-md-3">
+      <div class="card h-100  ">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted">Credit Utilization</span>
+            <i class="bi bi-credit-card fs-4 text-info"></i>
+          </div>
+          <h2 class="mb-0">
+            <%= @supplier.credit_utilization_percentage %>%
+          </h2>
+          <div class="progress mt-2" style="height: 8px;">
+            <div class="progress-bar <%= @supplier.over_credit_limit? ? 'bg-danger' : 'bg-info' %>" 
+                 style="width: <%= [@supplier.credit_utilization_percentage, 100].min %>%"></div>
+          </div>
+          <small class="text-muted mt-1 d-block">
+            $<%= number_with_delimiter(@supplier.available_credit, delimiter: ',') %> available
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Charts Row -->
+  <div class="row g-3 mb-4">
+    <!-- Purchase Volume Trend -->
+    <div class="col-md-8">
+      <div class="card  ">
+        <div class="card-header d-flex align-items-center justify-content-start bg-white ">
+          <h5 class="mb-0">
+            <i class="bi bi-graph-up me-2"></i>Purchase Volume Trend (Last 12 Months)
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="purchaseVolumeChart" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Performance Scores Breakdown -->
+    <div class="col-md-4">
+      <div class="card  ">
+        <div class="card-header d-flex align-items-center justify-content-start bg-white ">
+          <h5 class="mb-0">
+            <i class="bi bi-speedometer2 me-2"></i>Performance Breakdown
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="performanceRadarChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Charts Row 2 -->
+  <div class="row g-3 mb-4">
+    <!-- Quality Issues by Type -->
+    <div class="col-md-6">
+      <div class="card  ">
+        <div class="card-header d-flex align-items-center justify-content-start bg-white ">
+          <h5 class="mb-0">
+            <i class="bi bi-pie-chart me-2"></i>Quality Issues by Type
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="qualityIssuesChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Order Status Distribution -->
+    <div class="col-md-6">
+      <div class="card  ">
+        <div class="card-header d-flex align-items-center justify-content-start bg-white ">
+          <h5 class="mb-0">
+            <i class="bi bi-bar-chart me-2"></i>Order Status Distribution
+          </h5>
+        </div>
+        <div class="card-body">
+          <canvas id="orderStatusChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Recent Activity & Reviews -->
+  <div class="row g-3">
+    <!-- Recent Performance Reviews -->
+    <div class="col-md-6">
+      <div class="card  ">
+        <div class="card-header d-flex align-items-center justify-content-start bg-white ">
+          <h5 class="mb-0">
+            <i class="bi bi-star me-2"></i>Recent Performance Reviews
+          </h5>
+        </div>
+        <div class="card-body">
+          <% if @supplier.performance_reviews.any? %>
+            <div class="list-group list-group-flush">
+              <% @supplier.performance_reviews.order(review_date: :desc).limit(5).each do |review| %>
+                <div class="list-group-item px-0">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <h6 class="mb-1"><%= review.review_type %> Review</h6>
+                      <small class="text-muted">
+                        <%= review.review_period_start.strftime('%b %Y') %> - 
+                        <%= review.review_period_end.strftime('%b %Y') %>
+                      </small>
+                    </div>
+                    <span class="badge <%= rating_badge_class(review.overall_score) %> fs-6">
+                      <%= review.overall_score %>/100
+                    </span>
+                  </div>
+                  <p class="mb-1 mt-2 small"><%= truncate(review.strengths, length: 100) %></p>
+                  <small class="text-muted">
+                    Reviewed by <%= review.reviewer_name %> on <%= review.review_date.strftime('%b %d, %Y') %>
+                  </small>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-muted text-center py-4">No performance reviews yet</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Quality Issues -->
+    <div class="col-md-6">
+      <div class="card  ">
+        <div class="card-header d-flex align-items-center justify-content-start bg-white ">
+          <h5 class="mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>Recent Quality Issues
+          </h5>
+        </div>
+        <div class="card-body">
+          <% if @supplier.quality_issues.any? %>
+            <div class="list-group list-group-flush">
+              <% @supplier.quality_issues.order(issue_date: :desc).limit(5).each do |issue| %>
+                <div class="list-group-item px-0">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                      <h6 class="mb-1"><%= issue.issue_title %></h6>
+                      <small class="text-muted">
+                        <%= issue.issue_date.strftime('%b %d, %Y') %>
+                        <% if issue.product %>
+                          • <%= issue.product.item_code %>
+                        <% end %>
+                      </small>
+                    </div>
+                    <span class="badge <%= severity_badge_class(issue.severity) %> ms-2">
+                      <%= issue.severity %>
+                    </span>
+                    <span class="badge <%= status_badge_class(issue.status) %> ms-2">
+                      <%= issue.status %>
+                    </span>
+                  </div>
+                  <% if issue.financial_impact && issue.financial_impact > 0 %>
+                    <p class="mb-0 mt-2 small text-danger">
+                      <i class="bi bi-currency-dollar me-1"></i>
+                      Impact: $<%= number_with_delimiter(issue.financial_impact, delimiter: ',') %>
+                    </p>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-muted text-center py-4">
+              <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+              No quality issues logged
+            </p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Purchase Volume Trend Chart
+  const purchaseCtx = document.getElementById('purchaseVolumeChart');
+  new Chart(purchaseCtx, {
+    type: 'line',
+    data: {
+      labels: <%= raw @chart_data[:months] %>,
+      datasets: [{
+        label: 'Purchase Amount ($)',
+        data: <%= raw @chart_data[:purchase_amounts] %>,
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  // Performance Radar Chart
+  const radarCtx = document.getElementById('performanceRadarChart');
+  new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+      labels: ['Quality', 'Delivery', 'Price', 'Service', 'Innovation'],
+      datasets: [{
+        label: 'Performance',
+        data: [
+          <%= @supplier.quality_score || 0 %>,
+          <%= @supplier.delivery_score || 0 %>,
+          <%= @supplier.price_score || 0 %>,
+          <%= @supplier.service_score || 0 %>,
+          <%#= @supplier.innovation_score || 0 %>
+        ],
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.2)'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+  
+  // Quality Issues Pie Chart
+  const qualityCtx = document.getElementById('qualityIssuesChart');
+  new Chart(qualityCtx, {
+    type: 'doughnut',
+    data: {
+      labels: <%= raw @chart_data[:quality_issue_types] %>,
+      datasets: [{
+        data: <%= raw @chart_data[:quality_issue_counts] %>,
+        backgroundColor: [
+          '#dc3545', '#ffc107', '#0dcaf0', '#198754', '#6c757d'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+  
+  // Order Status Chart
+  const orderCtx = document.getElementById('orderStatusChart');
+  new Chart(orderCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= raw @chart_data[:order_statuses] %>,
+      datasets: [{
+        label: 'Orders',
+        data: <%= raw @chart_data[:order_counts] %>,
+        backgroundColor: '#0d6efd'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+
+<% content_for :head do %>
+  <style>
+    .progress { background-color: #e9ecef; }
+  </style>
+<% end %>

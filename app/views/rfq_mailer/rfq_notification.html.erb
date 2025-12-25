@@ -1,0 +1,191 @@
+<!-- app/views/rfq_mailer/rfq_notification.html.erb -->
+<!-- Email sent to suppliers when RFQ is issued -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #007bff; color: white; padding: 20px; text-align: center; }
+    .content { background: #f8f9fa; padding: 20px; margin: 20px 0; }
+    .footer { text-align: center; color: #6c757d; font-size: 12px; margin-top: 20px; }
+    .button { background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background: #e9ecef; font-weight: bold; }
+    .urgent { background: #dc3545; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold; }
+    .info-box { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #007bff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <h2><%= @company_name %></h2>
+      <h3>Request for Quote (RFQ)</h3>
+    </div>
+    
+    <!-- Greeting -->
+    <div class="content">
+      <p>Dear <%= @contact.full_name || @supplier.display_name %>,</p>
+      
+      <p>
+        We are requesting a quote for the items listed below. 
+        <% if @rfq.is_urgent? %>
+          <span class="urgent">URGENT REQUEST</span>
+        <% end %>
+      </p>
+      
+      <!-- RFQ Details -->
+      <div class="info-box">
+        <h4>RFQ Details</h4>
+        <table>
+          <tr>
+            <td><strong>RFQ Number:</strong></td>
+            <td><%= @rfq.rfq_number %></td>
+          </tr>
+          <tr>
+            <td><strong>Title:</strong></td>
+            <td><%= @rfq.title %></td>
+          </tr>
+          <tr>
+            <td><strong>Issue Date:</strong></td>
+            <td><%= @rfq.rfq_date.strftime('%B %d, %Y') %></td>
+          </tr>
+          <tr>
+            <td><strong>Response Deadline:</strong></td>
+            <td style="color: #dc3545; font-weight: bold;">
+              <%= @rfq.response_deadline.strftime('%B %d, %Y') %>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Required By:</strong></td>
+            <td><%= @rfq.due_date.strftime('%B %d, %Y') %></td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Description -->
+      <% if @rfq.description.present? %>
+        <div class="info-box">
+          <h4>Description</h4>
+          <p><%= simple_format(@rfq.description) %></p>
+        </div>
+      <% end %>
+      
+      <!-- Items -->
+      <div class="info-box">
+        <h4>Items Requested (<%= @rfq_items.count %>)</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Line</th>
+              <th>Item Description</th>
+              <th>Quantity</th>
+              <th>Required By</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @rfq_items.order(:line_number).each do |item| %>
+              <tr>
+                <td><%= item.line_number %></td>
+                <td>
+                  <%= item.display_name %>
+                  <% if item.is_critical_item? %>
+                    <span style="color: #dc3545; font-weight: bold;">(CRITICAL)</span>
+                  <% end %>
+                </td>
+                <td><%= item.quantity_requested %> <%= item.unit_of_measure %></td>
+                <td><%= item.required_delivery_date&.strftime('%b %d, %Y') || 'TBD' %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Requirements -->
+      <div class="info-box">
+        <h4>Requirements</h4>
+        <ul>
+          <% if @rfq.requires_technical_drawings? %>
+            <li>✓ Technical drawings required</li>
+          <% end %>
+          <% if @rfq.requires_certifications? %>
+            <li>✓ Certifications required</li>
+          <% end %>
+          <% if @rfq.requires_samples? %>
+            <li>✓ Samples required</li>
+          <% end %>
+        </ul>
+        
+        <p><strong>Please include in your quote:</strong></p>
+        <ul>
+          <li>Unit price for each item</li>
+          <li>Total price</li>
+          <li>Lead time in days</li>
+          <li>Payment terms</li>
+          <li>Delivery terms</li>
+          <li>Quote validity period</li>
+        </ul>
+      </div>
+      
+      <!-- Call to Action -->
+      <div style="text-align: center; margin: 30px 0;">
+        <% 
+          # Generate quote submission link (adjust to your actual route)
+          quote_url = "#{ENV['APP_URL'] || 'http://localhost:3000'}/rfqs/#{@rfq.id}/submit_quote"
+        %>
+        <a href="<%= quote_url %>" class="button">
+          Submit Your Quote
+        </a>
+        <p style="margin-top: 15px;">
+          <strong>Deadline: <%= @rfq.response_deadline.strftime('%B %d, %Y') %></strong>
+          <br>
+          <span style="color: #dc3545;">
+            (<%= (@rfq.response_deadline - Date.current).to_i %> days remaining)
+          </span>
+        </p>
+      </div>
+      
+      <!-- Contact Information -->
+      <div class="info-box">
+        <h4>Contact Information</h4>
+        <% if @rfq.buyer_assigned %>
+          <p>
+            <strong>Buyer:</strong> <%= @rfq.buyer_assigned.name %><br>
+            <strong>Email:</strong> <%= @rfq.buyer_assigned.email %><br>
+            <% if @rfq.buyer_assigned.phone %>
+              <strong>Phone:</strong> <%= @rfq.buyer_assigned.phone %><br>
+            <% end %>
+          </p>
+        <% end %>
+        
+        <p>Please reply to this email or contact the buyer above if you have any questions.</p>
+      </div>
+      
+      <!-- Closing -->
+      <p>
+        Thank you for your prompt attention to this request. We look forward to receiving your competitive quote.
+      </p>
+      
+      <p>
+        Best regards,<br>
+        <strong><%= @rfq.buyer_assigned&.name || @company_name %></strong><br>
+        Procurement Department
+      </p>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        This is an automated message from <%= @company_name %> Procurement System.<br>
+        RFQ Number: <%= @rfq.rfq_number %> | Issued: <%= @rfq.rfq_date.strftime('%B %d, %Y') %>
+      </p>
+    </div>
+    
+  </div>
+</body>
+</html>

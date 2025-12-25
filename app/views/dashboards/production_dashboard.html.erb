@@ -86,7 +86,7 @@
     <div class="col-md-6">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary">
-          <h4 class="mb-0"><i class="bi bi-calendar-week"></i> This Week</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-calendar-week"></i> This Week</h4>
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -103,12 +103,12 @@
             <div class="col-6">
               <div class="border-end">
                 <small class="text-muted d-block">Quantity Produced</small>
-                <h4 class="mb-0"><%= number_with_precision(@week_stats[:quantity_produced], precision: 0) %></h4>
+                <h4 class="mb-0" style="color: white;"><%= number_with_precision(@week_stats[:quantity_produced], precision: 0) %></h4>
               </div>
             </div>
             <div class="col-6">
               <small class="text-muted d-block">Avg Completion</small>
-              <h4 class="mb-0"><%= @week_stats[:avg_completion_time] %> hrs</h4>
+              <h4 class="mb-0" style="color: white;"><%= @week_stats[:avg_completion_time] %> hrs</h4>
             </div>
           </div>
         </div>
@@ -118,7 +118,7 @@
     <div class="col-md-6">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary">
-          <h4 class="mb-0"><i class="bi bi-calendar-month"></i> This Month</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-calendar-month"></i> This Month</h4>
         </div>
         <div class="card-body">
           <div class="row g-3">
@@ -130,7 +130,7 @@
             </div>
             <div class="col-6">
               <small class="text-muted d-block">Production Cost</small>
-              <h4 class="mb-0">$<%= number_with_precision(@month_stats[:total_production_cost], precision: 0) %></h4>
+              <h4 class="mb-0" style="color: white;">$<%= number_with_precision(@month_stats[:total_production_cost], precision: 0) %></h4>
             </div>
             <div class="col-6">
               <div class="border-end">
@@ -156,7 +156,7 @@
     <div class="col-md-6">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary d-flex justify-content-between align-items-center">
-          <h4 class="mb-0"><i class="bi bi-list-check"></i> Active Work Orders</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-list-check"></i> Active Work Orders</h4>
           <%= link_to "View All", work_orders_path(status: ['RELEASED', 'IN_PROGRESS']), 
               class: "btn btn-sm btn-success" %>
         </div>
@@ -208,13 +208,13 @@
     <div class="col-md-6">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary">
-          <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Alerts & Urgent Items</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-exclamation-triangle"></i> Alerts & Urgent Items</h4>
         </div>
         <div class="card-body p-0">
           <div class="list-group list-group-flush">
             <!-- Overdue WOs -->
             <% if @overdue_wos.any? %>
-              <div class="list-group-item bg-danger bg-opacity-10">
+              <div class="list-group-item bg-opacity-10">
                 <h4 class="mb-2 text-danger">
                   <i class="bi bi-clock-history"></i> Overdue Work Orders (<%= @overdue_wos.count %>)
                 </h4>
@@ -272,7 +272,7 @@
     <div class="col-md-6">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary">
-          <h4 class="mb-0"><i class="bi bi-graph-up"></i> Production Trend (Last 7 Days)</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-graph-up"></i> Production Trend (Last 7 Days)</h4>
         </div>
         <div class="card-body">
           <canvas id="productionTrendChart" height="250"></canvas>
@@ -284,7 +284,7 @@
     <div class="col-md-6">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary">
-          <h4 class="mb-0"><i class="bi bi-currency-dollar"></i> Cost Trend (Last 7 Days)</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-currency-dollar"></i> Cost Trend (Last 7 Days)</h4>
         </div>
         <div class="card-body">
           <canvas id="costTrendChart" height="250"></canvas>
@@ -298,7 +298,7 @@
     <div class="col-md-12">
       <div class="card ">
         <div class="card-header d-flex justify-content-start align-items-center bg-primary">
-          <h4 class="mb-0"><i class="bi bi-gear-wide-connected"></i> Work Center Utilization</h4>
+          <h4 class="mb-0" style="color: white;"><i class="bi bi-gear-wide-connected"></i> Work Center Utilization</h4>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">

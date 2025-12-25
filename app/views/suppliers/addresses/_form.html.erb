@@ -1,0 +1,64 @@
+
+<%= simple_form_for @address do |f| %>
+<%= render 'layouts/error_messages', object: @address %>
+
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :address_type,
+          collection: [
+            ['Primary Office', 'PRIMARY_OFFICE'],
+            ['Factory', 'FACTORY'],
+            ['Warehouse', 'WAREHOUSE']
+          ],
+          selected: 'PRIMARY_OFFICE', input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :address_label,
+          hint: 'e.g., "Main Factory", "HQ Office"' %>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-12">
+      <%= f.input :street_address_1, required: true %>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-12">
+      <%= f.input :street_address_2 %>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-4">
+      <%= f.input :city, required: true %>
+    </div>
+    <div class="col-md-4">
+      <%= f.input :state_province, label: 'State/Province' %>
+    </div>
+    <div class="col-md-4">
+      <%= f.input :postal_code, required: true %>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :country, required: true,
+          collection: [['United States', 'US'], ['Canada', 'CA']],
+          selected: 'US', input_html: {class: 'form-control'} %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :contact_phone %>
+    </div>
+  </div>
+  <div class="row mt-1">
+    <div class="col">
+      <div class="d-flex justify-content-between">
+        <%= f.button :submit, 'Save Contact', class: 'btn btn-primary' %>
+      </div>
+    </div>
+  </div>
+  <%= f.input :is_default, as: :hidden, input_html: { value: true } %>
+  <%= f.input :is_active, as: :hidden, input_html: { value: true } %>
+<% end %>

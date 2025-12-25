@@ -1,0 +1,174 @@
+<%= simple_form_for document,
+                    url: document.new_record? ?
+                         supplier_documents_path(@supplier) :
+                         supplier_document_path(@supplier, document),
+                    html: { multipart: true, class: 'needs-validation' } do |f| %>
+
+  <!-- FILE UPLOAD -->
+  <% if document.new_record? %>
+    <%= f.input :file,
+                as: :file,
+                required: true,
+                hint: 'Accepted formats: PDF, Word, Excel, Images (Max 10MB)',
+                input_html: {
+                  accept: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
+                } %>
+  <% else %>
+    <div class="alert alert-info mb-3">
+      <strong>Current File:</strong> <%= document.file.filename %><br>
+      <small class="text-muted">
+        Size: <%= number_to_human_size(document.file.size) %>
+      </small>
+    </div>
+
+    <%= f.input :file,
+                as: :file,
+                label: 'Replace Document (Optional)',
+                hint: 'Leave empty to keep current file',
+                input_html: {
+                  accept: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png'
+                } %>
+  <% end %>
+
+  <hr class="my-4">
+
+  <div class="row">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-md-6">
+      <h6 class="text-primary mb-3">
+        <i class="bi bi-card-heading me-2"></i>Document Information
+      </h6>
+
+      <%= f.input :document_title,
+                  required: true,
+                  placeholder: 'e.g., ISO 9001 Certificate' %>
+
+      <%= f.input :document_type,
+                  collection: [
+                    ['Certificate', 'CERTIFICATE'],
+                    ['Contract', 'CONTRACT'],
+                    ['Insurance', 'INSURANCE'],
+                    ['License', 'LICENSE'],
+                    ['Quality Document', 'QUALITY_DOC'],
+                    ['Compliance Document', 'COMPLIANCE'],
+                    ['Financial Statement', 'FINANCIAL'],
+                    ['W-9 Form', 'W9'],
+                    ['NDA', 'NDA'],
+                    ['Other', 'OTHER']
+                  ],
+                  required: true,
+                  prompt: 'Select Type', input_html: {class: 'form-control'} %>
+
+      <%= f.input :document_category,
+                  collection: [
+                    ['Legal', 'LEGAL'],
+                    ['Quality', 'QUALITY'],
+                    ['Financial', 'FINANCIAL'],
+                    ['Technical', 'TECHNICAL'],
+                    ['Compliance', 'COMPLIANCE'],
+                    ['Administrative', 'ADMINISTRATIVE']
+                  ],
+                  include_blank: 'Select Category', input_html: {class: 'form-control'} %>
+
+      <%= f.input :document_number,
+                  placeholder: 'e.g., CERT-2024-001',
+                  hint: 'Reference or certificate number' %>
+
+      <%= f.input :version,
+                  placeholder: 'e.g., 1.0, Rev A' %>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-md-6">
+      <h6 class="text-primary mb-3">
+        <i class="bi bi-calendar-check me-2"></i>Dates & Validity
+      </h6>
+
+      <%= f.input :effective_date,
+                  as: :date,
+                  input_html: {
+                    class: 'form-control',
+                    value: document.effective_date || Date.current
+                  } %>
+
+      <%= f.input :expiry_date,
+                  as: :date,
+                  hint: "Leave blank if document doesn't expire",
+                  input_html: {class: 'form-control'} %>
+
+      <%= f.input :renewal_date,
+                  as: :date,
+                  hint: 'When document needs renewal', 
+                  input_html: {class: 'form-control'} %>
+
+      <%= f.input :renewal_reminder_days,
+                  input_html: { min: 0 },
+                  hint: 'Alert before expiry (days)' %>
+
+      <div class="card bg-light mb-3">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Document Status</h6>
+
+          <%= f.input :is_active, as: :boolean %>
+          <%= f.input :requires_renewal, as: :boolean %>
+          <%= f.input :is_confidential, as: :boolean %>
+        </div>
+      </div>
+
+      <%= f.input :issuing_authority,
+                  placeholder: 'e.g., ISO Registrar, Govt Agency',
+                  hint: 'Organization that issued this document' %>
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <%= f.input :description,
+              as: :text,
+              input_html: { rows: 3 },
+              placeholder: 'Brief description of document contents...' %>
+
+  <%= f.input :notes,
+              as: :text,
+              input_html: { rows: 2 },
+              placeholder: 'Internal notes (not visible to supplier)' %>
+
+  <% unless document.new_record? %>
+    <div class="card bg-light mt-3">
+      <div class="card-body">
+        <h6 class="card-title mb-2">
+          <i class="bi bi-info-circle me-1"></i>Document Metadata
+        </h6>
+
+        <div class="row">
+          <div class="col-md-4">
+            <small class="text-muted">Uploaded:</small><br>
+            <strong><%= document.created_at.strftime('%b %d, %Y') %></strong>
+          </div>
+
+          <div class="col-md-4">
+            <small class="text-muted">Uploaded By:</small><br>
+            <strong><%= document.created_by&.full_name || 'System' %></strong>
+          </div>
+
+          <% if document.expiry_date %>
+            <div class="col-md-4">
+              <small class="text-muted">Days Until Expiry:</small><br>
+              <strong class="<%= document.expired? ? 'text-danger' : 'text-success' %>">
+                <%= document.days_until_expiry %>
+              </strong>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mt-4">
+    <%= f.button :submit,
+                 document.new_record? ? 'Upload Document' : 'Update Document',
+                 class: 'btn btn-primary' %>
+  </div>
+
+<% end %>

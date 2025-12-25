@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -544,6 +544,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.bigint "created_by_id"
     t.decimal "current_unit_price", precision: 15, scale: 4, null: false
     t.integer "days_since_last_order"
+    t.boolean "deleted", default: false
     t.decimal "delivery_performance_rating", precision: 5, scale: 2, default: "100.0"
     t.string "discontinuation_reason"
     t.date "discontinued_date"
@@ -645,17 +646,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.bigint "product_id", null: false
     t.bigint "purchase_order_id", null: false
     t.decimal "received_qty", precision: 14, scale: 4, default: "0.0"
+    t.bigint "rfq_item_id"
     t.decimal "tax_amount", precision: 15, scale: 2, default: "0.0"
     t.bigint "tax_code_id"
     t.decimal "tax_rate", precision: 6, scale: 4, default: "0.0"
     t.decimal "unit_price", precision: 15, scale: 4, default: "0.0", null: false
     t.bigint "uom_id", null: false
     t.datetime "updated_at", null: false
+    t.bigint "vendor_quote_id"
     t.index ["line_status"], name: "index_purchase_order_lines_on_line_status"
     t.index ["product_id"], name: "index_purchase_order_lines_on_product_id"
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
+    t.index ["rfq_item_id"], name: "index_purchase_order_lines_on_rfq_item_id"
     t.index ["tax_code_id"], name: "index_purchase_order_lines_on_tax_code_id"
     t.index ["uom_id"], name: "index_purchase_order_lines_on_uom_id"
+    t.index ["vendor_quote_id"], name: "index_purchase_order_lines_on_vendor_quote_id"
   end
 
   create_table "purchase_orders", force: :cascade do |t|
@@ -673,6 +678,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.date "order_date", default: -> { "CURRENT_DATE" }, null: false
     t.string "payment_terms", limit: 50
     t.string "po_number", limit: 50, null: false
+    t.bigint "rfq_id"
     t.text "shipping_address"
     t.decimal "shipping_cost", precision: 15, scale: 2, default: "0.0"
     t.string "shipping_method", limit: 100
@@ -689,10 +695,214 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.index ["expected_date"], name: "index_purchase_orders_on_expected_date"
     t.index ["order_date"], name: "index_purchase_orders_on_order_date"
     t.index ["po_number"], name: "index_purchase_orders_on_po_number", unique: true
+    t.index ["rfq_id"], name: "index_purchase_orders_on_rfq_id"
     t.index ["status"], name: "index_purchase_orders_on_status"
     t.index ["supplier_id", "status"], name: "index_purchase_orders_on_supplier_id_and_status"
     t.index ["supplier_id"], name: "index_purchase_orders_on_supplier_id"
     t.index ["warehouse_id"], name: "index_purchase_orders_on_warehouse_id"
+  end
+
+  create_table "rfq_items", force: :cascade do |t|
+    t.decimal "average_quoted_price", precision: 15, scale: 4
+    t.datetime "awarded_at"
+    t.integer "best_delivery_days"
+    t.text "buyer_notes"
+    t.string "color_specification"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "criticality_reason"
+    t.string "customer_part_number"
+    t.string "delivery_location"
+    t.text "dimensional_requirements"
+    t.string "drawing_number"
+    t.integer "drawing_revision"
+    t.text "engineering_notes"
+    t.string "finish_requirement"
+    t.decimal "highest_quoted_price", precision: 15, scale: 4
+    t.boolean "is_critical_item", default: false
+    t.boolean "is_custom_fabrication", default: false
+    t.boolean "is_long_lead_item", default: false
+    t.string "item_description"
+    t.date "last_purchase_date"
+    t.decimal "last_purchase_price", precision: 15, scale: 4
+    t.bigint "last_purchased_from_id"
+    t.integer "line_number", null: false
+    t.decimal "lowest_quoted_price", precision: 15, scale: 4
+    t.string "material_grade"
+    t.text "packaging_requirements"
+    t.boolean "partial_delivery_acceptable", default: false
+    t.decimal "price_variance_percentage", precision: 5, scale: 2
+    t.decimal "price_variance_vs_last", precision: 15, scale: 2
+    t.decimal "price_variance_vs_target", precision: 15, scale: 2
+    t.bigint "product_id", null: false
+    t.text "quality_notes"
+    t.text "quality_requirements"
+    t.decimal "quantity_requested", precision: 15, scale: 2, null: false
+    t.integer "quotes_received_count", default: 0
+    t.text "reference_notes"
+    t.date "required_delivery_date"
+    t.boolean "requires_approval", default: false
+    t.boolean "requires_testing", default: false
+    t.bigint "rfq_id", null: false
+    t.decimal "savings_vs_highest_quote", precision: 15, scale: 2
+    t.integer "selected_lead_time_days"
+    t.bigint "selected_supplier_id"
+    t.decimal "selected_total_price", precision: 15, scale: 2
+    t.decimal "selected_unit_price", precision: 15, scale: 4
+    t.text "selection_reason"
+    t.text "shipping_instructions"
+    t.decimal "target_total_price", precision: 15, scale: 2
+    t.decimal "target_unit_price", precision: 15, scale: 4
+    t.text "technical_specifications"
+    t.string "testing_standards"
+    t.string "unit_of_measure"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["created_by_id"], name: "index_rfq_items_on_created_by_id"
+    t.index ["is_critical_item"], name: "index_rfq_items_on_is_critical_item"
+    t.index ["last_purchased_from_id"], name: "index_rfq_items_on_last_purchased_from_id"
+    t.index ["product_id"], name: "index_rfq_items_on_product_id"
+    t.index ["required_delivery_date"], name: "index_rfq_items_on_required_delivery_date"
+    t.index ["rfq_id", "line_number"], name: "index_rfq_items_on_rfq_id_and_line_number", unique: true
+    t.index ["rfq_id"], name: "index_rfq_items_on_rfq_id"
+    t.index ["selected_supplier_id"], name: "index_rfq_items_on_selected_supplier_id"
+    t.index ["updated_by_id"], name: "index_rfq_items_on_updated_by_id"
+  end
+
+  create_table "rfq_suppliers", force: :cascade do |t|
+    t.string "contact_email_used"
+    t.datetime "created_at", null: false
+    t.integer "days_overdue"
+    t.text "decline_reason"
+    t.datetime "declined_at"
+    t.boolean "email_bounced", default: false
+    t.integer "email_count", default: 0
+    t.text "internal_notes"
+    t.string "invitation_status", default: "INVITED"
+    t.datetime "invited_at"
+    t.bigint "invited_by_id"
+    t.boolean "is_selected", default: false
+    t.integer "items_not_quoted_count", default: 0
+    t.integer "items_quoted_count", default: 0
+    t.datetime "last_email_sent_at"
+    t.boolean "quoted_all_items", default: false
+    t.datetime "quoted_at"
+    t.boolean "responded_on_time", default: true
+    t.integer "response_time_hours"
+    t.bigint "rfq_id", null: false
+    t.date "selected_date"
+    t.text "selection_notes"
+    t.bigint "supplier_contact_id"
+    t.bigint "supplier_id", null: false
+    t.decimal "total_quoted_amount", precision: 15, scale: 2
+    t.datetime "updated_at", null: false
+    t.datetime "viewed_at"
+    t.index ["invitation_status"], name: "index_rfq_suppliers_on_invitation_status"
+    t.index ["invited_at"], name: "index_rfq_suppliers_on_invited_at"
+    t.index ["invited_by_id"], name: "index_rfq_suppliers_on_invited_by_id"
+    t.index ["is_selected"], name: "index_rfq_suppliers_on_is_selected"
+    t.index ["rfq_id", "supplier_id"], name: "index_rfq_suppliers_on_rfq_id_and_supplier_id", unique: true
+    t.index ["rfq_id"], name: "index_rfq_suppliers_on_rfq_id"
+    t.index ["supplier_contact_id"], name: "index_rfq_suppliers_on_supplier_contact_id"
+    t.index ["supplier_id"], name: "index_rfq_suppliers_on_supplier_id"
+  end
+
+  create_table "rfqs", force: :cascade do |t|
+    t.date "all_responses_received_date"
+    t.text "approval_notes"
+    t.datetime "approved_at"
+    t.bigint "approver_id"
+    t.text "attachments_description"
+    t.boolean "auto_email_enabled", default: true
+    t.decimal "average_quote_amount", precision: 15, scale: 2
+    t.date "award_date"
+    t.text "award_reason"
+    t.bigint "awarded_supplier_id"
+    t.decimal "awarded_total_amount", precision: 15, scale: 2
+    t.bigint "buyer_assigned_id"
+    t.text "buyer_notes"
+    t.text "cancellation_reason"
+    t.datetime "cancelled_at"
+    t.integer "cancelled_by_id"
+    t.datetime "closed_at"
+    t.string "comparison_basis"
+    t.integer "comparison_views_count", default: 0
+    t.date "conversion_date", comment: "Date when RFQ was converted to PO(s)"
+    t.bigint "converted_by_id", comment: "User who converted RFQ to PO"
+    t.boolean "converted_to_po", default: false
+    t.decimal "cost_savings", precision: 15, scale: 2
+    t.decimal "cost_savings_percentage", precision: 5, scale: 2
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.integer "days_to_all_responses"
+    t.integer "days_to_first_response"
+    t.datetime "deleted_at"
+    t.bigint "deleted_by_id"
+    t.text "delivery_terms"
+    t.text "description"
+    t.date "due_date", null: false
+    t.decimal "estimated_budget", precision: 15, scale: 2
+    t.text "evaluation_notes"
+    t.decimal "highest_quote_amount", precision: 15, scale: 2
+    t.string "incoterms"
+    t.text "internal_notes"
+    t.boolean "is_deleted", default: false
+    t.boolean "is_urgent", default: false
+    t.datetime "last_compared_at"
+    t.datetime "last_reminder_sent_at"
+    t.decimal "lowest_quote_amount", precision: 15, scale: 2
+    t.text "payment_terms"
+    t.date "po_created_date"
+    t.string "po_numbers", comment: "Comma-separated list of generated PO numbers"
+    t.string "priority", default: "NORMAL"
+    t.text "quality_requirements"
+    t.integer "quotes_pending_count", default: 0
+    t.integer "quotes_received_count", default: 0
+    t.bigint "recommended_supplier_id"
+    t.decimal "recommended_supplier_score", precision: 5, scale: 2
+    t.integer "reminder_count", default: 0
+    t.bigint "requester_id"
+    t.date "required_delivery_date"
+    t.boolean "requires_certifications", default: false
+    t.boolean "requires_samples", default: false
+    t.boolean "requires_technical_drawings", default: false
+    t.date "response_deadline"
+    t.decimal "response_rate_percentage", precision: 5, scale: 2
+    t.date "rfq_date", null: false
+    t.string "rfq_number", null: false
+    t.jsonb "scoring_weights"
+    t.decimal "selected_quote_amount", precision: 15, scale: 2
+    t.boolean "send_to_all_contacts", default: false
+    t.datetime "sent_at"
+    t.text "special_instructions"
+    t.string "status", default: "DRAFT", null: false
+    t.integer "suppliers_invited_count", default: 0
+    t.text "terms_and_conditions"
+    t.string "title", null: false
+    t.integer "total_items_count", default: 0
+    t.decimal "total_quantity_requested", precision: 15, scale: 2, default: "0.0"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.index ["approver_id"], name: "index_rfqs_on_approver_id"
+    t.index ["awarded_supplier_id"], name: "index_rfqs_on_awarded_supplier_id"
+    t.index ["buyer_assigned_id"], name: "index_rfqs_on_buyer_assigned_id"
+    t.index ["cancelled_by_id"], name: "index_rfqs_on_cancelled_by_id"
+    t.index ["conversion_date"], name: "index_rfqs_on_conversion_date"
+    t.index ["converted_by_id"], name: "index_rfqs_on_converted_by_id"
+    t.index ["created_at"], name: "index_rfqs_on_created_at"
+    t.index ["created_by_id"], name: "index_rfqs_on_created_by_id"
+    t.index ["deleted_by_id"], name: "index_rfqs_on_deleted_by_id"
+    t.index ["due_date"], name: "index_rfqs_on_due_date"
+    t.index ["is_deleted"], name: "index_rfqs_on_is_deleted"
+    t.index ["is_urgent"], name: "index_rfqs_on_is_urgent"
+    t.index ["recommended_supplier_id"], name: "index_rfqs_on_recommended_supplier_id"
+    t.index ["requester_id"], name: "index_rfqs_on_requester_id"
+    t.index ["response_deadline"], name: "index_rfqs_on_response_deadline"
+    t.index ["rfq_date"], name: "index_rfqs_on_rfq_date"
+    t.index ["rfq_number"], name: "index_rfqs_on_rfq_number", unique: true
+    t.index ["status", "is_deleted"], name: "index_rfqs_on_status_and_is_deleted"
+    t.index ["status"], name: "index_rfqs_on_status"
+    t.index ["updated_by_id"], name: "index_rfqs_on_updated_by_id"
   end
 
   create_table "routing_operations", force: :cascade do |t|
@@ -983,6 +1193,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.string "country", default: "US", null: false
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
+    t.boolean "deleted", default: false
     t.string "dock_gate_info"
     t.text "equipment_available"
     t.integer "facility_size_sqft"
@@ -1020,6 +1231,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.string "contact_role", null: false
     t.datetime "created_at", null: false
     t.bigint "created_by_id"
+    t.boolean "deleted", default: false
     t.string "department"
     t.string "direct_line"
     t.string "email", null: false
@@ -1076,16 +1288,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.bigint "created_by_id"
     t.text "description"
     t.string "document_category"
+    t.string "document_number"
     t.string "document_title", null: false
     t.string "document_type", null: false
     t.date "effective_date"
     t.date "expiry_date"
+    t.string "file"
     t.string "file_content_type"
     t.string "file_name"
     t.integer "file_size"
     t.boolean "is_active", default: true
     t.boolean "is_confidential", default: false
+    t.text "issuing_authority"
     t.text "notes"
+    t.date "renewal_date"
     t.integer "renewal_reminder_days", default: 30
     t.boolean "requires_renewal", default: false
     t.bigint "superseded_by_id"
@@ -1190,6 +1406,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.boolean "credit_requested", default: false
     t.integer "days_to_resolve"
     t.date "detected_date"
+    t.date "expected_resolution_date"
     t.decimal "financial_impact", precision: 15, scale: 2
     t.boolean "impacts_supplier_rating", default: true
     t.boolean "is_repeat_issue", default: false
@@ -1198,6 +1415,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.string "issue_number"
     t.string "issue_title", null: false
     t.string "issue_type"
+    t.string "lot_batch_number"
     t.integer "occurrence_count", default: 1
     t.text "preventive_action_taken"
     t.bigint "product_id"
@@ -1209,15 +1427,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.decimal "quantity_reworked", precision: 15, scale: 2
     t.decimal "rating_impact_points", precision: 5, scale: 2
     t.bigint "related_issue_id"
+    t.string "related_po_number"
     t.bigint "reported_by_id"
     t.boolean "requires_audit", default: false
     t.boolean "requires_corrective_action_verification", default: false
     t.date "resolution_date"
     t.text "root_cause_analysis"
+    t.string "root_cause_category"
     t.string "severity", null: false
     t.string "status", default: "OPEN"
     t.boolean "supplier_acknowledged", default: false
     t.bigint "supplier_id", null: false
+    t.boolean "supplier_notified"
     t.date "supplier_notified_date"
     t.text "supplier_response"
     t.date "supplier_response_date"
@@ -1406,12 +1627,122 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "full_name"
+    t.string "phone"
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  create_table "vendor_quotes", force: :cascade do |t|
+    t.text "alternate_description"
+    t.text "alternate_notes"
+    t.decimal "alternate_unit_price", precision: 15, scale: 4
+    t.text "attachments_description"
+    t.text "buyer_notes"
+    t.boolean "can_meet_required_date", default: true
+    t.boolean "certifications_included", default: false
+    t.text "certifications_list"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "currency", default: "USD"
+    t.integer "days_after_required_date"
+    t.text "delivery_notes"
+    t.decimal "delivery_rank", precision: 5, scale: 2
+    t.decimal "delivery_score", precision: 5, scale: 2, default: "0.0"
+    t.text "exclusions"
+    t.boolean "is_alternate_offered", default: false
+    t.boolean "is_best_value", default: false
+    t.boolean "is_fastest_delivery", default: false
+    t.boolean "is_latest_revision", default: true
+    t.boolean "is_lowest_price", default: false
+    t.boolean "is_recommended", default: false
+    t.boolean "is_selected", default: false
+    t.integer "lead_time_days", null: false
+    t.boolean "meets_specifications", default: true
+    t.integer "minimum_order_quantity"
+    t.integer "order_multiple"
+    t.decimal "other_charges", precision: 15, scale: 2, default: "0.0"
+    t.text "other_charges_description"
+    t.integer "overall_rank"
+    t.decimal "overall_score", precision: 5, scale: 2, default: "0.0"
+    t.string "packaging_type"
+    t.boolean "partial_delivery_offered", default: false
+    t.string "payment_terms"
+    t.text "payment_terms_details"
+    t.decimal "price_break_1_price", precision: 15, scale: 4
+    t.decimal "price_break_1_qty", precision: 15, scale: 2
+    t.decimal "price_break_2_price", precision: 15, scale: 4
+    t.decimal "price_break_2_qty", precision: 15, scale: 2
+    t.decimal "price_break_3_price", precision: 15, scale: 4
+    t.decimal "price_break_3_qty", precision: 15, scale: 2
+    t.decimal "price_rank", precision: 5, scale: 2
+    t.decimal "price_score", precision: 5, scale: 2, default: "0.0"
+    t.decimal "price_vs_average_percentage", precision: 5, scale: 2
+    t.decimal "price_vs_last_purchase_percentage", precision: 5, scale: 2
+    t.decimal "price_vs_lowest_percentage", precision: 5, scale: 2
+    t.decimal "price_vs_target_percentage", precision: 5, scale: 2
+    t.date "promised_delivery_date"
+    t.decimal "quality_score", precision: 5, scale: 2, default: "0.0"
+    t.date "quote_date", null: false
+    t.string "quote_number"
+    t.integer "quote_revision", default: 1
+    t.string "quote_status", default: "SUBMITTED"
+    t.date "quote_valid_until"
+    t.text "review_notes"
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.text "revision_notes"
+    t.bigint "rfq_id", null: false
+    t.bigint "rfq_item_id", null: false
+    t.bigint "rfq_supplier_id", null: false
+    t.decimal "sample_cost", precision: 15, scale: 2
+    t.integer "sample_lead_time_days"
+    t.boolean "samples_available", default: false
+    t.bigint "selected_by_id"
+    t.date "selected_date"
+    t.text "selection_reason"
+    t.decimal "service_score", precision: 5, scale: 2, default: "0.0"
+    t.decimal "setup_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "shipping_cost", precision: 15, scale: 2, default: "0.0"
+    t.text "special_conditions"
+    t.text "specification_deviations"
+    t.bigint "superseded_by_id"
+    t.bigint "supplier_id", null: false
+    t.text "supplier_notes"
+    t.text "technical_notes"
+    t.decimal "tooling_cost", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_cost", precision: 15, scale: 2
+    t.decimal "total_cost_rank", precision: 5, scale: 2
+    t.decimal "total_price", precision: 15, scale: 2, null: false
+    t.decimal "unit_price", precision: 15, scale: 4, null: false
+    t.integer "units_per_package"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id"
+    t.integer "validity_days"
+    t.text "warranty_details"
+    t.string "warranty_period"
+    t.index ["created_by_id"], name: "index_vendor_quotes_on_created_by_id"
+    t.index ["is_best_value"], name: "index_vendor_quotes_on_is_best_value"
+    t.index ["is_fastest_delivery"], name: "index_vendor_quotes_on_is_fastest_delivery"
+    t.index ["is_latest_revision"], name: "index_vendor_quotes_on_is_latest_revision"
+    t.index ["is_lowest_price"], name: "index_vendor_quotes_on_is_lowest_price"
+    t.index ["is_selected"], name: "index_vendor_quotes_on_is_selected"
+    t.index ["overall_rank"], name: "index_vendor_quotes_on_overall_rank"
+    t.index ["quote_date"], name: "index_vendor_quotes_on_quote_date"
+    t.index ["quote_status"], name: "index_vendor_quotes_on_quote_status"
+    t.index ["quote_valid_until"], name: "index_vendor_quotes_on_quote_valid_until"
+    t.index ["reviewed_by_id"], name: "index_vendor_quotes_on_reviewed_by_id"
+    t.index ["rfq_id", "rfq_item_id", "supplier_id"], name: "index_vendor_quotes_on_rfq_id_and_rfq_item_id_and_supplier_id"
+    t.index ["rfq_id"], name: "index_vendor_quotes_on_rfq_id"
+    t.index ["rfq_item_id"], name: "index_vendor_quotes_on_rfq_item_id"
+    t.index ["rfq_supplier_id"], name: "index_vendor_quotes_on_rfq_supplier_id"
+    t.index ["selected_by_id"], name: "index_vendor_quotes_on_selected_by_id"
+    t.index ["superseded_by_id"], name: "index_vendor_quotes_on_superseded_by_id"
+    t.index ["supplier_id"], name: "index_vendor_quotes_on_supplier_id"
+    t.index ["updated_by_id"], name: "index_vendor_quotes_on_updated_by_id"
   end
 
   create_table "warehouses", force: :cascade do |t|
@@ -1624,13 +1955,34 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
   add_foreign_key "product_suppliers", "users", column: "updated_by_id"
   add_foreign_key "purchase_order_lines", "products"
   add_foreign_key "purchase_order_lines", "purchase_orders"
+  add_foreign_key "purchase_order_lines", "rfq_items"
   add_foreign_key "purchase_order_lines", "tax_codes"
   add_foreign_key "purchase_order_lines", "unit_of_measures", column: "uom_id"
+  add_foreign_key "purchase_order_lines", "vendor_quotes"
+  add_foreign_key "purchase_orders", "rfqs"
   add_foreign_key "purchase_orders", "suppliers"
   add_foreign_key "purchase_orders", "users", column: "closed_by_id"
   add_foreign_key "purchase_orders", "users", column: "confirmed_by_id"
   add_foreign_key "purchase_orders", "users", column: "created_by_id"
   add_foreign_key "purchase_orders", "warehouses"
+  add_foreign_key "rfq_items", "products"
+  add_foreign_key "rfq_items", "rfqs"
+  add_foreign_key "rfq_items", "suppliers", column: "last_purchased_from_id"
+  add_foreign_key "rfq_items", "suppliers", column: "selected_supplier_id"
+  add_foreign_key "rfq_items", "users", column: "created_by_id"
+  add_foreign_key "rfq_items", "users", column: "updated_by_id"
+  add_foreign_key "rfq_suppliers", "rfqs"
+  add_foreign_key "rfq_suppliers", "supplier_contacts"
+  add_foreign_key "rfq_suppliers", "suppliers"
+  add_foreign_key "rfq_suppliers", "users", column: "invited_by_id"
+  add_foreign_key "rfqs", "suppliers", column: "awarded_supplier_id"
+  add_foreign_key "rfqs", "suppliers", column: "recommended_supplier_id"
+  add_foreign_key "rfqs", "users", column: "approver_id"
+  add_foreign_key "rfqs", "users", column: "buyer_assigned_id"
+  add_foreign_key "rfqs", "users", column: "created_by_id"
+  add_foreign_key "rfqs", "users", column: "deleted_by_id"
+  add_foreign_key "rfqs", "users", column: "requester_id"
+  add_foreign_key "rfqs", "users", column: "updated_by_id"
   add_foreign_key "routing_operations", "routings"
   add_foreign_key "routing_operations", "work_centers"
   add_foreign_key "routings", "products"
@@ -1701,6 +2053,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_122702) do
   add_foreign_key "suppliers", "users", column: "default_buyer_id"
   add_foreign_key "suppliers", "users", column: "deleted_by_id"
   add_foreign_key "suppliers", "users", column: "updated_by_id"
+  add_foreign_key "vendor_quotes", "rfq_items"
+  add_foreign_key "vendor_quotes", "rfq_suppliers"
+  add_foreign_key "vendor_quotes", "rfqs"
+  add_foreign_key "vendor_quotes", "suppliers"
+  add_foreign_key "vendor_quotes", "users", column: "created_by_id"
+  add_foreign_key "vendor_quotes", "users", column: "reviewed_by_id"
+  add_foreign_key "vendor_quotes", "users", column: "selected_by_id"
+  add_foreign_key "vendor_quotes", "users", column: "updated_by_id"
+  add_foreign_key "vendor_quotes", "vendor_quotes", column: "superseded_by_id"
   add_foreign_key "work_centers", "locations"
   add_foreign_key "work_centers", "users", column: "created_by_id"
   add_foreign_key "work_centers", "warehouses"

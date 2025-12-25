@@ -12,8 +12,8 @@
                     </span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li class="<%= 'active' if request.path.include? '/home' %>">
-                        <a href="/home"><i class="anticon anticon-home"></i> Home</a>
+                    <li class="<%= 'active' if request.path == home_path %>">
+                        <a href="<%= home_path %>"><i class="anticon anticon-home"></i> Home</a>
                     </li>
                 </ul>
             </li>
@@ -81,12 +81,12 @@
                         <a href="<%= work_centers_path %>">Work Centers</a>
                     </li>
 
-                    <li class="<%= 'active' if !request.path.include? '' %>">
-                        <a href="<%= 'customers_list' %>">Customers</a>
+                    <li class="<%= 'active' if request.path.include? customers_path %>">
+                        <a href="<%= customers_path %>">Customers</a>
                     </li>
                
-                    <li class="suppliers' %> <%= 'active' if !request.path.include? '' %>">
-                        <a href="<%= 'suppliers_list' %>">Suppliers</a>
+                    <li class="suppliers' %> <%= 'active' if request.path.include? suppliers_path %>">
+                        <a href="<%= suppliers_path %>">Suppliers</a>
                     </li>
               
                     <li class="<%= 'active' if request.path.include? warehouses_path %>">
@@ -211,8 +211,12 @@
 
                 <ul class="dropdown-menu">
 
-                     <li class="<%= 'active' if request.path.include? inventory_dashboard_path %>">
+                    <li class="<%= 'active' if request.path.include? inventory_dashboard_path %>">
                         <a href="<%= inventory_dashboard_path %>"> Home</a>
+                    </li>
+
+                    <li class="<%= 'active' if request.path.include? rfqs_path %>">
+                        <a href="<%= rfqs_path %>">Request for Quotes (RFQs)</a>
                     </li>
 
                     <li class="<%= 'active' if request.path.include? inventory_purchase_orders_path %>">
@@ -263,9 +267,6 @@
 
                     <li class="sales' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'sales' %>"> Home</a>
-                    </li>
-                    <li class="<%= 'active' if request.path.include? customers_path %>">
-                        <a href="<%= customers_path %>">Customers</a>
                     </li>
                     <li class="salesorders' %> <%= 'active' if !request.path.include? '' %>">
                         <a href="<%= 'salesorder_list' %>">Sales Orders</a>

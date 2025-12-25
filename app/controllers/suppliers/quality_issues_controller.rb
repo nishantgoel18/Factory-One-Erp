@@ -2,7 +2,7 @@ module Suppliers
   class QualityIssuesController < ApplicationController
     before_action :authenticate_user!
     before_action :set_supplier
-    before_action :set_quality_issue, only: [:show, :edit, :update, :resolve, :close]
+    before_action :set_quality_issue, only: [:edit, :update, :resolve, :close]
     
     def index
       @quality_issues = @supplier.quality_issues.order(issue_date: :desc).page(params[:page])
@@ -14,9 +14,6 @@ module Suppliers
         severity: 'MAJOR',
         status: 'OPEN'
       )
-      respond_to do |format|
-        format.html { render partial: 'suppliers/quality_issues/form', locals: { supplier: @supplier, quality_issue: @quality_issue }, layout: false }
-      end
     end
     
     def create
@@ -24,34 +21,34 @@ module Suppliers
       @quality_issue.reported_by = current_user
       @quality_issue.created_by = current_user
       
-      if @quality_issue.save
-        render json: { success: true, message: 'Quality issue logged' }
-      else
-        render json: { success: false, errors: @quality_issue.errors.full_messages }, status: :unprocessable_entity
-      end
-    end
-    
-    def show
       respond_to do |format|
-        format.html { render partial: 'suppliers/quality_issues/detail', locals: { quality_issue: @quality_issue }, layout: false }
-        format.json { render json: @quality_issue }
+        if @quality_issue.save
+          format.html { redirect_to @supplier, notice: "Quality issue logged." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
       end
     end
     
     def edit
-      respond_to do |format|
-        format.html { render partial: 'suppliers/quality_issues/form', locals: { supplier: @supplier, quality_issue: @quality_issue }, layout: false }
-      end
+      
     end
     
     def update
-      if @quality_issue.update(quality_issue_params)
-        render json: { success: true, message: 'Quality issue updated' }
-      else
-        render json: { success: false, errors: @quality_issue.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @quality_issue.update(quality_issue_params)
+          format.html { redirect_to @supplier, notice: "Contact was successfully updated." }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+        end
       end
     end
     
+    def destroy
+      @contact.destroy!
+      render json: { success: true, message: 'Contact deleted successfully' }
+    end
+
     def resolve
       @quality_issue.mark_resolved!(params[:resolution_notes], current_user)
       render json: { success: true, message: 'Quality issue marked as resolved' }
@@ -81,7 +78,8 @@ module Suppliers
         :status, :root_cause_analysis, :corrective_action_taken,
         :preventive_action_taken, :supplier_response, :is_repeat_issue,
         :related_issue_id, :requires_audit, :quality_team_notes,
-        :purchasing_team_notes
+        :purchasing_team_notes, :related_po_number, :lot_batch_number, 
+        :root_cause_category, :expected_resolution_date, :supplier_notified
       )
     end
   end

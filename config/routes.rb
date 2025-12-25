@@ -96,68 +96,100 @@ Rails.application.routes.draw do
   end
 
   resources :suppliers do
-  # Member routes (specific supplier)
-  member do
-    get 'dashboard'           # Analytics dashboard
-    post 'approve'            # Approve supplier
-    post 'suspend'            # Suspend supplier
-    post 'blacklist'          # Blacklist supplier
-    post 'reactivate'         # Reactivate supplier
+    # Member routes (specific supplier)
+    member do
+      get 'dashboard'           # Analytics dashboard
+      get 'approve'            # Approve supplier
+      get 'suspend'            # Suspend supplier
+      get 'blacklist'          # Blacklist supplier
+      get 'reactivate'         # Reactivate supplier
+    end
+    
+    # Collection routes (all suppliers)
+    collection do
+      get 'autocomplete'        # For search/selection dropdowns
+      post 'bulk_action'        # Bulk operations
+      get 'comparison'          # Compare multiple suppliers
+    end
+    
+    # Nested resources
+    scope module: :suppliers do
+      resources :addresses, except: [:index, :show] do
+        member do
+          post 'make_default'   # Set as default address
+        end
+      end
+      
+      resources :contacts, except: [:index, :show] do
+        member do
+          post 'make_primary'   # Set as primary contact
+        end
+      end
+      
+      resources :products do
+        member do
+          post 'update_price'   # Update product price
+        end
+      end
+      
+      resources :quality_issues do
+        member do
+          post 'resolve'        # Mark issue as resolved
+          post 'close'          # Close issue
+        end
+      end
+      
+      resources :activities, except: [:index] do
+        member do
+          post 'complete'       # Mark activity as completed
+        end
+      end
+      
+      resources :documents, only: [:index, :new, :create, :edit, :update, :destroy] do
+        member do
+          get 'download'        # Download document
+        end
+      end
+      
+      resources :performance_reviews, only: [:index, :show, :new, :create, :edit, :update] do
+        member do
+          post 'approve'        # Approve review
+          post 'share'          # Share with supplier
+        end
+      end
+    end
   end
-  
-  # Collection routes (all suppliers)
-  collection do
-    get 'autocomplete'        # For search/selection dropdowns
-    post 'bulk_action'        # Bulk operations
-    get 'comparison'          # Compare multiple suppliers
-  end
-  
-  # Nested resources
-  scope module: :supplier do
-    resources :addresses, except: [:index, :show] do
-      member do
-        post 'make_default'   # Set as default address
-      end
+
+  resources :rfqs do
+    member do
+      post 'remind_supplier'  
+      post 'send_to_suppliers'      # Send RFQ to invited suppliers
+      get 'comparison'              # Comparison dashboard ⭐
+      post 'award'                  # Award to supplier
+      post 'close'                  # Close RFQ
+      post 'cancel'                 # Cancel RFQ
+      post 'invite_suppliers'       # Invite suppliers to RFQ
+      post 'select_quotes'          # Select winning quotes
     end
     
-    resources :contacts, except: [:index, :show] do
-      member do
-        post 'make_primary'   # Set as primary contact
-      end
+    collection do
+      get 'autocomplete'            # Search autocomplete
     end
     
-    resources :products do
+    # Nested RFQ Items (if needed for separate management)
+    resources :rfq_items, only: [:new, :create, :edit, :update, :destroy]
+      # Vendor quotes for each line item
+    resources :vendor_quotes do
       member do
-        post 'update_price'   # Update product price
-      end
-    end
-    
-    resources :quality_issues do
-      member do
-        post 'resolve'        # Mark issue as resolved
-        post 'close'          # Close issue
-      end
-    end
-    
-    resources :activities, except: [:index] do
-      member do
-        post 'complete'       # Mark activity as completed
-      end
-    end
-    
-    resources :documents, only: [:index, :new, :create, :edit, :update, :destroy] do
-      member do
-        get 'download'        # Download document
-      end
-    end
-    
-    resources :performance_reviews, only: [:index, :show, :new, :create, :edit, :update] do
-      member do
-        post 'approve'        # Approve review
-        post 'share'          # Share with supplier
+        post 'select'             # Select this quote as winner
+        post 'reject'             # Reject quote
       end
     end
   end
+
+  get '/rfqs/:rfq_id/conversions', to: 'rfq_conversions#new', as: :new_rfq_conversion
+  post '/rfqs/:rfq_id/conversions', to: 'rfq_conversions#new', as: :create_rfq_conversion
+
 
   resources :work_centers do
     member do

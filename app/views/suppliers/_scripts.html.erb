@@ -1,0 +1,549 @@
+<script>
+  // ============================================================================
+  // FILE: app/javascript/suppliers.js
+  // Complete JavaScript for Supplier Module - AJAX operations, modals, charts
+  // ============================================================================
+
+  // ============================================================================
+  // INITIALIZATION
+  // ============================================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeSupplierPage();
+  });
+
+  function initializeSupplierPage() {
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(el => new bootstrap.Tooltip(el));
+    
+    // Initialize search autocomplete if on index page
+    if (document.getElementById('supplierSearch')) {
+      initializeSearch();
+    }
+    
+    // Initialize charts if on dashboard
+    if (document.getElementById('revenueChart')) {
+      initializeCharts();
+    }
+  }
+
+  // ============================================================================
+  // ADDRESS MANAGEMENT
+  // ============================================================================
+  function loadAddressModal(action, addressId = null) {
+    const supplierId = getSupplierId();
+    let url = `/suppliers/${supplierId}/addresses/new`;
+    
+    if (action === 'edit' && addressId) {
+      url = `/suppliers/${supplierId}/addresses/${addressId}/edit`;
+    }
+    
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      showModal('Address', html);
+    })
+    .catch(error => {
+      showNotification('Error loading address form', 'error');
+      console.error(error);
+    });
+  }
+
+  function makeDefaultAddress(addressId) {
+    const supplierId = getSupplierId();
+    const url = `/suppliers/${supplierId}/addresses/${addressId}/make_default`;
+    
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken(),
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification(data.message, 'success');
+        reloadAddresses();
+      } else {
+        showNotification(data.message, 'error');
+      }
+    })
+    .catch(error => {
+      showNotification('Error updating address', 'error');
+      console.error(error);
+    });
+  }
+
+  function deleteAddress(addressId) {
+    if (!confirm('Are you sure you want to delete this address?')) return;
+    
+    const supplierId = getSupplierId();
+    const url = `/suppliers/${supplierId}/addresses/${addressId}`;
+    
+    fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification(data.message, 'success');
+        reloadAddresses();
+      } else {
+        showNotification(data.message, 'error');
+      }
+    })
+    .catch(error => {
+      showNotification('Error deleting address', 'error');
+      console.error(error);
+    });
+  }
+
+  function reloadAddresses() {
+    location.reload(); // Simple reload for now
+  }
+
+  // ============================================================================
+  // CONTACT MANAGEMENT
+  // ============================================================================
+  function loadContactModal(action, contactId = null) {
+    const supplierId = getSupplierId();
+    let url = `/suppliers/${supplierId}/contacts/new`;
+    
+    if (action === 'edit' && contactId) {
+      url = `/suppliers/${supplierId}/contacts/${contactId}/edit`;
+    }
+    
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      showModal('Contact', html);
+    })
+    .catch(error => {
+      showNotification('Error loading contact form', 'error');
+      console.error(error);
+    });
+  }
+
+  function makePrimaryContact(contactId) {
+    const supplierId = getSupplierId();
+    const url = `/suppliers/${supplierId}/contacts/${contactId}/make_primary`;
+    
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken(),
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification(data.message, 'success');
+        location.reload();
+      } else {
+        showNotification(data.message, 'error');
+      }
+    })
+    .catch(error => {
+      showNotification('Error updating contact', 'error');
+      console.error(error);
+    });
+  }
+
+  function deleteContact(contactId) {
+    if (!confirm('Are you sure you want to delete this contact?')) return;
+    
+    const supplierId = getSupplierId();
+    const url = `/suppliers/${supplierId}/contacts/${contactId}`;
+    
+    fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification(data.message, 'success');
+        location.reload();
+      } else {
+        showNotification(data.message, 'error');
+      }
+    })
+    .catch(error => {
+      showNotification('Error deleting contact', 'error');
+      console.error(error);
+    });
+  }
+
+  // ============================================================================
+  // PRODUCT CATALOG MANAGEMENT
+  // ============================================================================
+  function loadProductModal(action, productSupplierId = null) {
+    const supplierId = getSupplierId();
+    let url = `/suppliers/${supplierId}/products/new`;
+    
+    if (action === 'edit' && productSupplierId) {
+      url = `/suppliers/${supplierId}/products/${productSupplierId}/edit`;
+    }
+    
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      showModal('Product Catalog', html, 'lg');
+    })
+    .catch(error => {
+      showNotification('Error loading product form', 'error');
+      console.error(error);
+    });
+  }
+
+  function deleteProduct(productSupplierId) {
+    if (!confirm('Remove this product from catalog?')) return;
+    
+    const supplierId = getSupplierId();
+    const url = `/suppliers/${supplierId}/products/${productSupplierId}`;
+    
+    fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': getCsrfToken(),
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showNotification(data.message, 'success');
+        location.reload();
+      } else {
+        showNotification(data.message, 'error');
+      }
+    })
+    .catch(error => {
+      showNotification('Error removing product', 'error');
+      console.error(error);
+    });
+  }
+
+  // ============================================================================
+  // QUALITY ISSUE MANAGEMENT
+  // ============================================================================
+  function loadQualityIssueModal(action, issueId = null) {
+    const supplierId = getSupplierId();
+    let url = `/suppliers/${supplierId}/quality_issues/new`;
+    
+    if (action === 'edit' && issueId) {
+      url = `/suppliers/${supplierId}/quality_issues/${issueId}/edit`;
+    }
+    
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      showModal('Quality Issue', html, 'lg');
+    })
+    .catch(error => {
+      showNotification('Error loading quality issue form', 'error');
+      console.error(error);
+    });
+  }
+
+  function viewQualityIssue(issueId) {
+    const supplierId = getSupplierId();
+    const url = `/suppliers/${supplierId}/quality_issues/${issueId}`;
+    
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      showModal('Quality Issue Details', html, 'lg');
+    })
+    .catch(error => {
+      showNotification('Error loading quality issue', 'error');
+      console.error(error);
+    });
+  }
+
+  // ============================================================================
+  // ACTIVITY MANAGEMENT
+  // ============================================================================
+  function loadActivityModal(action, activityId = null) {
+    const supplierId = getSupplierId();
+    let url = `/suppliers/${supplierId}/activities/new`;
+    
+    if (action === 'edit' && activityId) {
+      url = `/suppliers/${supplierId}/activities/${activityId}/edit`;
+    }
+    
+    fetch(url, {
+      headers: {
+        'Accept': 'text/html',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      showModal('Activity', html);
+    })
+    .catch(error => {
+      showNotification('Error loading activity form', 'error');
+      console.error(error);
+    });
+  }
+
+  // ============================================================================
+  // MODAL MANAGEMENT
+  // ============================================================================
+  function showModal(title, content, size = 'md') {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('dynamicModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    // Create modal HTML
+    const modalHtml = `
+      <div class="modal fade" id="dynamicModal" tabindex="-1">
+        <div class="modal-dialog modal-${size} modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">${title}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              ${content}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('dynamicModal'));
+    modal.show();
+    
+    // Clean up on close
+    document.getElementById('dynamicModal').addEventListener('hidden.bs.modal', function() {
+      this.remove();
+    });
+  }
+
+  // ============================================================================
+  // NOTIFICATIONS
+  // ============================================================================
+  function showNotification(message, type = 'info') {
+    // Create toast notification
+    const toastHtml = `
+      <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0" 
+           role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+        <div class="d-flex">
+          <div class="toast-body">
+            ${message}
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
+    
+    const toastElement = document.querySelector('.toast:last-child');
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', function() {
+      this.remove();
+    });
+  }
+
+  // ============================================================================
+  // CHART.JS INTEGRATION (For Dashboard)
+  // ============================================================================
+  function initializeCharts() {
+    // Revenue Trend Chart
+    if (document.getElementById('revenueChart')) {
+      const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+      new Chart(revenueCtx, {
+        type: 'line',
+        data: window.revenueChartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Revenue Trend (12 Months)' }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toLocaleString();
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Order Volume Chart
+    if (document.getElementById('orderChart')) {
+      const orderCtx = document.getElementById('orderChart').getContext('2d');
+      new Chart(orderCtx, {
+        type: 'bar',
+        data: window.orderChartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Order Volume (12 Months)' }
+          }
+        }
+      });
+    }
+    
+    // Quality Trend Chart
+    if (document.getElementById('qualityChart')) {
+      const qualityCtx = document.getElementById('qualityChart').getContext('2d');
+      new Chart(qualityCtx, {
+        type: 'line',
+        data: window.qualityChartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Quality Acceptance Rate' }
+          },
+          scales: {
+            y: {
+              min: 0,
+              max: 100,
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Delivery Performance Pie Chart
+    if (document.getElementById('deliveryChart')) {
+      const deliveryCtx = document.getElementById('deliveryChart').getContext('2d');
+      new Chart(deliveryCtx, {
+        type: 'doughnut',
+        data: window.deliveryChartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Delivery Performance' }
+          }
+        }
+      });
+    }
+  }
+
+  // ============================================================================
+  // SEARCH & AUTOCOMPLETE
+  // ============================================================================
+  function initializeSearch() {
+    const searchInput = document.getElementById('supplierSearch');
+    if (!searchInput) return;
+    
+    let timeout = null;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(timeout);
+      const term = this.value;
+      
+      if (term.length < 2) return;
+      
+      timeout = setTimeout(() => {
+        fetch(`/suppliers/autocomplete?term=${encodeURIComponent(term)}`)
+          .then(response => response.json())
+          .then(data => {
+            showSearchResults(data);
+          })
+          .catch(error => console.error('Search error:', error));
+      }, 300);
+    });
+  }
+
+  function showSearchResults(results) {
+    // Implement autocomplete dropdown display
+    console.log('Search results:', results);
+  }
+
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
+  function getSupplierId() {
+    // Extract supplier ID from URL or data attribute
+    const url = window.location.pathname;
+    const match = url.match(/\/suppliers\/(\d+)/);
+    return match ? match[1] : null;
+  }
+
+  function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+  }
+
+  // ============================================================================
+  // EXPORT FOR USE IN OTHER FILES
+  // ============================================================================
+  window.SupplierModule = {
+    loadAddressModal,
+    loadContactModal,
+    loadProductModal,
+    loadQualityIssueModal,
+    loadActivityModal,
+    deleteAddress,
+    deleteContact,
+    deleteProduct,
+    makeDefaultAddress,
+    makePrimaryContact,
+    showNotification
+  };
+</script>

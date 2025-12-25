@@ -3,13 +3,14 @@
 # ============================================================================
 # COMBINED RAILS CONTROLLERS FILE
 # ============================================================================
-# Generated: 2025-12-08 01:10:04
-# Total Files: 33
+# Generated: 2025-12-24 16:14:37
+# Total Files: 45
 # Source Directory: app/controllers
 # ============================================================================
 
 # ============ REQUIRES ============
 
+    require 'csv'
 require "csv"
 require 'csv'
 
@@ -218,91 +219,542 @@ end
 
 class CustomersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_customer, only: %i[ show edit update destroy ]
-
-  # GET /customers or /customers.json
+  before_action :set_customer, only: [:show, :edit, :update, :destroy, :dashboard]
+  before_action :set_filter_options, only: [:index]
+  
+  # ========================================
+  # INDEX - List all customers with filters
+  # ========================================
   def index
-    @customers = Customer.non_deleted
+    @customers = Customer.non_deleted.includes(:default_sales_rep, :addresses, :contacts)
+    
+    # Apply filters
+    @customers = apply_filters(@customers)
+    
+    # Apply search
+    if params[:search].present?
+      @customers = @customers.search(params[:search])
+    end
+    
+    # Apply sorting
+    @customers = apply_sorting(@customers)
+    
+    # Pagination
+    @customers = @customers.page(params[:page]).per(20)
+    
+    # Statistics for dashboard cards
+    @stats = calculate_customer_stats
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @customers }
+      format.csv { send_data generate_csv(@customers), filename: "customers-#{Date.current}.csv" }
+      format.pdf { render pdf: "customers", template: "customers/index_pdf" }
+    end
   end
-
-  # GET /customers/1 or /customers/1.json
+  
+  # ========================================
+  # SHOW - Customer detail page with tabs
+  # ========================================
   def show
+    # Eager load associations for performance
+    @customer = Customer.includes(
+      :addresses, 
+      :contacts, 
+      :documents, 
+      :activities,
+      :default_sales_rep,
+      :default_warehouse
+    ).find(params[:id])
+    
+    # Recent activities
+    @recent_activities = @customer.activities.order(activity_date: :desc).limit(10)
+    
+    # Pending follow-ups
+    @pending_followups = @customer.pending_followups
+    
+    # Expiring documents
+    @expiring_docs = @customer.expiring_documents(30)
+    
+    # Performance data for charts
+    @performance_data = calculate_customer_performance(@customer)
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @customer.as_json(include: [:addresses, :contacts]) }
+      format.pdf { render pdf: "customer-#{@customer.code}", template: "customers/show_pdf" }
+    end
   end
-
-  # GET /customers/new
+  
+  # ========================================
+  # DASHBOARD - Analytics view
+  # ========================================
+  def dashboard
+    @revenue_chart_data = generate_revenue_chart_data(@customer)
+    @order_trend_data = generate_order_trend_data(@customer)
+    @payment_performance_data = generate_payment_performance_data(@customer)
+  end
+  
+  # ========================================
+  # NEW - New customer form
+  # ========================================
   def new
     @customer = Customer.new
+    
+    # Build nested associations for form
+    @customer.addresses.build(address_type: "BILLING", is_default: true)
+    @customer.addresses.build(address_type: "SHIPPING")
+    @customer.contacts.build(contact_role: "PRIMARY", is_primary_contact: true)
+    
+    load_form_options
   end
-
-  # GET /customers/1/edit
-  def edit
-  end
-
-  # POST /customers or /customers.json
+  
+  # ========================================
+  # CREATE - Create new customer
+  # ========================================
   def create
     @customer = Customer.new(customer_params)
-
+    @customer.created_by = current_user
+    
     respond_to do |format|
       if @customer.save
-        format.html { redirect_to @customer, notice: "Customer was successfully created." }
+        # Log creation activity
+        @customer.log_activity!(
+          activity_type: "NOTE",
+          subject: "Customer created",
+          description: "New customer record created by #{current_user.email}",
+          activity_date: Time.current,
+          related_user: current_user,
+          created_by: current_user
+        )
+        
+        format.html { redirect_to @customer, notice: "Customer successfully created." }
         format.json { render :show, status: :created, location: @customer }
       else
+        load_form_options
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @customer.errors, status: :unprocessable_entity }
       end
     end
   end
-
-  # PATCH/PUT /customers/1 or /customers/1.json
+  
+  # ========================================
+  # EDIT - Edit customer form
+  # ========================================
+  def edit
+    load_form_options
+  end
+  
+  # ========================================
+  # UPDATE - Update customer
+  # ========================================
   def update
     respond_to do |format|
       if @customer.update(customer_params)
-        format.html { redirect_to @customer, notice: "Customer was successfully updated.", status: :see_other }
+        @customer.update(last_modified_by: current_user)
+        
+        # Log update activity
+        @customer.log_activity!(
+          activity_type: "NOTE",
+          subject: "Customer updated",
+          description: "Customer record updated by #{current_user.email}",
+          activity_date: Time.current,
+          related_user: current_user,
+          created_by: current_user
+        )
+        
+        format.html { redirect_to @customer, notice: "Customer successfully updated." }
         format.json { render :show, status: :ok, location: @customer }
       else
+        load_form_options
         format.html { render :edit, status: :unprocessable_entity }
         format.json { render json: @customer.errors, status: :unprocessable_entity }
       end
     end
   end
-
-  # DELETE /customers/1 or /customers/1.json
+  
+  # ========================================
+  # DESTROY - Soft delete customer
+  # ========================================
   def destroy
     @customer.destroy!
-
+    
     respond_to do |format|
-      format.html { redirect_to customers_path, notice: "Customer was successfully destroyed.", status: :see_other }
+      format.html { redirect_to customers_path, notice: "Customer successfully deleted." }
       format.json { head :no_content }
     end
   end
-
+  
+  # ========================================
+  # CUSTOM ACTIONS
+  # ========================================
+  
+  # Credit hold management
+  def credit_hold
+    @customer = Customer.find(params[:id])
+    
+    if params[:action_type] == "place"
+      @customer.place_on_credit_hold!(params[:reason])
+      message = "Customer placed on credit hold."
+    else
+      @customer.remove_credit_hold!
+      message = "Credit hold removed."
+    end
+    
+    redirect_to @customer, notice: message
+  end
+  
+  # Export customer statement
+  def statement
+    @customer = Customer.find(params[:id])
+    
+    respond_to do |format|
+      format.pdf do
+        render pdf: "statement-#{@customer.code}",
+               template: "customers/statement_pdf",
+               layout: "pdf"
+      end
+    end
+  end
+  
+  # Quick search for autocomplete
+  def autocomplete
+    customers = Customer.active
+                       .search(params[:term])
+                       .limit(10)
+                       .select(:id, :code, :full_name, :email)
+    
+    results = customers.map do |c|
+      {
+        id: c.id,
+        label: "#{c.code} - #{c.full_name}",
+        value: c.full_name,
+        code: c.code,
+        email: c.email
+      }
+    end
+    
+    render json: results
+  end
+  
+  # Bulk actions
+  def bulk_action
+    customer_ids = params[:customer_ids]
+    action_type = params[:bulk_action_type]
+    
+    case action_type
+    when "activate"
+      Customer.where(id: customer_ids).update_all(is_active: true)
+      message = "Selected customers activated."
+    when "deactivate"
+      Customer.where(id: customer_ids).update_all(is_active: false)
+      message = "Selected customers deactivated."
+    when "export"
+      customers = Customer.where(id: customer_ids)
+      send_data generate_csv(customers), filename: "selected-customers-#{Date.current}.csv"
+      return
+    when "delete"
+      Customer.where(id: customer_ids).update_all(deleted: true)
+      message = "Selected customers deleted."
+    end
+    
+    redirect_to customers_path, notice: message
+  end
+  
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_customer
-      @customer = Customer.non_deleted.find(params.expect(:id))
+  
+  # ========================================
+  # PRIVATE HELPER METHODS
+  # ========================================
+  
+  def set_customer
+    @customer = Customer.non_deleted.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to customers_path, alert: "Customer not found."
+  end
+  
+  def set_filter_options
+    @categories = Customer::CUSTOMER_CATEGORIES
+    @types = Customer::CUSTOMER_TYPES
+    @payment_terms = Customer::PAYMENT_TERMS
+    @sales_reps = User.all.select(:id, :email)
+  end
+  
+  def load_form_options
+    @customer_types = Customer::CUSTOMER_TYPES
+    @customer_categories = Customer::CUSTOMER_CATEGORIES
+    @payment_terms = Customer::PAYMENT_TERMS
+    @freight_terms = Customer::FREIGHT_TERMS
+    @currencies = Customer::CURRENCIES
+    @communication_methods = Customer::COMMUNICATION_METHODS
+    @acquisition_sources = Customer::ACQUISITION_SOURCES
+    @order_frequencies = Customer::ORDER_FREQUENCIES
+    
+    @tax_codes = TaxCode.active.select(:id, :code, :name)
+    @accounts = Account.where(account_type: "ASSET").select(:id, :code, :name)
+    @sales_reps = User.all.select(:id, :email)
+    @warehouses = Warehouse.non_deleted.select(:id, :code, :name)
+  end
+  
+  def customer_params
+    params.require(:customer).permit(
+      # Basic info
+      :code, :full_name, :legal_name, :dba_name, :customer_type, :customer_category,
+      
+      # Contact info
+      :email, :phone_number, :mobile, :fax, :website,
+      :linkedin_url, :facebook_url, :twitter_url,
+      
+      # Billing address (keep for backward compatibility)
+      :billing_street, :billing_city, :billing_state, :billing_postal_code, :billing_country,
+      
+      # Shipping address (keep for backward compatibility)
+      :shipping_street, :shipping_city, :shipping_state, :shipping_postal_code, :shipping_country,
+      
+      # Primary/Secondary contacts (keep for backward compatibility)
+      :primary_contact_name, :primary_contact_email, :primary_contact_phone,
+      :secondary_contact_name, :secondary_contact_email, :secondary_contact_phone,
+      
+      # Financial
+      :credit_limit, :payment_terms, :default_currency, :discount_percentage,
+      :early_payment_discount, :late_fee_applicable,
+      :bank_name, :bank_account_number, :bank_routing_number,
+      
+      # Tax
+      :tax_exempt, :tax_exempt_number, :customer_tax_region, :ein_number, :business_number,
+      :default_tax_code_id,
+      
+      # Sales
+      :default_sales_rep_id, :sales_territory, :customer_acquisition_source,
+      :expected_order_frequency, :annual_revenue_potential,
+      
+      # Operations
+      :default_warehouse_id, :default_ar_account_id,
+      :shipping_method, :preferred_delivery_method, :freight_terms,
+      :delivery_instructions, :special_handling_requirements,
+      :allow_backorders, :require_po_number,
+      
+      # Preferences
+      :preferred_communication_method, :marketing_emails_allowed,
+      :auto_invoice_email,
+      
+      # Classification
+      :industry_type, :customer_since,
+      
+      # Status
+      :is_active, :internal_notes,
+      
+      # Nested attributes
+      addresses_attributes: [
+        :id, :address_type, :address_label, :is_default, :is_active,
+        :attention_to, :contact_phone, :contact_email,
+        :street_address_1, :street_address_2, :city, :state_province,
+        :postal_code, :country, :delivery_instructions, :dock_gate_info,
+        :delivery_hours, :residential_address, :requires_appointment, :access_code,
+        :_destroy
+      ],
+      
+      contacts_attributes: [
+        :id, :first_name, :last_name, :title, :department, :contact_role,
+        :is_primary_contact, :is_decision_maker, :is_active,
+        :email, :phone, :mobile, :fax, :extension,
+        :linkedin_url, :skype_id, :preferred_contact_method,
+        :contact_notes, :receive_order_confirmations, :receive_shipping_notifications,
+        :receive_invoice_copies, :receive_marketing_emails,
+        :birthday, :anniversary, :personal_notes,
+        :_destroy
+      ]
+    )
+  end
+  
+  # ========================================
+  # FILTERING & SORTING
+  # ========================================
+  
+  def apply_filters(scope)
+    # Filter by status
+    if params[:status].present?
+      case params[:status]
+      when "active"
+        scope = scope.where(is_active: true)
+      when "inactive"
+        scope = scope.where(is_active: false)
+      when "credit_hold"
+        scope = scope.where(credit_hold: true)
+      end
     end
-
-    # Only allow a list of trusted parameters through.
-    def customer_params
-      params.require(:customer).permit(
-        :code, :full_name, :legal_name, :customer_type, :dba_name,
-        :email, :phone, :mobile, :website, :fax,
-        :billing_street, :billing_city, :billing_state,
-        :billing_postal_code, :billing_country,
-        :shipping_street, :shipping_city, :shipping_state,
-        :shipping_postal_code, :shipping_country,
-        :tax_exempt, :tax_exempt_number, :customer_tax_region,
-        :default_tax_code_id, :ein_number, :business_number,
-        :credit_limit, :payment_terms, :default_ar_account_id,
-        :allow_backorders, :default_price_list_id,
-        :default_currency, :default_sales_rep_id,
-        :default_warehouse_id,
-        :primary_contact_name, :primary_contact_email, :primary_contact_phone,
-        :secondary_contact_name, :secondary_contact_email, :secondary_contact_phone,
-        :freight_terms, :shipping_method, :delivery_instructions,
-        :internal_notes, :is_active
-      )
+    
+    # Filter by category
+    scope = scope.by_category(params[:category]) if params[:category].present?
+    
+    # Filter by type
+    scope = scope.by_type(params[:type]) if params[:type].present?
+    
+    # Filter by territory
+    scope = scope.by_territory(params[:territory]) if params[:territory].present?
+    
+    # Filter by sales rep
+    scope = scope.by_sales_rep(params[:sales_rep_id]) if params[:sales_rep_id].present?
+    
+    # Filter by recent activity
+    if params[:activity].present?
+      case params[:activity]
+      when "recent_orders"
+        scope = scope.recent_orders
+      when "no_recent_orders"
+        scope = scope.no_recent_orders
+      end
     end
+    
+    # Filter by revenue
+    if params[:min_revenue].present?
+      scope = scope.where("total_revenue_all_time >= ?", params[:min_revenue])
+    end
+    
+    scope
+  end
+  
+  def apply_sorting(scope)
+    sort_by = params[:sort_by] || "full_name"
+    sort_dir = params[:sort_dir] || "asc"
+    
+    case sort_by
+    when "code"
+      scope.order(code: sort_dir)
+    when "full_name"
+      scope.order(full_name: sort_dir)
+    when "revenue"
+      scope.order(total_revenue_all_time: sort_dir)
+    when "last_order"
+      scope.order(last_order_date: sort_dir)
+    when "created_at"
+      scope.order(created_at: sort_dir)
+    when "credit_limit"
+      scope.order(credit_limit: sort_dir)
+    else
+      scope.order(full_name: :asc)
+    end
+  end
+  
+  # ========================================
+  # STATISTICS & ANALYTICS
+  # ========================================
+  
+  def calculate_customer_stats
+    {
+      total: Customer.non_deleted.count,
+      active: Customer.active.count,
+      inactive: Customer.inactive.count,
+      credit_hold: Customer.credit_hold.count,
+      
+      category_a: Customer.by_category("A").count,
+      category_b: Customer.by_category("B").count,
+      category_c: Customer.by_category("C").count,
+      
+      total_revenue_ytd: Customer.non_deleted.sum(:total_revenue_ytd),
+      avg_order_value: Customer.non_deleted.average(:average_order_value).to_f.round(2),
+      
+      high_value: Customer.high_value.count,
+      recent_orders: Customer.recent_orders.count,
+      no_recent_orders: Customer.no_recent_orders.count
+    }
+  end
+  
+  def calculate_customer_performance(customer)
+    {
+      health_score: customer.customer_health_score,
+      health_label: customer.customer_health_label,
+      credit_utilization: customer.credit_utilization_percentage,
+      payment_performance: customer.payment_performance_label,
+      
+      total_orders: customer.total_orders_count,
+      total_revenue: customer.total_revenue_all_time,
+      revenue_ytd: customer.total_revenue_ytd,
+      avg_order_value: customer.average_order_value,
+      
+      last_order_date: customer.last_order_date,
+      orders_per_month: customer.orders_per_month,
+      on_time_payment_rate: customer.on_time_payment_rate,
+      
+      addresses_count: customer.addresses.count,
+      contacts_count: customer.contacts.count,
+      activities_count: customer.activities.count
+    }
+  end
+  
+  # Chart data generators
+  def generate_revenue_chart_data(customer)
+    # Last 12 months revenue
+    (11.downto(0)).map do |i|
+      month = i.months.ago.beginning_of_month
+      {
+        month: month.strftime("%b %Y"),
+        revenue: 0  # TODO: Calculate from sales orders when integrated
+      }
+    end
+  end
+  
+  def generate_order_trend_data(customer)
+    # Last 12 months order count
+    (11.downto(0)).map do |i|
+      month = i.months.ago.beginning_of_month
+      {
+        month: month.strftime("%b %Y"),
+        orders: 0  # TODO: Calculate from sales orders when integrated
+      }
+    end
+  end
+  
+  def generate_payment_performance_data(customer)
+    {
+      on_time: customer.on_time_payment_rate.to_f,
+      late: 100 - customer.on_time_payment_rate.to_f
+    }
+  end
+  
+  # ========================================
+  # EXPORT FUNCTIONS
+  # ========================================
+  
+  def generate_csv(customers)
+    CSV.generate(headers: true) do |csv|
+      csv << [
+        "Code", "Customer Name", "Legal Name", "Type", "Category",
+        "Email", "Phone", "City", "State", "Country",
+        "Credit Limit", "Current Balance", "Available Credit",
+        "Payment Terms", "Sales Rep", "Territory",
+        "Total Orders", "Total Revenue", "Last Order Date",
+        "On-Time Payment %", "Status", "Customer Since"
+      ]
+      
+      customers.each do |customer|
+        csv << [
+          customer.code,
+          customer.full_name,
+          customer.legal_name,
+          customer.customer_type,
+          customer.customer_category,
+          customer.email,
+          customer.phone_number,
+          customer.billing_city,
+          customer.billing_state,
+          customer.billing_country,
+          customer.credit_limit,
+          customer.current_balance,
+          customer.available_credit,
+          customer.payment_terms,
+          customer.default_sales_rep&.email,
+          customer.sales_territory,
+          customer.total_orders_count,
+          customer.total_revenue_all_time,
+          customer.last_order_date,
+          customer.on_time_payment_rate,
+          customer.status_label,
+          customer.customer_since
+        ]
+      end
+    end
+  end
 end
 
 ============================================================================
@@ -1270,6 +1722,470 @@ class ProductsController < ApplicationController
 end
 
 ============================================================================
+# FILE: rfqs_controller.rb
+# PATH: rfqs_controller.rb
+============================================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# CONTROLLER: RfqsController
+# Complete RFQ management with quote comparison and vendor selection
+# ============================================================================
+class RfqsController < ApplicationController
+  before_action :authenticate_user!
+  before_action :set_rfq, only: [:show, :edit, :update, :destroy, :send_to_suppliers,
+                                  :comparison, :award, :close, :cancel]
+  
+  # ============================================================================
+  # INDEX - List all RFQs
+  # ============================================================================
+  def index
+    @rfqs = Rfq.non_deleted.includes(:created_by, :awarded_supplier, :buyer_assigned)
+    
+    # Filters
+    @rfqs = @rfqs.where(status: params[:status]) if params[:status].present?
+    @rfqs = @rfqs.where(is_urgent: true) if params[:urgent] == 'true'
+    @rfqs = @rfqs.where(buyer_assigned: current_user) if params[:my_rfqs] == 'true'
+    
+    # Search
+    if params[:search].present?
+      @rfqs = @rfqs.where('rfq_number ILIKE ? OR title ILIKE ?', 
+                          "%#{params[:search]}%", "%#{params[:search]}%")
+    end
+    
+    # Sorting
+    @rfqs = @rfqs.order(created_at: :desc)
+    @rfqs = @rfqs.page(params[:page]).per(20)
+    
+    # Statistics
+    @stats = {
+      total: Rfq.non_deleted.count,
+      draft: Rfq.draft.count,
+      active: Rfq.active.count,
+      awarded: Rfq.awarded.count,
+      my_rfqs: Rfq.where(buyer_assigned: current_user).active.count
+    }
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @rfqs }
+      format.csv { send_data generate_csv, filename: "rfqs-#{Date.current}.csv" }
+    end
+  end
+  
+  # ============================================================================
+  # SHOW - RFQ detail with all information
+  # ============================================================================
+  def show
+    @rfq_items = @rfq.rfq_items.includes(:product, vendor_quotes: :supplier).order(:line_number)
+    @rfq_suppliers = @rfq.rfq_suppliers.includes(:supplier, :supplier_contact).order(:invited_at)
+    @vendor_quotes = @rfq.vendor_quotes.latest.includes(:supplier, :rfq_item)
+    
+    respond_to do |format|
+      format.html
+      format.csv { send_data generate_rfq_csv(@rfq), filename: "RFQ_#{@rfq.rfq_number}_#{Date.current}.csv" }
+      format.json { render json: @rfq.as_json(include: [:rfq_items, :rfq_suppliers, :vendor_quotes]) }
+    end
+  end
+  
+  # ============================================================================
+  # NEW - Form for creating new RFQ
+  # ============================================================================
+  def new
+    @rfq = Rfq.new(
+      rfq_date: Date.current,
+      due_date: 14.days.from_now,
+      response_deadline: 14.days.from_now,
+      created_by: current_user,
+      buyer_assigned: current_user
+    )
+    @rfq.rfq_items.build
+  end
+  
+  # ============================================================================
+  # CREATE - Save new RFQ
+  # ============================================================================
+  def create
+    @rfq = Rfq.new(rfq_params)
+    @rfq.created_by = current_user
+    @rfq.buyer_assigned ||= current_user
+    
+    respond_to do |format|
+      if @rfq.save
+        format.html { redirect_to @rfq, notice: 'RFQ created successfully.' }
+        format.json { render json: @rfq, status: :created }
+      else
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: @rfq.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+  
+  # ============================================================================
+  # EDIT - Form for editing RFQ
+  # ============================================================================
+  def edit
+    # Can only edit DRAFT RFQs
+    unless @rfq.draft?
+      redirect_to @rfq, alert: 'Cannot edit RFQ after it has been sent.'
+    end
+  end
+  
+  # ============================================================================
+  # UPDATE - Save RFQ changes
+  # ============================================================================
+  def update
+    @rfq.updated_by = current_user
+    
+    respond_to do |format|
+      if @rfq.update(rfq_params)
+        format.html { redirect_to @rfq, notice: 'RFQ updated successfully.' }
+        format.json { render json: @rfq }
+      else
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: @rfq.errors, status: :unprocessable_entity }
+      end
+    end
+  end
+  
+  # ============================================================================
+  # DESTROY - Soft delete RFQ
+  # ============================================================================
+  def destroy
+    @rfq.soft_delete!(current_user)
+    redirect_to rfqs_path, notice: 'RFQ deleted successfully.'
+  end
+  
+  # ============================================================================
+  # SEND TO SUPPLIERS - Send RFQ to invited suppliers
+  # ============================================================================
+  def send_to_suppliers
+    if @rfq.send_to_suppliers!(current_user)
+      redirect_to @rfq, notice: 'RFQ sent to suppliers successfully.'
+    else
+      redirect_to @rfq, alert: 'Cannot send RFQ. Please add items and invite suppliers.'
+    end
+  end
+
+  def remind_supplier
+    @rfq = Rfq.non_deleted.find(params[:id])
+    supplier_id = params[:supplier_id]
+    rfq_supplier = @rfq.rfq_suppliers.find_by(supplier_id: supplier_id)
+    
+    if rfq_supplier.nil?
+      flash[:error] = "Supplier not found"
+      redirect_to rfq_path(@rfq) and return
+    end
+    
+    supplier = rfq_supplier.supplier
+    contact = rfq_supplier.supplier_contact || supplier.primary_contact
+    
+    if contact && contact.email.present?
+      begin
+        RfqMailer.rfq_reminder(@rfq, supplier, contact).deliver_later
+        
+        # Update tracking
+        @rfq.increment!(:reminder_count) if @rfq.respond_to?(:reminder_count)
+        @rfq.update(last_reminder_sent_at: Time.current) if @rfq.respond_to?(:last_reminder_sent_at)
+        
+        flash[:success] = "Reminder sent to #{supplier.display_name}"
+      rescue => e
+        flash[:error] = "Failed to send reminder: #{e.message}"
+      end
+    else
+      flash[:error] = "No email address found for #{supplier.display_name}"
+    end
+    
+    redirect_to rfq_path(@rfq, anchor: 'suppliers')
+  end
+  
+  # ============================================================================
+  # COMPARISON DASHBOARD - THE STAR FEATURE! ⭐
+  # ============================================================================
+  def comparison
+    @rfq.increment!(:comparison_views_count)
+    @rfq.update_column(:last_compared_at, Time.current)
+    
+    # Calculate all scores and rankings
+    @rfq.calculate_recommendations!
+    @rfq.calculate_quote_statistics!
+    
+    # Get comparison matrix data
+    @comparison_data = @rfq.comparison_matrix
+    
+    # Summary statistics
+    @summary = {
+      total_suppliers: @rfq.suppliers_invited_count,
+      quotes_received: @rfq.quotes_received_count,
+      response_rate: @rfq.response_rate,
+      lowest_total: @rfq.lowest_quote_amount,
+      highest_total: @rfq.highest_quote_amount,
+      average_total: @rfq.average_quote_amount,
+      recommended_supplier: @rfq.recommended_supplier,
+      recommended_score: @rfq.recommended_supplier_score
+    }
+    
+    # Chart data for visualizations
+    @chart_data = prepare_comparison_charts
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: { comparison: @comparison_data, summary: @summary } }
+    end
+  end
+  
+  # ============================================================================
+  # AWARD - Award RFQ to selected supplier
+  # ============================================================================
+  def award
+    supplier = Supplier.find(params[:supplier_id])
+    
+    if @rfq.award_to_supplier!(supplier, current_user, reason: params[:reason])
+      redirect_to @rfq, notice: "RFQ awarded to #{supplier.display_name}."
+    else
+      redirect_to @rfq, alert: 'Failed to award RFQ.'
+    end
+  end
+  
+  # ============================================================================
+  # CLOSE - Close RFQ
+  # ============================================================================
+  def close
+    @rfq.close!(current_user, reason: params[:reason])
+    redirect_to @rfq, notice: 'RFQ closed successfully.'
+  end
+  
+  # ============================================================================
+  # CANCEL - Cancel RFQ
+  # ============================================================================
+  def cancel
+    @rfq.cancel!(current_user, reason: params[:reason])
+    redirect_to @rfq, alert: 'RFQ cancelled.'
+  end
+  
+  # ============================================================================
+  # INVITE SUPPLIERS - Add suppliers to RFQ
+  # ============================================================================
+  def invite_suppliers
+    @rfq = Rfq.find(params[:id])
+    supplier_ids = params[:supplier_ids] || []
+    
+    @rfq.invite_multiple_suppliers!(supplier_ids, current_user)
+    
+    redirect_to @rfq, notice: "#{supplier_ids.count} suppliers invited."
+  end
+  
+  # ============================================================================
+  # SELECT QUOTES - Select winning quotes for each line item
+  # ============================================================================
+  def select_quotes
+    @rfq = Rfq.find(params[:id])
+    
+    # params[:selections] = { rfq_item_id => vendor_quote_id }
+    selections = params[:selections] || {}
+    
+    selections.each do |item_id, quote_id|
+      quote = VendorQuote.find(quote_id)
+      quote.select!(current_user, reason: params[:reason])
+    end
+    
+    @rfq.mark_under_review!(current_user)
+    
+    redirect_to @rfq, notice: 'Quotes selected successfully.'
+  end
+  
+  # ============================================================================
+  # AUTOCOMPLETE - For search
+  # ============================================================================
+  def autocomplete
+    rfqs = Rfq.non_deleted
+               .where('rfq_number ILIKE ? OR title ILIKE ?', 
+                      "%#{params[:term]}%", "%#{params[:term]}%")
+               .limit(10)
+    
+    results = rfqs.map { |r| { id: r.id, label: r.display_name, value: r.rfq_number } }
+    render json: results
+  end
+  
+  private
+  
+  # ============================================================================
+  # PRIVATE METHODS
+  # ============================================================================
+  def set_rfq
+    @rfq = Rfq.non_deleted.find(params[:id])
+  end
+  
+  def rfq_params
+    params.require(:rfq).permit(
+      :title, :description, :rfq_date, :due_date, :response_deadline,
+      :required_delivery_date, :is_urgent, :priority,
+      :terms_and_conditions, :payment_terms, :delivery_terms,
+      :quality_requirements, :special_instructions, :incoterms,
+      :estimated_budget, :comparison_basis,
+      :auto_email_enabled, :send_to_all_contacts,
+      :requires_technical_drawings, :requires_certifications, :requires_samples,
+      :requester_id, :buyer_assigned_id, :approver_id,
+      :internal_notes, :buyer_notes,
+      rfq_items_attributes: [
+        :id, :product_id, :line_number, :item_description,
+        :quantity_requested, :unit_of_measure,
+        :technical_specifications, :quality_requirements,
+        :material_grade, :finish_requirement, :dimensional_requirements,
+        :color_specification, :packaging_requirements,
+        :requires_testing, :testing_standards,
+        :required_delivery_date, :partial_delivery_acceptable,
+        :delivery_location, :shipping_instructions,
+        :customer_part_number, :drawing_number, :drawing_revision,
+        :target_unit_price, :is_critical_item, :is_long_lead_item,
+        :buyer_notes, :engineering_notes, :_destroy
+      ],
+      rfq_suppliers_attributes: [
+        :id, :_destroy, :supplier_contact_id, :supplier_id
+      ]
+    )
+  end
+  
+  def prepare_comparison_charts
+    # Price comparison chart data
+    price_data = @rfq.rfq_suppliers.includes(:supplier).map do |rs|
+      {
+        supplier: rs.supplier.display_name,
+        total: rs.total_quoted_amount,
+        color: rs.is_selected ? '#28a745' : '#6c757d'
+      }
+    end
+    
+    # Response time chart data
+    response_data = @rfq.rfq_suppliers.where.not(response_time_hours: nil).map do |rs|
+      {
+        supplier: rs.supplier.display_name,
+        hours: rs.response_time_hours,
+        on_time: rs.responded_on_time
+      }
+    end
+    
+    {
+      price_comparison: price_data,
+      response_times: response_data
+    }
+  end
+  
+  def generate_rfq_csv(rfq)
+    
+    CSV.generate(headers: true) do |csv|
+      # Header section
+      csv << ['RFQ HEADER INFORMATION']
+      csv << ['RFQ Number', rfq.rfq_number]
+      csv << ['Title', rfq.title]
+      csv << ['Status', rfq.status]
+      csv << ['RFQ Date', rfq.rfq_date.strftime('%Y-%m-%d')]
+      csv << ['Due Date', rfq.due_date.strftime('%Y-%m-%d')]
+      csv << ['Response Deadline', rfq.response_deadline.strftime('%Y-%m-%d')]
+      csv << ['Urgent', rfq.is_urgent? ? 'YES' : 'NO']
+      csv << ['Suppliers Invited', rfq.suppliers_invited_count]
+      csv << ['Quotes Received', rfq.quotes_received_count]
+      csv << ['Response Rate', "#{rfq.response_rate}%"]
+      csv << []
+      
+      # Items section
+      csv << ['RFQ ITEMS']
+      csv << ['Line', 'Item Description', 'Product Code', 'Quantity', 'UOM', 'Target Price', 'Required Date', 'Critical']
+      
+      rfq.rfq_items.order(:line_number).each do |item|
+        csv << [
+          item.line_number,
+          item.item_description,
+          item.product&.sku,
+          item.quantity_requested,
+          item.unit_of_measure,
+          item.target_unit_price,
+          item.required_delivery_date&.strftime('%Y-%m-%d'),
+          item.is_critical_item? ? 'YES' : 'NO'
+        ]
+      end
+      
+      csv << []
+      
+      # Suppliers section
+      csv << ['INVITED SUPPLIERS']
+      csv << ['Supplier Name', 'Contact', 'Email', 'Status', 'Quoted At', 'Response Time (hrs)', 'On Time']
+      
+      rfq.rfq_suppliers.includes(:supplier, :supplier_contact).each do |rfq_supplier|
+        csv << [
+          rfq_supplier.supplier.display_name,
+          rfq_supplier.supplier_contact&.full_name,
+          rfq_supplier.contact_email_used,
+          rfq_supplier.invitation_status,
+          rfq_supplier.quoted_at&.strftime('%Y-%m-%d %H:%M'),
+          rfq_supplier.response_time_hours,
+          rfq_supplier.responded_on_time ? 'YES' : 'NO'
+        ]
+      end
+      
+      csv << []
+      
+      # Quotes section
+      if rfq.vendor_quotes.any?
+        csv << ['RECEIVED QUOTES']
+        csv << ['Supplier', 'Item', 'Quote #', 'Unit Price', 'Total Price', 'Lead Time', 'Overall Score', 'Selected']
+        
+        rfq.vendor_quotes.includes(:supplier, :rfq_item).order('overall_rank ASC').each do |quote|
+          csv << [
+            quote.supplier.display_name,
+            quote.rfq_item.display_name,
+            quote.quote_number,
+            quote.unit_price,
+            quote.total_price,
+            "#{quote.lead_time_days} days",
+            quote.overall_score,
+            quote.is_selected ? 'YES' : 'NO'
+          ]
+        end
+      end
+      
+      csv << []
+      
+      # Award information
+      if rfq.awarded_supplier
+        csv << ['AWARD INFORMATION']
+        csv << ['Awarded To', rfq.awarded_supplier.display_name]
+        csv << ['Award Date', rfq.award_date.strftime('%Y-%m-%d')]
+        csv << ['Awarded Amount', rfq.awarded_total_amount]
+        csv << ['Cost Savings', rfq.cost_savings]
+        csv << ['Savings Percentage', "#{rfq.cost_savings_percentage}%"]
+        csv << ['Award Reason', rfq.award_reason]
+      end
+    end
+  end
+
+  def generate_csv
+    CSV.generate(headers: true) do |csv|
+      csv << ['RFQ Number', 'Title', 'Status', 'RFQ Date', 'Due Date', 
+              'Suppliers Invited', 'Quotes Received', 'Response Rate',
+              'Lowest Quote', 'Awarded Supplier', 'Award Amount']
+      
+      @rfqs.each do |rfq|
+        csv << [
+          rfq.rfq_number,
+          rfq.title,
+          rfq.status,
+          rfq.rfq_date,
+          rfq.due_date,
+          rfq.suppliers_invited_count,
+          rfq.quotes_received_count,
+          "#{rfq.response_rate}%",
+          rfq.lowest_quote_amount,
+          rfq.awarded_supplier&.display_name,
+          rfq.awarded_total_amount
+        ]
+      end
+    end
+  end
+end
+
+============================================================================
 # FILE: routing_reports_controller.rb
 # PATH: routing_reports_controller.rb
 ============================================================================
@@ -1927,74 +2843,593 @@ end
 
 class SuppliersController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_supplier, only: %i[ show edit update destroy ]
-
-  # GET /suppliers or /suppliers.json
+  before_action :set_supplier, only: [:show, :edit, :update, :destroy, :dashboard, 
+                                       :approve, :suspend, :blacklist, :reactivate]
+  before_action :check_deletion_allowed, only: [:destroy]
+  
+  # ============================================================================
+  # INDEX - List all suppliers with filtering, search, sorting
+  # ============================================================================
   def index
-    @suppliers = Supplier.all
+    @suppliers = Supplier.non_deleted
+    
+    # Apply filters
+    apply_filters
+    apply_search
+    apply_sorting
+    
+    # Statistics
+    @stats = calculate_statistics
+    
+    # Pagination
+    @suppliers = @suppliers.page(params[:page]).per(20)
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @suppliers }
+      format.csv { send_data generate_csv, filename: "suppliers-#{Date.current}.csv" }
+      format.pdf { send_data generate_pdf, filename: "suppliers-#{Date.current}.pdf", type: 'application/pdf' }
+    end
   end
-
-  # GET /suppliers/1 or /suppliers/1.json
+  
+  # ============================================================================
+  # SHOW - Supplier detail page with full information
+  # ============================================================================
   def show
+    @addresses = @supplier.addresses.non_deleted.active.order(is_default: :desc)
+    @contacts = @supplier.contacts.non_deleted.active.order(is_primary_contact: :desc)
+    @product_catalog = @supplier.product_catalog.non_deleted.includes(:product).order('products.sku')
+    @quality_issues = @supplier.quality_issues.order(issue_date: :desc).limit(10)
+    @recent_activities = @supplier.recent_activities(10)
+    @documents = @supplier.active_documents.order(created_at: :desc)
+    @performance_reviews = @supplier.performance_reviews.recent.limit(5)
+    
+    # Performance metrics for charts
+    @performance_data = calculate_performance_data
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @supplier.as_json(include: [:addresses, :contacts, :products]) }
+    end
   end
-
-  # GET /suppliers/new
+  
+  # ============================================================================
+  # NEW - Form for creating new supplier
+  # ============================================================================
   def new
-    @supplier = Supplier.new
+    @supplier = Supplier.new(
+      is_active: true,
+      supplier_status: 'PENDING',
+      currency: 'USD',
+      default_payment_terms: 'NET_30'
+    )
+    @supplier.addresses.build(is_active: true, address_type: 'PRIMARY_OFFICE')
+    @supplier.contacts.build(is_active: true, contact_role: 'PRIMARY')
   end
-
-  # GET /suppliers/1/edit
-  def edit
-  end
-
-  # POST /suppliers or /suppliers.json
+  
+  # ============================================================================
+  # CREATE - Save new supplier
+  # ============================================================================
   def create
     @supplier = Supplier.new(supplier_params)
-
+    @supplier.created_by = current_user
+    
     respond_to do |format|
       if @supplier.save
-        format.html { redirect_to @supplier, notice: "Supplier was successfully created." }
-        format.json { render :show, status: :created, location: @supplier }
+        @supplier.log_activity!('NOTE', 'Supplier Created', "Supplier #{@supplier.code} was created", current_user)
+        
+        format.html { redirect_to @supplier, notice: 'Supplier created successfully.' }
+        format.json { render json: @supplier, status: :created }
       else
         format.html { render :new, status: :unprocessable_entity }
         format.json { render json: @supplier.errors, status: :unprocessable_entity }
       end
     end
   end
-
-  # PATCH/PUT /suppliers/1 or /suppliers/1.json
+  
+  # ============================================================================
+  # EDIT - Form for editing supplier
+  # ============================================================================
+  def edit
+    # Form will be rendered
+  end
+  
+  # ============================================================================
+  # UPDATE - Save supplier changes
+  # ============================================================================
   def update
+    @supplier.updated_by = current_user
+    
     respond_to do |format|
       if @supplier.update(supplier_params)
-        format.html { redirect_to @supplier, notice: "Supplier was successfully updated.", status: :see_other }
-        format.json { render :show, status: :ok, location: @supplier }
+        format.html { redirect_to @supplier, notice: 'Supplier updated successfully.' }
       else
         format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @supplier.errors, status: :unprocessable_entity }
       end
     end
   end
-
-  # DELETE /suppliers/1 or /suppliers/1.json
+  
+  # ============================================================================
+  # DESTROY - Soft delete supplier
+  # ============================================================================
   def destroy
-    @supplier.destroy!
-
+    @supplier.soft_delete!(current_user)
+    
     respond_to do |format|
-      format.html { redirect_to suppliers_path, notice: "Supplier was successfully destroyed.", status: :see_other }
-      format.json { head :no_content }
+      format.html { redirect_to suppliers_path, notice: 'Supplier deleted successfully.' }
+      format.json { render json: { success: true, message: 'Supplier deleted successfully' } }
     end
   end
-
+  
+  # ============================================================================
+  # DASHBOARD - Analytics and performance dashboard
+  # ============================================================================
+  def dashboard
+    @chart_data = {
+      revenue_trend: calculate_revenue_trend,
+      order_trend: calculate_order_trend,
+      quality_trend: calculate_quality_trend,
+      delivery_performance: calculate_delivery_performance
+    }
+    
+    @key_metrics = {
+      total_spend: @supplier.total_purchase_value,
+      ytd_spend: @supplier.purchase_value_ytd,
+      total_orders: @supplier.total_po_count,
+      on_time_rate: @supplier.on_time_delivery_rate,
+      quality_rate: @supplier.quality_acceptance_rate,
+      overall_rating: @supplier.overall_rating
+    }
+  end
+  
+  # ============================================================================
+  # STATUS MANAGEMENT ACTIONS
+  # ============================================================================
+  def approve
+    @supplier.approve!(current_user, notes: params[:notes])
+    redirect_to @supplier, notice: 'Supplier approved successfully.'
+  end
+  
+  def suspend
+    @supplier.suspend!(params[:reason], current_user)
+    redirect_to @supplier, alert: 'Supplier suspended.'
+  end
+  
+  def blacklist
+    @supplier.blacklist!(params[:reason], current_user)
+    redirect_to @supplier, alert: 'Supplier blacklisted.'
+  end
+  
+  def reactivate
+    @supplier.reactivate!(current_user, notes: params[:notes])
+    redirect_to @supplier, notice: 'Supplier reactivated successfully.'
+  end
+  
+  # ============================================================================
+  # AUTOCOMPLETE - For search/selection
+  # ============================================================================
+  def autocomplete
+    suppliers = Supplier.non_deleted.active
+                       .search(params[:term])
+                       .limit(10)
+    
+    results = suppliers.map do |s|
+      {
+        id: s.id,
+        code: s.code,
+        name: s.display_name,
+        label: s.full_display_name,
+        value: s.full_display_name
+      }
+    end
+    
+    render json: results
+  end
+  
+  # ============================================================================
+  # BULK ACTIONS
+  # ============================================================================
+  def bulk_action
+    supplier_ids = params[:supplier_ids] || []
+    action = params[:bulk_action]
+    
+    case action
+    when 'export_csv'
+      suppliers = Supplier.where(id: supplier_ids)
+      send_data generate_csv(suppliers), filename: "suppliers-#{Date.current}.csv"
+    when 'export_pdf'
+      suppliers = Supplier.where(id: supplier_ids)
+      send_data generate_pdf(suppliers), filename: "suppliers-#{Date.current}.pdf"
+    when 'activate'
+      Supplier.where(id: supplier_ids).update_all(is_active: true, updated_by_id: current_user.id)
+      redirect_to suppliers_path, notice: "#{supplier_ids.count} suppliers activated."
+    when 'deactivate'
+      Supplier.where(id: supplier_ids).update_all(is_active: false, updated_by_id: current_user.id)
+      redirect_to suppliers_path, notice: "#{supplier_ids.count} suppliers deactivated."
+    when 'delete'
+      Supplier.where(id: supplier_ids).each { |s| s.soft_delete!(current_user) }
+      redirect_to suppliers_path, notice: "#{supplier_ids.count} suppliers deleted."
+    else
+      redirect_to suppliers_path, alert: 'Invalid bulk action.'
+    end
+  end
+  
+  # ============================================================================
+  # COMPARISON - Compare multiple suppliers
+  # ============================================================================
+  def comparison
+    @supplier_ids = params[:supplier_ids] || []
+    @suppliers = Supplier.where(id: @supplier_ids).includes(:product_suppliers)
+    @common_products = find_common_products(@suppliers)
+  end
+  
+  def dashboard
+    @supplier = Supplier.non_deleted.find(params[:id])
+    
+    # Prepare all chart data
+    @chart_data = {
+      # Purchase volume trend (last 12 months)
+      months: last_12_months_labels,
+      purchase_amounts: calculate_monthly_purchases(@supplier),
+      
+      # Quality issues breakdown
+      quality_issue_types: quality_issue_type_labels,
+      quality_issue_counts: quality_issue_type_counts(@supplier),
+      
+      # Order status distribution
+      order_statuses: order_status_labels,
+      order_counts: calculate_order_status_counts(@supplier)
+    }
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: { supplier: @supplier, chart_data: @chart_data } }
+    end
+  end
+  
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_supplier
-      @supplier = Supplier.find(params.expect(:id))
-    end
+  # ============================================================================
+  # PRIVATE METHODS
+  # ============================================================================
 
-    # Only allow a list of trusted parameters through.
-    def supplier_params
-      params.expect(supplier: [ :code, :name, :email, :phone, :billing_address, :shipping_address, :lead_time_days, :on_time_delivery_rate, :is_active, :deleted, :created_by ])
+  # ============================================================================
+  # CHART DATA HELPER METHODS
+  # ============================================================================
+  
+  # Last 12 months labels for charts
+  def last_12_months_labels
+    (0..11).map { |i| i.months.ago.strftime('%b %y') }.reverse
+  end
+  
+  # Calculate monthly purchase amounts for last 12 months
+  def calculate_monthly_purchases(supplier)
+    # Get purchase orders for this supplier for last 12 months
+    start_date = 12.months.ago.beginning_of_month
+    
+    monthly_data = (0..11).map do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = i.months.ago.end_of_month
+      
+      # Calculate total purchase amount for this month
+      # Adjust based on your PurchaseOrder model structure
+      if defined?(PurchaseOrder)
+        total = PurchaseOrder.where(supplier: supplier)
+                            .where(order_date: month_start..month_end)
+                            .sum(:total_amount)
+      else
+        # Fallback: Use supplier's total_purchase_value divided by 12
+        (supplier.total_purchase_value || 0) / 12.0
+      end
+      
+      total.to_f.round(2)
     end
+    
+    monthly_data.reverse
+  end
+  
+  # Quality issue type labels
+  def quality_issue_type_labels
+    [
+      'Material Defect',
+      'Manufacturing',
+      'Dimensional',
+      'Finish/Surface',
+      'Packaging',
+      'Documentation',
+      'Delivery',
+      'Other'
+    ]
+  end
+  
+  # Count quality issues by type
+  def quality_issue_type_counts(supplier)
+    defect_types = [
+      'MATERIAL_DEFECT',
+      'MANUFACTURING_DEFECT',
+      'DIMENSIONAL',
+      'FINISH',
+      'PACKAGING',
+      'DOCUMENTATION',
+      'DELIVERY',
+      'OTHER'
+    ]
+    
+    defect_types.map do |type|
+      supplier.quality_issues.where(issue_type: type).count
+    end
+  end
+  
+  # Order status labels
+  def order_status_labels
+    ['Pending', 'Confirmed', 'In Transit', 'Received', 'Cancelled']
+  end
+  
+  # Calculate order counts by status
+  def calculate_order_status_counts(supplier)
+    # Adjust based on your PurchaseOrder model structure
+    if defined?(PurchaseOrder)
+      statuses = ['PENDING', 'CONFIRMED', 'IN_TRANSIT', 'RECEIVED', 'CANCELLED']
+      
+      statuses.map do |status|
+        PurchaseOrder.where(supplier: supplier)
+                    .where(status: status)
+                    .count
+      end
+    else
+      # Fallback: Return sample data
+      total_orders = supplier.total_orders_count || 0
+      
+      if total_orders > 0
+        # Distribute orders across statuses (sample distribution)
+        [
+          (total_orders * 0.10).to_i,  # Pending: 10%
+          (total_orders * 0.15).to_i,  # Confirmed: 15%
+          (total_orders * 0.25).to_i,  # In Transit: 25%
+          (total_orders * 0.45).to_i,  # Received: 45%
+          (total_orders * 0.05).to_i   # Cancelled: 5%
+        ]
+      else
+        [0, 0, 0, 0, 0]
+      end
+    end
+  end
+  
+  
+  def set_supplier
+    @supplier = Supplier.non_deleted.find(params[:id])
+  end
+  
+  def supplier_params
+    params.require(:supplier).permit(
+      # Basic Info
+      :legal_name, :trade_name, :tax_id, :vat_number, :gst_number,
+      :business_registration_number, :is_1099_vendor,
+      
+      # Classification
+      :supplier_type, :supplier_category, :supplier_status, :status_reason,
+      :status_effective_date, :supplier_since,
+      
+      # Contact
+      :primary_email, :primary_phone, :primary_fax, :website,
+      :linkedin_url, :facebook_url, :company_profile,
+      
+      # Financial
+      :default_payment_terms, :payment_method, :currency,
+      :credit_limit_extended, :requires_advance_payment, :advance_payment_percentage,
+      :early_payment_discount_percentage, :early_payment_discount_days,
+      :requires_tax_withholding, :tax_withholding_percentage,
+      :bank_name, :bank_account_number, :bank_routing_number,
+      :bank_swift_code, :bank_iban, :bank_branch,
+      
+      # Manufacturing
+      :default_lead_time_days, :minimum_order_quantity, :maximum_order_quantity,
+      :order_multiple, :production_capacity_monthly,
+      
+      # Certifications
+      :iso_9001_certified, :iso_14001_certified, :iso_45001_certified,
+      :iso_9001_expiry, :iso_14001_expiry, :iso_45001_expiry,
+      
+      # Strategic Flags
+      :is_preferred_supplier, :is_strategic_supplier, :is_local_supplier,
+      :is_minority_owned, :is_woman_owned, :is_veteran_owned,
+      
+      # Status
+      :is_active, :can_receive_pos, :can_receive_rfqs,
+      
+      # Notes
+      :internal_notes, :purchasing_notes,
+      
+      # References
+      :default_buyer_id, :supplier_territory,
+      
+      # Arrays
+      manufacturing_processes: [], quality_control_capabilities: [],
+      testing_capabilities: [], materials_specialization: [],
+      geographic_coverage: [], factory_locations: [], certifications: [],
+      
+      # Nested Attributes
+      addresses_attributes: [
+        :id, :address_type, :address_label, :is_default, :is_active,
+        :attention_to, :street_address_1, :street_address_2, :city,
+        :state_province, :postal_code, :country, :contact_phone,
+        :contact_email, :operating_hours, :receiving_hours,
+        :shipping_instructions, :requires_appointment, :_destroy
+      ],
+      contacts_attributes: [
+        :id, :first_name, :last_name, :title, :department, :contact_role,
+        :is_primary_contact, :is_decision_maker, :is_active,
+        :email, :phone, :mobile, :fax, :extension,
+        :skype_id, :linkedin_url, :preferred_contact_method,
+        :receive_pos, :receive_rfqs, :receive_quality_alerts,
+        :working_hours, :timezone, :_destroy
+      ]
+    )
+  end
+  
+  def apply_filters
+    # Status filter
+    if params[:status].present?
+      @suppliers = @suppliers.where(supplier_status: params[:status])
+    end
+    
+    # Type filter
+    if params[:supplier_type].present?
+      @suppliers = @suppliers.where(supplier_type: params[:supplier_type])
+    end
+    
+    # Category filter
+    if params[:supplier_category].present?
+      @suppliers = @suppliers.where(supplier_category: params[:supplier_category])
+    end
+    
+    # Rating filter
+    if params[:min_rating].present?
+      @suppliers = @suppliers.where('overall_rating >= ?', params[:min_rating])
+    end
+    
+    # Active/Inactive filter
+    if params[:is_active].present?
+      @suppliers = @suppliers.where(is_active: params[:is_active])
+    end
+    
+    # Strategic suppliers
+    if params[:strategic] == 'true'
+      @suppliers = @suppliers.where(is_strategic_supplier: true)
+    end
+    
+    # Preferred suppliers
+    if params[:preferred] == 'true'
+      @suppliers = @suppliers.where(is_preferred_supplier: true)
+    end
+    
+    # Territory filter
+    if params[:territory].present?
+      @suppliers = @suppliers.where(supplier_territory: params[:territory])
+    end
+  end
+  
+  def apply_search
+    if params[:search].present?
+      @suppliers = @suppliers.search(params[:search])
+    end
+  end
+  
+  def apply_sorting
+    sort_column = params[:sort] || 'legal_name'
+    sort_direction = params[:direction] || 'asc'
+    
+    case sort_column
+    when 'name'
+      @suppliers = @suppliers.order(legal_name: sort_direction)
+    when 'code'
+      @suppliers = @suppliers.order(code: sort_direction)
+    when 'rating'
+      @suppliers = @suppliers.order(overall_rating: sort_direction)
+    when 'total_spend'
+      @suppliers = @suppliers.order(total_purchase_value: sort_direction)
+    when 'last_order'
+      @suppliers = @suppliers.order(Arel.sql("last_po_date #{sort_direction} NULLS LAST"))
+    when 'created_at'
+      @suppliers = @suppliers.order(created_at: sort_direction)
+    else
+      @suppliers = @suppliers.order(legal_name: :asc)
+    end
+  end
+  
+  def calculate_statistics
+    suppliers = Supplier.non_deleted
+    {
+      total: suppliers.count,
+      active: suppliers.active.count,
+      approved: suppliers.approved.count,
+      pending: suppliers.pending.count,
+      suspended: suppliers.suspended.count,
+      high_rated: suppliers.high_rated.count,
+      medium_rated: suppliers.medium_rated.count,
+      low_rated: suppliers.low_rated.count
+    }
+  end
+  
+  def calculate_performance_data
+    # Will be implemented with actual PO data
+    {
+      on_time_deliveries: @supplier.on_time_delivery_rate,
+      quality_acceptance: @supplier.quality_acceptance_rate,
+      total_spend: @supplier.total_purchase_value,
+      order_count: @supplier.total_po_count
+    }
+  end
+  
+  def calculate_revenue_trend
+    # Mock data - will use actual PO data
+    (1..12).map do |i|
+      {
+        month: i.months.ago.strftime('%b %Y'),
+        amount: rand(10000..50000)
+      }
+    end.reverse
+  end
+  
+  def calculate_order_trend
+    # Mock data
+    (1..12).map do |i|
+      {
+        month: i.months.ago.strftime('%b %Y'),
+        orders: rand(5..20)
+      }
+    end.reverse
+  end
+  
+  def calculate_quality_trend
+    # Mock data
+    (1..12).map do |i|
+      {
+        month: i.months.ago.strftime('%b %Y'),
+        rate: rand(90.0..100.0).round(2)
+      }
+    end.reverse
+  end
+  
+  def calculate_delivery_performance
+    {
+      on_time: @supplier.on_time_delivery_rate,
+      late: 100 - @supplier.on_time_delivery_rate
+    }
+  end
+  
+  def generate_csv(suppliers = @suppliers)
+    CSV.generate(headers: true) do |csv|
+      csv << ['Code', 'Legal Name', 'Type', 'Category', 'Status', 'Rating', 'Total Spend', 'Email', 'Phone']
+      suppliers.each do |s|
+        csv << [s.code, s.legal_name, s.supplier_type, s.supplier_category, 
+                s.supplier_status, s.overall_rating, s.total_purchase_value,
+                s.primary_email, s.primary_phone]
+      end
+    end
+  end
+  
+  def generate_pdf(suppliers = @suppliers)
+    # PDF generation logic (use Prawn or similar)
+    "PDF content here"
+  end
+  
+  def check_deletion_allowed
+    # Check if supplier has active purchase orders
+    # if @supplier.purchase_orders.active.any?
+    #   redirect_to @supplier, alert: 'Cannot delete supplier with active purchase orders.'
+    # end
+  end
+  
+  def find_common_products(suppliers)
+    return [] if suppliers.empty?
+    
+    product_ids = suppliers.first.products.pluck(:id)
+    suppliers[1..-1].each do |supplier|
+      product_ids &= supplier.products.pluck(:id)
+    end
+    
+    Product.where(id: product_ids)
+  end
 end
 
 ============================================================================
@@ -2149,6 +3584,399 @@ class UnitOfMeasuresController < ApplicationController
     def unit_of_measure_params
       params.expect(unit_of_measure: [ :name, :symbol, :is_decimal ])
     end
+end
+
+============================================================================
+# FILE: vendor_quotes_controller.rb
+# PATH: vendor_quotes_controller.rb
+============================================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# FILE: app/controllers/vendor_quotes_controller.rb
+# Vendor Quote Management Controller
+# Handles quote entry by buyer for suppliers
+# ============================================================================
+
+class VendorQuotesController < ApplicationController
+  before_action :authenticate_user!
+  before_action :set_rfq
+  before_action :set_vendor_quote, only: [:show, :edit, :update, :destroy]
+  
+  # GET /rfqs/:rfq_id/vendor_quotes
+  def index
+    @vendor_quotes = @rfq.vendor_quotes.includes(:supplier, :rfq_item).latest
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @vendor_quotes }
+    end
+  end
+  
+  # GET /rfqs/:rfq_id/vendor_quotes/:id
+  def show
+    respond_to do |format|
+      format.html
+      format.json { render json: @vendor_quote }
+      format.pdf do
+        render pdf: "Quote_#{@vendor_quote.quote_number}",
+               template: 'vendor_quotes/show_pdf',
+               layout: 'pdf'
+      end
+    end
+  end
+  
+  # GET /rfqs/:rfq_id/vendor_quotes/new
+  def new
+    # Get supplier from params
+    @supplier = Supplier.find(params[:supplier_id]) if params[:supplier_id]
+    
+    unless @supplier
+      flash[:error] = "Please specify a supplier"
+      redirect_to rfq_path(@rfq) and return
+    end
+    
+    # Get available items (not yet quoted by this supplier)
+    @available_items = @rfq.rfq_items.where.not(
+      id: VendorQuote.where(rfq: @rfq, supplier: @supplier).select(:rfq_item_id)
+    )
+    
+    if @available_items.empty?
+      flash[:warning] = "All items already have quotes from #{@supplier.display_name}"
+      redirect_to rfq_path(@rfq) and return
+    end
+    
+    # Build new quote
+    @rfq_item = params[:rfq_item_id] ? @rfq.rfq_items.find(params[:rfq_item_id]) : @available_items.first
+    @vendor_quote = VendorQuote.new(
+      rfq: @rfq,
+      supplier: @supplier,
+      rfq_item: @rfq_item,
+      quote_date: Date.current,
+      quote_valid_until: 30.days.from_now,
+      currency: 'USD',
+      can_meet_required_date: true,
+      meets_specifications: true
+    )
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @vendor_quote }
+    end
+  end
+  
+  # POST /rfqs/:rfq_id/vendor_quotes
+  def create
+    @rfq_item = @rfq.rfq_items.find_by(id: vendor_quote_params[:rfq_item_id])
+    @supplier = Supplier.find_by(id: vendor_quote_params[:supplier_id])
+    @rfq_supplier = @rfq.rfq_suppliers.find_by!(supplier: @supplier)
+    
+    # Check if quote already exists
+    existing_quote = VendorQuote.find_by(
+      rfq: @rfq,
+      supplier: @supplier,
+      rfq_item: @rfq_item
+    )
+    
+    if existing_quote
+      flash[:error] = "Quote already exists for this item from #{@supplier.display_name}"
+      redirect_to rfq_path(@rfq, anchor: 'quotes') and return
+    end
+    
+    # Build new quote
+    @vendor_quote = VendorQuote.new(vendor_quote_params)
+    @vendor_quote.rfq = @rfq
+    @vendor_quote.rfq_supplier = @rfq_supplier
+    @vendor_quote.rfq_item = @rfq_item
+    @vendor_quote.supplier = @supplier
+    @vendor_quote.created_by = current_user
+    
+    # Generate quote number if not present
+    @vendor_quote.quote_number ||= generate_quote_number(@supplier)
+    
+    # Calculate total price
+    calculate_total_price!(@vendor_quote)
+    
+    # Calculate scores
+    calculate_scores!(@vendor_quote)
+    if @vendor_quote.save
+      # Update RFQ supplier status
+      update_rfq_supplier_status(@supplier)
+      
+      # Update RFQ counter caches
+      update_rfq_counters!
+      
+      # Recalculate all quotes for this item (rankings)
+      recalculate_item_quotes!(@rfq_item)
+      
+      # Optional: Send notification email to buyer
+      # RfqMailer.quote_received_notification(@rfq, @vendor_quote).deliver_later
+      
+      flash[:success] = "Quote from #{@supplier.display_name} saved successfully"
+      
+      respond_to do |format|
+        format.html { redirect_to rfq_path(@rfq, anchor: 'quotes') }
+        format.json { render json: { success: true, quote: @vendor_quote }, status: :created }
+      end
+    else
+      flash[:error] = @vendor_quote.errors.full_messages.join(', ')
+      
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @vendor_quote.errors.full_messages }, status: :unprocessable_entity }
+      end
+    end
+  end
+  
+  # GET /rfqs/:rfq_id/vendor_quotes/:id/edit
+  def edit
+    @supplier = @vendor_quote.supplier
+    @rfq_item = @vendor_quote.rfq_item
+    @available_items = [@rfq_item] # Can only edit current item
+    
+    respond_to do |format|
+      format.html
+      format.json { render json: @vendor_quote }
+    end
+  end
+  
+  # PATCH/PUT /rfqs/:rfq_id/vendor_quotes/:id
+  def update
+    @vendor_quote.updated_by = current_user
+    
+    # Store old values for comparison
+    old_unit_price = @vendor_quote.unit_price
+    old_lead_time = @vendor_quote.lead_time_days
+    
+    # Update attributes
+    @vendor_quote.assign_attributes(vendor_quote_params)
+    
+    # Recalculate if prices or lead time changed
+    if @vendor_quote.unit_price != old_unit_price || 
+       @vendor_quote.lead_time_days != old_lead_time
+      calculate_total_price!(@vendor_quote)
+      calculate_scores!(@vendor_quote)
+    end
+    
+    if @vendor_quote.save
+      # Recalculate all quotes for this item
+      recalculate_item_quotes!(@vendor_quote.rfq_item)
+      
+      flash[:success] = "Quote updated successfully"
+      
+      respond_to do |format|
+        format.html { redirect_to rfq_path(@rfq, anchor: 'quotes') }
+        format.json { render json: { success: true, quote: @vendor_quote } }
+      end
+    else
+      flash[:error] = @vendor_quote.errors.full_messages.join(', ')
+      
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @vendor_quote.errors.full_messages }, status: :unprocessable_entity }
+      end
+    end
+  end
+  
+  # DELETE /rfqs/:rfq_id/vendor_quotes/:id
+  def destroy
+    supplier = @vendor_quote.supplier
+    rfq_item = @vendor_quote.rfq_item
+    
+    @vendor_quote.destroy!
+    
+    # Update RFQ supplier status
+    update_rfq_supplier_status(supplier)
+    
+    # Update RFQ counter caches
+    update_rfq_counters!
+    
+    # Recalculate remaining quotes for this item
+    recalculate_item_quotes!(rfq_item)
+    
+    flash[:success] = "Quote deleted successfully"
+    redirect_to rfq_path(@rfq, anchor: 'quotes')
+  end
+  
+  private
+  
+  def set_rfq
+    @rfq = Rfq.non_deleted.find(params[:rfq_id])
+  end
+  
+  def set_vendor_quote
+    @vendor_quote = VendorQuote.find(params[:id])
+  end
+  
+  def vendor_quote_params
+    params.require(:vendor_quote).permit(
+      :supplier_id,
+      :rfq_item_id,
+      :quote_number,
+      :quote_date,
+      :quote_valid_until,
+      :unit_price,
+      :currency,
+      :lead_time_days,
+      :promised_delivery_date,
+      :can_meet_required_date,
+      :minimum_order_quantity,
+      :order_multiple,
+      :units_per_package,
+      :tooling_cost,
+      :setup_cost,
+      :shipping_cost,
+      :other_charges,
+      :payment_terms,
+      :warranty_period,
+      :special_conditions,
+      :meets_specifications,
+      :certifications_included,
+      :samples_available,
+      :specification_deviations,
+      :partial_delivery_offered,
+      :notes,
+      :volume_price_break_1_qty,
+      :volume_price_break_1_price,
+      :volume_price_break_2_qty,
+      :volume_price_break_2_price,
+      :volume_price_break_3_qty,
+      :volume_price_break_3_price
+    )
+  end
+  
+  # ============================================================================
+  # HELPER METHODS
+  # ============================================================================
+  
+  # Generate unique quote number
+  def generate_quote_number(supplier)
+    prefix = supplier.code || supplier.id.to_s.rjust(3, '0')
+    date_part = Date.current.strftime('%Y%m%d')
+    sequence = VendorQuote.where(supplier: supplier).count + 1
+    
+    "QT-#{prefix}-#{date_part}-#{sequence.to_s.rjust(3, '0')}"
+  end
+  
+  # Calculate total price
+  def calculate_total_price!(quote)
+    base_price = (quote.unit_price || 0) * (quote.rfq_item.quantity_requested || 0)
+    
+    additional_costs = (quote.tooling_cost || 0) + 
+                       (quote.setup_cost || 0) + 
+                       (quote.shipping_cost || 0) + 
+                       (quote.other_charges || 0)
+    
+    quote.total_price = base_price + additional_costs
+    quote
+  end
+  
+  # Calculate scores for quote
+  def calculate_scores!(quote)
+    rfq = quote.rfq
+    rfq_item = quote.rfq_item
+    
+    # Get all quotes for this item
+    all_quotes = VendorQuote.where(rfq: rfq, rfq_item: rfq_item)
+    
+    # Price Score (lower price = higher score)
+    all_prices = all_quotes.pluck(:unit_price).compact
+    if all_prices.any?
+      min_price = all_prices.min
+      quote.price_score = min_price > 0 ? (min_price / quote.unit_price.to_f * 100).round(0) : 100
+    else
+      quote.price_score = 100
+    end
+    
+    # Delivery Score (faster delivery = higher score)
+    all_lead_times = all_quotes.pluck(:lead_time_days).compact
+    if all_lead_times.any?
+      min_lead_time = all_lead_times.min
+      quote.delivery_score = quote.lead_time_days > 0 ? (min_lead_time.to_f / quote.lead_time_days * 100).round(0) : 100
+    else
+      quote.delivery_score = 100
+    end
+    
+    # Quality Score (from supplier rating)
+    quote.quality_score = quote.supplier.quality_score || 80
+    
+    # Service Score (from supplier rating)
+    quote.service_score = quote.supplier.service_score || 80
+    
+    # Calculate overall score (weighted average)
+    weights = rfq.weights || { price: 40, delivery: 20, quality: 25, service: 15 }
+    
+    quote.overall_score = (
+      (quote.price_score || 0) * weights[:price] +
+      (quote.delivery_score || 0) * weights[:delivery] +
+      (quote.quality_score || 0) * weights[:quality] +
+      (quote.service_score || 0) * weights[:service]
+    ) / 100.0
+    
+    quote.overall_score = quote.overall_score.round(0)
+    
+    quote
+  end
+  
+  # Update rankings for all quotes of an item
+  def recalculate_item_quotes!(rfq_item)
+    quotes = VendorQuote.where(rfq: @rfq, rfq_item: rfq_item)
+    
+    quotes.each do |quote|
+      calculate_scores!(quote)
+      
+      # Determine rankings
+      quote.is_lowest_price = (quotes.order(unit_price: :asc).first&.id == quote.id)
+      quote.is_fastest_delivery = (quotes.order(lead_time_days: :asc).first&.id == quote.id)
+      quote.is_best_value = (quotes.order(overall_score: :desc).first&.id == quote.id)
+      quote.is_recommended = quote.is_best_value
+      
+      # Set overall rank
+      ranked_quotes = quotes.order(overall_score: :desc).to_a
+      quote.overall_rank = ranked_quotes.index(quote) + 1
+      
+      quote.save!
+    end
+  end
+  
+  # Update RFQ supplier status
+  def update_rfq_supplier_status(supplier)
+    rfq_supplier = @rfq.rfq_suppliers.find_by(supplier: supplier)
+    return unless rfq_supplier
+    
+    # Count quotes from this supplier
+    quote_count = VendorQuote.where(rfq: @rfq, supplier: supplier).count
+    total_quoted = VendorQuote.where(rfq: @rfq, supplier: supplier).sum(:total_price)
+    
+    if quote_count > 0
+      rfq_supplier.update!(
+        invitation_status: 'QUOTED',
+        quoted_at: Time.current,
+        items_quoted_count: quote_count,
+        total_quoted_amount: total_quoted
+      )
+    else
+      rfq_supplier.update!(
+        invitation_status: 'INVITED',
+        quoted_at: nil,
+        items_quoted_count: 0,
+        total_quoted_amount: nil
+      )
+    end
+  end
+  
+  # Update RFQ counter caches
+  def update_rfq_counters!
+    @rfq.update!(
+      quotes_received_count: @rfq.vendor_quotes.count
+    )
+    
+    # Update status if needed
+    if @rfq.quotes_received_count > 0 && @rfq.sent?
+      @rfq.update!(status: 'RESPONSES_RECEIVED')
+    end
+  end
 end
 
 ============================================================================
@@ -3557,6 +5385,383 @@ class WorkOrdersController < ApplicationController
 end
 
 
+# ============ NAMESPACE: Customers ============
+
+============================================================================
+# FILE: activities_controller.rb
+# PATH: customers/activities_controller.rb
+============================================================================
+
+module Customers
+  class ActivitiesController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_customer
+    before_action :set_activity, only: [:edit, :update, :destroy, :complete, :reschedule]
+    
+    def new
+      @activity = @customer.activities.build()
+      @contacts = @customer.contacts.active
+      respond_to do |format|
+        format.html { render partial: "customers/activities/form", locals: { customer: @customer, activity: @activity, contacts: @contacts }, layout: false }
+      end
+    end
+    
+    # POST /customers/:customer_id/activities
+    def create
+      @activity = @customer.activities.build(activity_params)
+      @activity.related_user = current_user
+      @activity.created_by = current_user
+      
+      respond_to do |format|
+        if @activity.save
+          format.html { redirect_to @customer, notice: "Activity added successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # GET /customers/:customer_id/activities/:id/edit
+    def edit
+      @contacts = @customer.contacts.active
+      render partial: "customers/activities/form", locals: { customer: @customer, activity: @activity, contacts: @contacts }
+    end
+    
+    # PATCH /customers/:customer_id/activities/:id
+    def update
+      respond_to do |format|
+        if @activity.update(activity_params)
+          format.html { redirect_to @customer, notice: "Activity updated successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # DELETE /customers/:customer_id/activities/:id
+    def destroy
+      @activity.destroy!
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Activity deleted successfully." }
+      end
+    end
+
+    # GET /customers/:customer_id/activities
+    def index
+      @activities = @customer.activities.order(activity_date: :desc).page(params[:page]).per(20)
+      
+      respond_to do |format|
+        format.html { render partial: "customers/activities/list", locals: { activities: @activities } }
+        format.json { render json: @activities }
+      end
+    end
+    
+    
+    # POST /customers/:customer_id/activities/:id/complete
+    def complete
+      @activity.mark_completed!(params[:outcome], params[:notes])
+      render json: { success: true, message: "Activity marked as completed" }
+    end
+    
+    # POST /customers/:customer_id/activities/:id/reschedule
+    def reschedule
+      @activity.reschedule!(params[:new_date])
+      render json: { success: true, message: "Activity rescheduled" }
+    end
+    
+    private
+    
+    def set_customer
+      @customer = Customer.non_deleted.find(params[:customer_id])
+    end
+    
+    def set_activity
+      @activity = @customer.activities.find(params[:id])
+    end
+    
+    def activity_params
+      params.require(:customer_activity).permit(
+        :customer_contact_id, :activity_type, :activity_status, :subject, :description,
+        :activity_date, :duration_minutes, :outcome, :next_action,
+        :followup_date, :followup_required, :communication_method, :direction,
+        :customer_sentiment, :priority, :category, tags: []
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: addresses_controller.rb
+# PATH: customers/addresses_controller.rb
+============================================================================
+
+module Customers
+  class AddressesController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_customer
+    before_action :set_address, only: [:edit, :update, :destroy, :make_default]
+    
+    # GET /customers/:customer_id/addresses/new
+    def new
+      @address = @customer.addresses.build(is_active: true)
+      
+      respond_to do |format|
+        format.html { render partial: "customers/addresses/form", locals: { customer: @customer, address: @address }, layout: false }
+      end
+    end
+    
+    # POST /customers/:customer_id/addresses
+    def create
+      @address = @customer.addresses.build(address_params)
+      @address.created_by = current_user
+      
+      respond_to do |format|
+        if @address.save
+          format.html { redirect_to @customer, notice: "Address added successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # GET /customers/:customer_id/addresses/:id/edit
+    def edit
+      respond_to do |format|
+        format.html { render partial: "customers/addresses/form", locals: { customer: @customer, address: @address }, layout: false }
+      end
+    end
+    
+    # PATCH /customers/:customer_id/addresses/:id
+    def update
+      respond_to do |format|
+        if @address.update(address_params)
+          format.html { redirect_to @customer, notice: "Address updated successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # DELETE /customers/:customer_id/addresses/:id
+    def destroy
+      @address.destroy!
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Address deleted successfully." }
+      end
+    end
+    
+    # POST /customers/:customer_id/addresses/:id/make_default
+    def make_default
+      @address.make_default!
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Set as default address." }
+      end
+    end
+    
+    private
+    
+    def set_customer
+      @customer = Customer.non_deleted.find(params[:customer_id])
+    end
+    
+    def set_address
+      @address = @customer.addresses.find(params[:id])
+    end
+    
+    def address_params
+      params.require(:customer_address).permit(
+        :address_type, :address_label, :is_default, :is_active,
+        :attention_to, :contact_phone, :contact_email,
+        :street_address_1, :street_address_2, :city, :state_province,
+        :postal_code, :country, :delivery_instructions, :dock_gate_info,
+        :delivery_hours, :residential_address, :requires_appointment, :access_code
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: contacts_controller.rb
+# PATH: customers/contacts_controller.rb
+============================================================================
+
+module Customers
+  class ContactsController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_customer
+    before_action :set_contact, only: [:edit, :update, :destroy, :make_primary]
+    
+    # GET /customers/:customer_id/contacts/new
+    def new
+      @contact = @customer.contacts.build(is_active: true)
+      respond_to do |format|
+        format.html { render partial: "customers/contacts/form", locals: { customer: @customer, contact: @contact }, layout: false }
+      end
+    end
+    
+    # POST /customers/:customer_id/contacts
+    def create
+      @contact = @customer.contacts.build(contact_params)
+      @contact.created_by = current_user
+      
+      respond_to do |format|
+        if @contact.save
+          format.html { redirect_to @customer, notice: "Contact added successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # GET /customers/:customer_id/contacts/:id/edit
+    def edit
+      respond_to do |format|
+        format.html { render partial: "customers/contacts/form", locals: { customer: @customer, contact: @contact }, layout: false }
+      end
+    end
+    
+    # PATCH /customers/:customer_id/contacts/:id
+    def update
+      respond_to do |format|
+        if @contact.update(contact_params)
+          format.html { redirect_to @customer, notice: "Contact updated successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # DELETE /customers/:customer_id/contacts/:id
+    def destroy
+      @contact.destroy!
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Contact deleted successfully." }
+      end
+    end
+    
+    # POST /customers/:customer_id/contacts/:id/make_primary
+    def make_primary
+      @contact.make_primary!
+      render json: { success: true, message: "Set as primary contact" }
+    end
+    
+    private
+    
+    def set_customer
+      @customer = Customer.non_deleted.find(params[:customer_id])
+    end
+    
+    def set_contact
+      @contact = @customer.contacts.find(params[:id])
+    end
+    
+    def contact_params
+      params.require(:customer_contact).permit(
+        :first_name, :last_name, :title, :department, :contact_role,
+        :is_primary_contact, :is_decision_maker, :is_active,
+        :email, :phone, :mobile, :fax, :extension,
+        :linkedin_url, :skype_id, :preferred_contact_method,
+        :contact_notes, :receive_order_confirmations, :receive_shipping_notifications,
+        :receive_invoice_copies, :receive_marketing_emails,
+        :birthday, :anniversary, :personal_notes
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: documents_controller.rb
+# PATH: customers/documents_controller.rb
+============================================================================
+
+module Customers
+  class DocumentsController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_customer
+    before_action :set_document, only: [:edit, :update, :destroy, :download]
+    
+    def new
+      @document = @customer.documents.build(is_active: true)
+      respond_to do |format|
+        format.html { render partial: "customers/documents/form", locals: { customer: @customer, document: @document }, layout: false }
+      end
+    end
+    
+    # POST /customers/:customer_id/documents
+    def create
+      @document = @customer.documents.build(document_params)
+      @document.created_by = current_user
+      
+      respond_to do |format|
+        if @document.save
+          format.html { redirect_to @customer, notice: "Document added successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # GET /customers/:customer_id/documents/:id/edit
+    def edit
+      respond_to do |format|
+        format.html { render partial: "customers/documents/form", locals: { customer: @customer, document: @document }, layout: false }
+      end
+    end
+    
+    # PATCH /customers/:customer_id/documents/:id
+    def update
+      respond_to do |format|
+        if @document.update(document_params)
+          format.html { redirect_to @customer, notice: "Document updated successfully." }
+        else
+          format.html {  }
+        end
+      end
+    end
+    
+    # DELETE /customers/:customer_id/documents/:id
+    def destroy
+      @document.destroy!
+      
+      respond_to do |format|
+        format.html { redirect_to @customer, notice: "Document deleted successfully." }
+      end
+    end
+
+    # GET /customers/:customer_id/documents/:id/download
+    def download
+      if @document.file.attached?
+        redirect_to rails_blob_path(@document.file, disposition: "attachment")
+      else
+        redirect_to customer_path(@customer), alert: "File not found"
+      end
+    end
+    
+    private
+    
+    def set_customer
+      @customer = Customer.non_deleted.find(params[:customer_id])
+    end
+    
+    def set_document
+      @document = @customer.documents.find(params[:id])
+    end
+    
+    def document_params
+      params.require(:customer_document).permit(
+        :document_type, :document_category, :document_title, :description,
+        :effective_date, :expiry_date, :requires_renewal, :renewal_reminder_days,
+        :version, :is_confidential, :customer_can_view, :notes, :file
+      )
+    end
+  end
+end
+
+
 # ============ NAMESPACE: Inventory ============
 
 module Inventory
@@ -4896,6 +7101,582 @@ module Inventory
 
 
 end
+
+# ============ NAMESPACE: Suppliers ============
+
+============================================================================
+# FILE: activities_controller.rb
+# PATH: suppliers/activities_controller.rb
+============================================================================
+
+module Suppliers
+  class ActivitiesController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_supplier
+    before_action :set_activity, only: [:edit, :update, :destroy, :complete]
+    
+    def new
+      @activity = @supplier.activities.build(
+        activity_date: Time.current,
+        activity_status: 'COMPLETED',
+        priority: 'NORMAL'
+      )
+      @contacts = @supplier.contacts.active
+    end
+    
+    def create
+      @activity = @supplier.activities.build(activity_params)
+      @activity.related_user = current_user
+      @activity.created_by = current_user
+      
+      if @activity.save
+        redirect_to @supplier, notice: "Contact was successfully created."
+      else
+        render :new, status: :unprocessable_entity
+      end
+    end
+    
+    def edit
+      @contacts = @supplier.contacts.active
+      
+    end
+    
+    def update
+      if @activity.update(activity_params)
+        redirect_to @supplier, notice: "Activity was successfully updated."
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+    
+    def destroy
+      @activity.destroy!
+      rredirect_to @supplier, notice: 'Activity deleted successfully'
+    end
+    
+    def complete
+      @activity.mark_completed!(params[:outcome], current_user)
+      redirect_to @supplier, notice: 'Activity marked as completed'
+    end
+    
+    private
+    
+    def set_supplier
+      @supplier = Supplier.non_deleted.find(params[:supplier_id])
+    end
+    
+    def set_activity
+      @activity = @supplier.activities.find(params[:id])
+    end
+    
+    def activity_params
+      params.require(:supplier_activity).permit(
+        :supplier_contact_id, :activity_type, :activity_status, :subject,
+        :description, :activity_date, :duration_minutes, :outcome,
+        :action_items, :next_steps, :followup_required, :followup_date,
+        :communication_method, :direction, :supplier_sentiment,
+        :priority, :category, tags: []
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: addresses_controller.rb
+# PATH: suppliers/addresses_controller.rb
+============================================================================
+
+module Suppliers
+  class AddressesController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_supplier
+    before_action :set_address, only: [:edit, :update, :destroy, :make_default]
+    
+    def new
+      @address = @supplier.addresses.build(is_active: true)
+    end
+    
+    def create
+      @address = @supplier.addresses.build(address_params)
+      @address.created_by = current_user
+      
+      respond_to do |format|
+        if @address.save
+          format.html { redirect_to @supplier, notice: "Address was successfully created." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    def edit
+      
+    end
+    
+    def update
+      respond_to do |format|
+        if @address.update(address_params)
+          format.html { redirect_to @supplier, notice: "Address was successfully updated." }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    def destroy
+      @address.destroy!
+      render json: { success: true, message: 'Address deleted successfully' }
+    end
+
+    def make_default
+      @address.make_default!
+      render json: { success: true, message: 'Address marked as default successfully' }
+    end
+    
+    private
+    
+    def set_supplier
+      @supplier = Supplier.non_deleted.find(params[:supplier_id])
+    end
+    
+    def set_address
+      @address = @supplier.addresses.find(params[:id])
+    end
+    
+    def address_params
+      params.require(:supplier_address).permit(
+        :address_type, :address_label, :is_default, :is_active,
+        :attention_to, :street_address_1, :street_address_2,
+        :city, :state_province, :postal_code, :country,
+        :contact_phone, :contact_email, :contact_fax,
+        :operating_hours, :receiving_hours, :shipping_instructions,
+        :special_instructions, :dock_gate_info, :requires_appointment,
+        :access_code, :facility_size_sqft, :warehouse_capacity_pallets,
+        equipment_available: [], certifications_at_location: []
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: contacts_controller.rb
+# PATH: suppliers/contacts_controller.rb
+============================================================================
+
+module Suppliers
+  class ContactsController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_supplier
+    before_action :set_contact, only: [:edit, :update, :destroy, :make_primary]
+    
+    def new
+      @contact = @supplier.contacts.build(is_active: true)
+    end
+    
+    def create
+      @contact = @supplier.contacts.build(contact_params)
+      @contact.created_by = current_user
+      
+      respond_to do |format|
+        if @contact.save
+          format.html { redirect_to @supplier, notice: "Contact was successfully created." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    def edit
+      
+    end
+    
+    def update
+      respond_to do |format|
+        if @contact.update(contact_params)
+          format.html { redirect_to @supplier, notice: "Contact was successfully updated." }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    def destroy
+      @contact.destroy!
+      render json: { success: true, message: 'Contact deleted successfully' }
+    end
+    
+    def make_primary
+      @contact.make_primary!
+      redirect_to @supplier, notice: 'Set as primary contact'
+    end
+    
+    private
+    
+    def set_supplier
+      @supplier = Supplier.non_deleted.find(params[:supplier_id])
+    end
+    
+    def set_contact
+      @contact = @supplier.contacts.find(params[:id])
+    end
+    
+    def contact_params
+      params.require(:supplier_contact).permit(
+        :first_name, :last_name, :title, :department, :contact_role,
+        :is_primary_contact, :is_decision_maker, :is_escalation_contact,
+        :is_after_hours_contact, :is_active, :email, :phone, :mobile,
+        :fax, :extension, :direct_line, :skype_id, :linkedin_url,
+        :wechat_id, :whatsapp_number, :preferred_contact_method,
+        :receive_pos, :receive_rfqs, :receive_quality_alerts,
+        :receive_payment_confirmations, :receive_general_updates,
+        :communication_notes, :working_hours, :timezone,
+        :birthday, :anniversary, :personal_notes, :professional_notes,
+        languages_spoken: []
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: documents_controller.rb
+# PATH: suppliers/documents_controller.rb
+============================================================================
+
+module Suppliers
+  class DocumentsController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_supplier
+    before_action :set_document, only: [:show, :edit, :update, :destroy, :download, :preview]
+    
+    # GET /suppliers/:supplier_id/documents
+    def index
+      @documents = @supplier.documents
+                           .order(created_at: :desc)
+      
+      # Filter by document type
+      if params[:document_type].present?
+        @documents = @documents.where(document_type: params[:document_type])
+      end
+      
+      # Filter by active/expired
+      if params[:status] == 'expired'
+        @documents = @documents.where('expiry_date < ?', Date.current)
+      elsif params[:status] == 'expiring_soon'
+        @documents = @documents.where('expiry_date <= ?', 30.days.from_now)
+                              .where('expiry_date >= ?', Date.current)
+      elsif params[:status] == 'active'
+        @documents = @documents.where(is_active: true)
+      end
+      
+      respond_to do |format|
+        format.html
+        format.json { render json: @documents }
+      end
+    end
+
+    # GET /suppliers/:supplier_id/documents/new
+    def new
+      @supplier_document = @supplier.documents.build(
+        effective_date: Date.current,
+        is_active: true,
+        renewal_reminder_days: 30
+      )
+    end
+    
+    # POST /suppliers/:supplier_id/documents
+    def create
+      @supplier_document = @supplier.documents.build(document_params)
+      @supplier_document.created_by = current_user
+      
+      respond_to do |format|
+        if @supplier_document.save
+          format.html { redirect_to @supplier, notice: "Document was successfully created." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    # GET /suppliers/:supplier_id/documents/:id
+    def show
+      respond_to do |format|
+        format.html { render partial: 'suppliers/documents/show', 
+                             locals: { supplier: @supplier, document: @supplier_document }, 
+                             layout: false }
+        format.json { render json: @supplier_document }
+      end
+    end
+    
+    # GET /suppliers/:supplier_id/documents/:id/edit
+    def edit
+    end
+    
+    # PATCH/PUT /suppliers/:supplier_id/documents/:id
+    def update
+      @supplier_document.uploaded_by = current_user
+      if @supplier_document.update(document_params)
+        redirect_to @supplier, notice: "Document was successfully updated." 
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+    
+    # DELETE /suppliers/:supplier_id/documents/:id
+    def destroy
+      @supplier_document.destroy!
+      
+      render json: { 
+        success: true, 
+        message: 'Document deleted successfully' 
+      }
+    end
+    
+    # GET /suppliers/:supplier_id/documents/:id/download
+    def download
+      if @supplier_document.document.attached?
+        redirect_to rails_blob_path(@supplier_document.document, disposition: "attachment")
+      else
+        render json: { 
+          success: false, 
+          message: 'Document file not found' 
+        }, status: :not_found
+      end
+    end
+    
+    # GET /suppliers/:supplier_id/documents/:id/preview
+    def preview
+      if @supplier_document.document.attached?
+        redirect_to rails_blob_path(@supplier_document.document, disposition: "inline")
+      else
+        render json: { 
+          success: false, 
+          message: 'Document file not found' 
+        }, status: :not_found
+      end
+    end
+    
+    private
+    
+    def set_supplier
+      @supplier = Supplier.non_deleted.find(params[:supplier_id])
+    end
+    
+    def set_document
+      @supplier_document = @supplier.documents.find(params[:id])
+    end
+    
+    def document_params
+      params.require(:supplier_document).permit(
+        :document,
+        :document_title,
+        :document_type,
+        :document_category,
+        :document_number,
+        :version,
+        :effective_date,
+        :expiry_date,
+        :renewal_date,
+        :renewal_reminder_days,
+        :is_active,
+        :requires_renewal,
+        :is_confidential,
+        :issuing_authority,
+        :description,
+        :notes,
+        :file,
+        :document_number,
+        :renewal_date,
+        :issuing_authority,
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: products_controller.rb
+# PATH: suppliers/products_controller.rb
+============================================================================
+
+module Suppliers
+  class ProductsController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_supplier
+    before_action :set_product_supplier, only: [:edit, :update, :destroy, :update_price]
+    
+    def index
+      @product_suppliers = @supplier.product_catalog.includes(:product)
+      respond_to do |format|
+        format.html
+        format.json { render json: @product_suppliers }
+      end
+    end
+
+
+    def create
+      @product_supplier = @supplier.product_suppliers.build(product_supplier_params)
+      @product_supplier.created_by = current_user
+      @product_supplier.first_purchase_date = Date.current
+      
+      if @product_supplier.save
+        redirect_to @supplier, notice: "Product added to catalog."
+      else
+        render :new, status: :unprocessable_entity
+      end
+    end
+    
+    def edit
+      
+    end
+    
+    def new
+      @product_supplier = @supplier.product_suppliers.build
+      @available_products = Product.where.not(id: @supplier.products.pluck(:id))
+    end
+    
+    
+    def update
+      if @product_supplier.update(product_supplier_params)
+        redirect_to @supplier, notice: "Product updated!"
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+    
+    def destroy
+      @product_supplier.destroy!
+      render json: { success: true, message: 'Product removed from catalog' }
+    end
+    
+    def update_price
+      new_price = params[:new_price].to_f
+      effective_date = params[:effective_date]&.to_date || Date.current
+      
+      @product_supplier.update_price!(new_price, effective_date)
+      render json: { success: true, message: 'Price updated successfully' }
+    end
+    
+    private
+    
+    def set_supplier
+      @supplier = Supplier.non_deleted.find(params[:supplier_id])
+    end
+    
+    def set_product_supplier
+      @product_supplier = @supplier.product_suppliers.find(params[:id])
+    end
+    
+    def product_supplier_params
+      params.require(:product_supplier).permit(
+        :product_id, :supplier_item_code, :supplier_item_description,
+        :manufacturer_part_number, :current_unit_price, :price_uom,
+        :price_effective_date, :price_expiry_date, :lead_time_days,
+        :minimum_order_quantity, :maximum_order_quantity, :order_multiple,
+        :packaging_type, :units_per_package, :available_for_order,
+        :quality_rating, :is_preferred_supplier, :supplier_rank,
+        :is_approved_supplier, :is_sole_source, :is_strategic_item,
+        :sourcing_strategy, :requires_quality_cert, :requires_coc,
+        :requires_msds, :buyer_notes, :quality_notes, :engineering_notes,
+        :contract_reference, :contract_expiry_date, :is_active,
+        :price_break_1_qty, :price_break_1_price,
+        :price_break_2_qty, :price_break_2_price,
+        :price_break_3_qty, :price_break_3_price
+      )
+    end
+  end
+end
+
+============================================================================
+# FILE: quality_issues_controller.rb
+# PATH: suppliers/quality_issues_controller.rb
+============================================================================
+
+module Suppliers
+  class QualityIssuesController < ApplicationController
+    before_action :authenticate_user!
+    before_action :set_supplier
+    before_action :set_quality_issue, only: [:edit, :update, :resolve, :close]
+    
+    def index
+      @quality_issues = @supplier.quality_issues.order(issue_date: :desc).page(params[:page])
+    end
+    
+    def new
+      @quality_issue = @supplier.quality_issues.build(
+        issue_date: Date.current,
+        severity: 'MAJOR',
+        status: 'OPEN'
+      )
+    end
+    
+    def create
+      @quality_issue = @supplier.quality_issues.build(quality_issue_params)
+      @quality_issue.reported_by = current_user
+      @quality_issue.created_by = current_user
+      
+      respond_to do |format|
+        if @quality_issue.save
+          format.html { redirect_to @supplier, notice: "Quality issue logged." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    def edit
+      
+    end
+    
+    def update
+      respond_to do |format|
+        if @quality_issue.update(quality_issue_params)
+          format.html { redirect_to @supplier, notice: "Contact was successfully updated." }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+        end
+      end
+    end
+    
+    def destroy
+      @contact.destroy!
+      render json: { success: true, message: 'Contact deleted successfully' }
+    end
+
+    def resolve
+      @quality_issue.mark_resolved!(params[:resolution_notes], current_user)
+      render json: { success: true, message: 'Quality issue marked as resolved' }
+    end
+    
+    def close
+      @quality_issue.close!(current_user)
+      render json: { success: true, message: 'Quality issue closed' }
+    end
+    
+    private
+    
+    def set_supplier
+      @supplier = Supplier.non_deleted.find(params[:supplier_id])
+    end
+    
+    def set_quality_issue
+      @quality_issue = @supplier.quality_issues.find(params[:id])
+    end
+    
+    def quality_issue_params
+      params.require(:supplier_quality_issue).permit(
+        :product_id, :issue_title, :issue_description, :issue_type,
+        :severity, :issue_date, :detected_date, :quantity_affected,
+        :quantity_rejected, :quantity_reworked, :quantity_returned,
+        :financial_impact, :credit_requested, :credit_amount,
+        :status, :root_cause_analysis, :corrective_action_taken,
+        :preventive_action_taken, :supplier_response, :is_repeat_issue,
+        :related_issue_id, :requires_audit, :quality_team_notes,
+        :purchasing_team_notes, :related_po_number, :lot_batch_number, 
+        :root_cause_category, :expected_resolution_date, :supplier_notified
+      )
+    end
+  end
+end
+
 
 
 # ============ END OF COMBINED CONTROLLERS FILE ============

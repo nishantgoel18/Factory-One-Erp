@@ -1,0 +1,349 @@
+<%# app/views/customers/index.html.erb %>
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">RFQs</h2>
+
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <%= link_to raw('<i class="anticon anticon-home m-r-5"></i>Home'), root_path, class: "breadcrumb-item" %>
+        <%= link_to "Masters", "#", class: "breadcrumb-item" %>
+        <span class="breadcrumb-item active">RFQs</span>
+      </nav>
+    </div>
+  </div>
+<!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-file-earmark-text me-2 text-primary"></i>
+        Request for Quotes (RFQ)
+      </h2>
+      <p class="text-muted mb-0">Manage supplier quote requests and comparisons</p>
+    </div>
+    <div>
+      <%= link_to new_rfq_path, class: 'btn btn-primary btn-lg' do %>
+        <i class="bi bi-plus-circle me-1"></i>New RFQ
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Statistics Cards -->
+  <div class="row g-3 mb-4">
+
+    <!-- Total RFQs -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-blue">
+              <i class="fa fa-file"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @stats[:total] %></h2>
+              <p class="m-b-0 text-muted">Total RFQs</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Draft RFQs -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-cyan">
+              <i class="fa fa-edit"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @stats[:draft] %></h2>
+              <p class="m-b-0 text-muted">Draft</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active RFQs -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-gold">
+              <i class="fa fa-hourglass-half"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @stats[:active] %></h2>
+              <p class="m-b-0 text-muted">Active</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Awarded RFQs -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-green">
+              <i class="fa fa-trophy"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @stats[:awarded] %></h2>
+              <p class="m-b-0 text-muted">Awarded</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <!-- Filters Section -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <%= form_with url: rfqs_path, method: :get, class: 'row g-3', id: 'filterForm' do |f| %>
+        
+        <!-- Search -->
+        <div class="col-md-4">
+          <%= f.label :search, 'Search RFQ', class: 'form-label' %>
+          <%= f.text_field :search, 
+              value: params[:search],
+              class: 'form-control', 
+              placeholder: 'RFQ Number or Title' %>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="col-md-3">
+          <%= f.label :status, 'Status', class: 'form-label' %>
+          <%= f.select :status,
+              options_for_select([
+                ['All Statuses', ''],
+                ['Draft', 'DRAFT'],
+                ['Sent', 'SENT'],
+                ['Responses Received', 'RESPONSES_RECEIVED'],
+                ['Under Review', 'UNDER_REVIEW'],
+                ['Awarded', 'AWARDED'],
+                ['Closed', 'CLOSED'],
+                ['Cancelled', 'CANCELLED']
+              ], params[:status]),
+              {},
+              { class: 'form-control' } %>
+        </div>
+        
+        <!-- Urgent Filter -->
+        <div class="col-md-2">
+          <%= f.label :urgent, 'Priority', class: 'form-label' %>
+          <%= f.select :urgent,
+              options_for_select([
+                ['All', ''],
+                ['Urgent Only', 'true']
+              ], params[:urgent]),
+              {},
+              { class: 'form-control' } %>
+        </div>
+        
+        <!-- My RFQs Filter -->
+        <div class="col-md-2">
+          <%= f.label :my_rfqs, 'Filter', class: 'form-label' %>
+          <%= f.select :my_rfqs,
+              options_for_select([
+                ['All RFQs', ''],
+                ['My RFQs Only', 'true']
+              ], params[:my_rfqs]),
+              {},
+              { class: 'form-control' } %>
+        </div>
+        
+        <!-- Filter Buttons -->
+        <div class="col-md-1 d-flex align-items-end">
+          <%= f.submit 'Filter', class: 'btn btn-primary w-100' %>
+        </div>
+        
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- RFQ Table -->
+  <div class="card">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>RFQ Number</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th class="text-center">Items</th>
+              <th class="text-center">Suppliers</th>
+              <th class="text-center">Quotes</th>
+              <th>Created</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @rfqs.any? %>
+              <% @rfqs.each do |rfq| %>
+                <tr>
+                  <!-- RFQ Number -->
+                  <td>
+                    <%= link_to rfq_path(rfq), class: 'text-decoration-none fw-bold' do %>
+                      <%= rfq.rfq_number %>
+                    <% end %>
+                    <% if rfq.is_urgent? %>
+                      <span class="badge bg-danger ms-1">URGENT</span>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Title -->
+                  <td>
+                    <%= truncate(rfq.title, length: 50) %>
+                    <% if rfq.is_overdue? %>
+                      <br><small class="text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Overdue by <%= (Date.current - rfq.response_deadline).to_i %> days
+                      </small>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Status -->
+                  <td>
+                    <span class="badge <%= rfq_status_badge_class(rfq.status) %>">
+                      <%= rfq.status %>
+                    </span>
+                  </td>
+                  
+                  <!-- Due Date -->
+                  <td>
+                    <%= rfq.response_deadline.strftime('%b %d, %Y') %>
+                    <% if rfq.days_until_deadline && rfq.days_until_deadline > 0 %>
+                      <br><small class="text-muted">
+                        <%= rfq.days_until_deadline %> days left
+                      </small>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Items Count -->
+                  <td class="text-center">
+                    <span class="badge bg-info text-white">
+                      <%= rfq.rfq_items.count %>
+                    </span>
+                  </td>
+                  
+                  <!-- Suppliers Count -->
+                  <td class="text-center">
+                    <span class="badge bg-secondary">
+                      <%= rfq.suppliers_invited_count || 0 %>
+                    </span>
+                  </td>
+                  
+                  <!-- Quotes Count -->
+                  <td class="text-center">
+                    <span class="badge <%= rfq.quotes_received_count > 0 ? 'bg-success' : 'bg-warning' %>">
+                      <%= rfq.quotes_received_count || 0 %> / <%= rfq.suppliers_invited_count || 0 %>
+                    </span>
+                  </td>
+                  
+                  <!-- Created Date -->
+                  <td>
+                    <%= rfq.created_at.strftime('%b %d, %Y') %>
+                    <% if rfq.created_by %>
+                      <br><small class="text-muted">by <%= rfq.created_by.full_name %></small>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Actions -->
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                      <%= link_to rfq_path(rfq), class: 'btn btn-outline-primary', title: 'View' do %>
+                        <i class="anticon anticon-eye"></i>
+                      <% end %>
+                      
+                      <% if rfq.draft? %>
+                        <%= link_to edit_rfq_path(rfq), class: 'btn btn-outline-secondary', title: 'Edit' do %>
+                          <i class="anticon anticon-edit"></i>
+                        <% end %>
+                      <% end %>
+                      
+                      <% if !rfq.can_be_sent? %>
+                        <%= button_to send_to_suppliers_rfq_path(rfq), 
+                            method: :post,
+                            class: 'btn btn-outline-success btn-sm',
+                            title: 'Send to Suppliers',
+                            data: { confirm: 'Send this RFQ to all invited suppliers?' } do %>
+                          <i class="anticon anticon-message"></i>
+                        <% end %>
+                      <% end %>
+                      
+                      <% if rfq.quotes_received_count > 0 %>
+                        <%= link_to comparison_rfq_path(rfq), class: 'btn btn-outline-info', title: 'Compare Quotes' do %>
+                          <i class="anticon anticon-bar-chart"></i>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="9" class="text-center py-5">
+                  <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                  <p class="text-muted mb-0">No RFQs found</p>
+                  <% if params[:search].present? || params[:status].present? %>
+                    <%= link_to 'Clear Filters', rfqs_path, class: 'btn btn-sm btn-outline-primary mt-2' %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Pagination -->
+    <% if @rfqs.any? %>
+      <div class="card-footer bg-white border-top">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted">
+            Showing <%= @rfqs.offset_value + 1 %> to 
+            <%= [@rfqs.offset_value + @rfqs.length, @rfqs.total_count].min %> 
+            of <%= @rfqs.total_count %> RFQs
+          </div>
+          <%= paginate @rfqs %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  
+</div>
+
+<% content_for :head do %>
+<% end %>
+
+<script>
+  // Auto-submit filter form on select change
+  document.querySelectorAll('#filterForm select').forEach(select => {
+    select.addEventListener('change', function() {
+      document.getElementById('filterForm').submit();
+    });
+  });
+  
+  // Helper function for status badge colors
+  function rfq_status_badge_class(status) {
+    const classes = {
+      'DRAFT': 'bg-secondary',
+      'SENT': 'bg-primary',
+      'RESPONSES_RECEIVED': 'bg-info',
+      'UNDER_REVIEW': 'bg-warning',
+      'AWARDED': 'bg-success',
+      'CLOSED': 'bg-dark',
+      'CANCELLED': 'bg-danger'
+    };
+    return classes[status] || 'bg-secondary';
+  }
+</script>

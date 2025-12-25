@@ -1,0 +1,47 @@
+<%= simple_form_for @contact do |f| %>
+<%= render 'layouts/error_messages', object: @contact %>
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :first_name, required: true %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :last_name, required: true %>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :title, label: 'Job Title' %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :contact_role, required: true,
+          collection: [
+            ['Primary Contact', 'PRIMARY'],
+            ['Sales', 'SALES'],
+            ['Accounts Payable', 'ACCOUNTS_PAYABLE'],
+            ['Technical', 'TECHNICAL'],
+            ['Management', 'MANAGEMENT']
+          ],
+          selected: 'PRIMARY', input_html: {class: 'form-control'} %>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <%= f.input :email, required: true,
+          input_html: { type: 'email' } %>
+    </div>
+    <div class="col-md-6">
+      <%= f.input :phone, required: true %>
+    </div>
+  </div>
+  <div class="row mt-1">
+    <div class="col">
+      <div class="d-flex justify-content-between">
+        <%= f.button :submit, 'Save Contact', class: 'btn btn-primary' %>
+      </div>
+    </div>
+  </div>
+  <%= f.input :is_primary_contact, as: :hidden, input_html: { value: true } %>
+  <%= f.input :is_active, as: :hidden, input_html: { value: true } %>
+<% end %>

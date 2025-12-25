@@ -1,0 +1,80 @@
+<!-- ========================================================================== -->
+<!-- RFQ CONVERSION BUTTON PARTIAL                                            -->
+<!-- Location: app/views/rfqs/_conversion_button.html.erb                     -->
+<!-- Usage: Add this to your RFQ show page header actions                     -->
+<!-- ========================================================================== -->
+
+<% if @rfq.can_convert_to_po? %>
+  <%= link_to new_rfq_conversion_path(@rfq), 
+      class: "btn btn-success btn-lg shadow-sm" do %>
+    <i class="bi bi-arrow-right-circle"></i>
+    <strong>Convert to Purchase Order</strong>
+    <% if @rfq.items_by_supplier.keys.count > 1 %>
+      <span class="badge bg-white text-success ms-1">
+        <%= @rfq.items_by_supplier.keys.count %> POs
+      </span>
+    <% end %>
+  <% end %>
+
+<% elsif @rfq.converted_to_po? %>
+  <!-- Already Converted -->
+  <div class="alert alert-success mb-0 py-2">
+    <i class="bi bi-check-circle-fill"></i>
+    <strong>Converted to Purchase Order</strong>
+    <br>
+    <small class="d-block mt-1">
+      <% if @rfq.po_numbers.present? %>
+        PO Number<%= @rfq.po_numbers.include?(',') ? 's' : '' %>: 
+        <% @rfq.po_numbers.split(',').each do |po_num| %>
+          <% po = PurchaseOrder.find_by(po_number: po_num.strip) %>
+          <% if po %>
+            <%= link_to po_num.strip, inventory_purchase_order_path(po), 
+                class: "badge bg-white text-success text-decoration-none" %>
+          <% else %>
+            <span class="badge bg-white text-success"><%= po_num.strip %></span>
+          <% end %>
+        <% end %>
+      <% end %>
+      
+      <% if @rfq.conversion_date.present? %>
+        on <%= @rfq.conversion_date.strftime('%b %d, %Y') %>
+      <% end %>
+    </small>
+  </div>
+
+<% elsif @rfq.status != 'AWARDED' %>
+  <!-- Not Yet Awarded -->
+  <button type="button" class="btn btn-secondary" disabled>
+    <i class="bi bi-arrow-right-circle"></i>
+    Convert to Purchase Order
+  </button>
+  <small class="text-muted d-block mt-1">
+    <i class="bi bi-info-circle"></i>
+    RFQ must be AWARDED before conversion
+  </small>
+
+<% elsif @rfq.selected_items.empty? %>
+  <!-- No Items Selected -->
+  <button type="button" class="btn btn-secondary" disabled>
+    <i class="bi bi-arrow-right-circle"></i>
+    Convert to Purchase Order
+  </button>
+  <small class="text-muted d-block mt-1">
+    <i class="bi bi-exclamation-triangle"></i>
+    No items have been selected/awarded
+  </small>
+
+<% end %>
+
+<!-- Info Alert for Multi-Supplier RFQs -->
+<% if @rfq.can_convert_to_po? && @rfq.items_by_supplier.keys.count > 1 %>
+  <div class="alert alert-info mt-2 mb-0 py-2">
+    <small>
+      <i class="bi bi-info-circle"></i>
+      This RFQ has items awarded to <strong><%= @rfq.items_by_supplier.keys.count %></strong> different suppliers. 
+      Separate Purchase Orders will be created for each supplier.
+    </small>
+  </div>
+<% end %>
+
+<br />

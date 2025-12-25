@@ -1,7 +1,7 @@
 # ==========================================
 # All Rails Models - Merged for AI Context
-# Generated: 2025-12-08 01:09:28 +0530
-# Total Models: 37
+# Generated: 2025-12-24 16:14:19 +0530
+# Total Models: 52
 # ==========================================
 
 
@@ -253,18 +253,82 @@ end
 # File: app/models/customer.rb
 # ============================================================
 
+# frozen_string_literal: true
+
+# ============================================================================
+# MODEL: Customer (Enhanced Enterprise Version)
+# ============================================================================
+# Complete customer management with addresses, contacts, documents, activities
+# Includes performance metrics, credit management, and CRM features
+# ============================================================================
+
 class Customer < ApplicationRecord
+  # ========================================
+  # ASSOCIATIONS
+  # ========================================
+  
+  # User relationships
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :last_modified_by, class_name: "User", optional: true
+  belongs_to :approved_by, class_name: "User", optional: true
+  belongs_to :default_sales_rep, class_name: "User", optional: true
+  
+  # System relationships
   belongs_to :default_tax_code, class_name: "TaxCode", optional: true
   belongs_to :default_ar_account, class_name: "Account", optional: true
-  belongs_to :default_sales_rep, class_name: "User", optional: true
   belongs_to :default_warehouse, class_name: "Warehouse", optional: true
-
+  
+  # Customer-specific relationships
+  has_many :addresses, 
+           -> { where(deleted: false).order(is_default: :desc, created_at: :desc) },
+           class_name: "CustomerAddress",
+           dependent: :destroy,
+           inverse_of: :customer
+           
+  has_many :contacts,
+           -> { where(deleted: false).order(is_primary_contact: :desc, created_at: :desc) },
+           class_name: "CustomerContact",
+           dependent: :destroy,
+           inverse_of: :customer
+           
+  has_many :documents,
+           -> { where(deleted: false).order(created_at: :desc) },
+           class_name: "CustomerDocument",
+           dependent: :destroy,
+           inverse_of: :customer
+           
+  has_many :activities,
+           -> { where(deleted: false).order(activity_date: :desc) },
+           class_name: "CustomerActivity",
+           dependent: :destroy,
+           inverse_of: :customer
+  
+  # Future integrations (uncomment when ready)
+  # has_many :sales_orders, dependent: :restrict_with_error
+  # has_many :invoices, dependent: :restrict_with_error
+  # has_many :quotes, dependent: :restrict_with_error
+  
+  # Nested attributes for inline management
+  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :contacts, allow_destroy: true, reject_if: :all_blank
+  
+  # ========================================
+  # CONSTANTS & ENUMS
+  # ========================================
+  
   CUSTOMER_TYPES = {
     "INDIVIDUAL" => "Individual",
     "BUSINESS"   => "Business",
     "GOVERNMENT" => "Government",
     "NON_PROFIT" => "Non-profit"
+  }.freeze
+  
+  CUSTOMER_CATEGORIES = {
+    "A" => "A - High Value",
+    "B" => "B - Medium Value",
+    "C" => "C - Low Value",
+    "NEW" => "New Customer",
+    "INACTIVE" => "Inactive"
   }.freeze
 
   PAYMENT_TERMS = {
@@ -273,7 +337,9 @@ class Customer < ApplicationRecord
     "NET_30"         => "Net 30",
     "NET_45"         => "Net 45",
     "NET_60"         => "Net 60",
-    "PREPAID"        => "Prepaid"
+    "NET_90"         => "Net 90",
+    "PREPAID"        => "Prepaid",
+    "COD"            => "Cash on Delivery"
   }.freeze
 
   FREIGHT_TERMS = {
@@ -286,36 +352,1087 @@ class Customer < ApplicationRecord
     "USD" => "US Dollar",
     "CAD" => "Canadian Dollar"
   }.freeze
+  
+  ACQUISITION_SOURCES = {
+    "REFERRAL"    => "Referral",
+    "MARKETING"   => "Marketing Campaign",
+    "COLD_CALL"   => "Cold Call",
+    "TRADE_SHOW"  => "Trade Show",
+    "WEBSITE"     => "Website Inquiry",
+    "PARTNER"     => "Partner Referral",
+    "OTHER"       => "Other"
+  }.freeze
+  
+  ORDER_FREQUENCIES = {
+    "DAILY"      => "Daily",
+    "WEEKLY"     => "Weekly",
+    "BI_WEEKLY"  => "Bi-Weekly",
+    "MONTHLY"    => "Monthly",
+    "QUARTERLY"  => "Quarterly",
+    "ANNUALLY"   => "Annually",
+    "AS_NEEDED"  => "As Needed"
+  }.freeze
+  
+  COMMUNICATION_METHODS = {
+    "EMAIL" => "Email",
+    "PHONE" => "Phone",
+    "BOTH"  => "Both"
+  }.freeze
 
-  # BASIC VALIDATIONS
-  validates :code, presence: true, uniqueness: true, length: { maximum: 20 }
+  # ========================================
+  # VALIDATIONS
+  # ========================================
+  
+  # Basic required fields
+  validates :code, presence: true, uniqueness: { case_sensitive: false }, length: { maximum: 20 }
   validates :full_name, presence: true, length: { maximum: 255 }
-
+  
+  # Email validations
   validates :email, :primary_contact_email, :secondary_contact_email,
             allow_blank: true,
-            format: { with: URI::MailTo::EMAIL_REGEXP }
-
-  validates :phone_number, :mobile, :primary_contact_phone, :secondary_contact_phone,
+            format: { with: URI::MailTo::EMAIL_REGEXP },
+            length: { maximum: 255 }
+  
+  # Phone validations
+  validates :phone_number, :mobile, :fax,
+            :primary_contact_phone, :secondary_contact_phone,
             allow_blank: true,
             length: { maximum: 20 }
-
+  
+  # Enum validations
   validates :customer_type, inclusion: { in: CUSTOMER_TYPES.keys }, allow_blank: true
+  validates :customer_category, inclusion: { in: CUSTOMER_CATEGORIES.keys }, allow_blank: true
   validates :payment_terms, inclusion: { in: PAYMENT_TERMS.keys }, allow_blank: true
   validates :freight_terms, inclusion: { in: FREIGHT_TERMS.keys }, allow_blank: true
   validates :default_currency, inclusion: { in: CURRENCIES.keys }
-
+  validates :customer_acquisition_source, inclusion: { in: ACQUISITION_SOURCES.keys }, allow_blank: true
+  validates :expected_order_frequency, inclusion: { in: ORDER_FREQUENCIES.keys }, allow_blank: true
+  validates :preferred_communication_method, inclusion: { in: COMMUNICATION_METHODS.keys }, allow_blank: true
+  
+  # Numeric validations
   validates :credit_limit, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :current_balance, numericality: true
-
-  scope :active,      -> { where(is_active: true, deleted: false) }
-
+  validates :available_credit, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :discount_percentage, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
+  validates :early_payment_discount, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
+  validates :annual_revenue_potential, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :on_time_payment_rate, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
+  validates :average_days_to_pay, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :returns_rate, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
+  
+  # String length validations
+  validates :legal_name, :website, :industry_type, length: { maximum: 255 }, allow_blank: true
+  validates :sales_territory, length: { maximum: 50 }, allow_blank: true
+  
+  # ========================================
+  # CALLBACKS
+  # ========================================
+  
+  before_validation :generate_code, on: :create
+  before_validation :normalize_data
+  before_save :calculate_available_credit
+  before_save :set_customer_since
+  before_save :update_last_modified
+  
+  after_initialize :set_defaults, if: :new_record?
+  
+  # ========================================
+  # SCOPES
+  # ========================================
+  
+  scope :active, -> { where(is_active: true, deleted: false) }
+  scope :inactive, -> { where(is_active: false, deleted: false) }
+  scope :credit_hold, -> { where(credit_hold: true, deleted: false) }
+  scope :no_credit_hold, -> { where(credit_hold: false, deleted: false) }
+  
+  scope :by_category, ->(category) { where(customer_category: category, deleted: false) }
+  scope :by_territory, ->(territory) { where(sales_territory: territory, deleted: false) }
+  scope :by_sales_rep, ->(rep_id) { where(default_sales_rep_id: rep_id, deleted: false) }
+  scope :by_type, ->(type) { where(customer_type: type, deleted: false) }
+  
+  scope :high_value, -> { where("total_revenue_all_time > ?", 100000).order(total_revenue_all_time: :desc) }
+  scope :recent_orders, -> { where("last_order_date >= ?", 90.days.ago) }
+  scope :no_recent_orders, -> { where("last_order_date < ? OR last_order_date IS NULL", 90.days.ago) }
+  
+  scope :search, ->(query) {
+    where("code ILIKE ? OR full_name ILIKE ? OR legal_name ILIKE ? OR email ILIKE ?",
+          "%#{query}%", "%#{query}%", "%#{query}%", "%#{query}%")
+  }
+  
+  # ========================================
+  # CLASS METHODS
+  # ========================================
+  
+  def self.generate_next_code
+    last_customer = Customer.unscoped.order(created_at: :desc).first
+    if last_customer && last_customer.code =~ /^CUST-(\d+)$/
+      next_number = $1.to_i + 1
+    else
+      next_number = 1001
+    end
+    "CUST-#{next_number.to_s.rjust(5, '0')}"
+  end
+  
+  # ========================================
+  # INSTANCE METHODS - Display
+  # ========================================
+  
   def display_name
     legal_name.presence || full_name
+  end
+  
+  def full_display_name
+    "#{code} - #{display_name}"
+  end
+  
+  def status_label
+    return "Credit Hold" if credit_hold?
+    return "Inactive" if !is_active?
+    "Active"
+  end
+  
+  def status_badge_class
+    return "danger" if credit_hold?
+    return "secondary" if !is_active?
+    "success"
+  end
+  
+  def category_badge_class
+    case customer_category
+    when "A" then "success"
+    when "B" then "primary"
+    when "C" then "warning"
+    when "NEW" then "info"
+    when "INACTIVE" then "secondary"
+    else "secondary"
+    end
+  end
+  
+  # ========================================
+  # INSTANCE METHODS - Financial
+  # ========================================
+  
+  def over_credit_limit?
+    return false if credit_limit.nil? || credit_limit.zero?
+    current_balance.to_d > credit_limit.to_d
+  end
+  
+  def credit_utilization_percentage
+    return 0 if credit_limit.nil? || credit_limit.zero?
+    ((current_balance.to_d / credit_limit.to_d) * 100).round(2)
+  end
+  
+  def can_place_order?(order_amount)
+    return true if credit_limit.nil? || credit_limit.zero?  # No credit limit set
+    return false if credit_hold?
+    (current_balance.to_d + order_amount.to_d) <= credit_limit.to_d
+  end
+  
+  def place_on_credit_hold!(reason)
+    update!(
+      credit_hold: true,
+      credit_hold_reason: reason,
+      credit_hold_date: Date.current
+    )
+  end
+  
+  def remove_credit_hold!
+    update!(
+      credit_hold: false,
+      credit_hold_reason: nil,
+      credit_hold_date: nil
+    )
+  end
+  
+  # ========================================
+  # INSTANCE METHODS - Performance
+  # ========================================
+  
+  def payment_performance_label
+    rate = on_time_payment_rate.to_f
+    case rate
+    when 95..100 then "Excellent"
+    when 85...95 then "Good"
+    when 70...85 then "Fair"
+    else "Poor"
+    end
+  end
+  
+  def customer_health_score
+    # Calculate 0-100 score based on multiple factors
+    score = 0
+    
+    # On-time payment (40 points)
+    score += (on_time_payment_rate.to_f * 0.4).round
+    
+    # Recent activity (30 points)
+    if last_order_date.present?
+      days_since_order = (Date.current - last_order_date).to_i
+      if days_since_order < 30
+        score += 30
+      elsif days_since_order < 90
+        score += 20
+      elsif days_since_order < 180
+        score += 10
+      end
+    end
+    
+    # Revenue contribution (30 points)
+    if total_revenue_ytd.to_d > 100000
+      score += 30
+    elsif total_revenue_ytd.to_d > 50000
+      score += 20
+    elsif total_revenue_ytd.to_d > 10000
+      score += 10
+    end
+    
+    score
+  end
+  
+  def customer_health_label
+    score = customer_health_score
+    case score
+    when 80..100 then "Excellent"
+    when 60...80 then "Good"
+    when 40...60 then "Fair"
+    when 20...40 then "At Risk"
+    else "Critical"
+    end
+  end
+  
+  # ========================================
+  # INSTANCE METHODS - Relationships
+  # ========================================
+  
+  def primary_contact
+    contacts.find_by(is_primary_contact: true) || contacts.first
+  end
+  
+  def primary_address
+    addresses.find_by(is_default: true, address_type: ["BILLING", "BOTH"]) || addresses.first
+  end
+  
+  def billing_address_object
+    addresses.find_by(address_type: ["BILLING", "BOTH"], is_default: true) ||
+    addresses.find_by(address_type: ["BILLING", "BOTH"])
+  end
+  
+  def shipping_address_object
+    addresses.find_by(address_type: ["SHIPPING", "BOTH"], is_default: true) ||
+    addresses.find_by(address_type: ["SHIPPING", "BOTH"])
+  end
+  
+  def recent_activities(limit = 10)
+    activities.order(activity_date: :desc).limit(limit)
+  end
+  
+  def pending_followups
+    activities.where(followup_required: true, activity_status: "SCHEDULED")
+              .where("followup_date <= ?", Date.current)
+              .order(followup_date: :asc)
+  end
+  
+  def active_documents
+    documents.where(is_active: true)
+  end
+  
+  def expiring_documents(days = 30)
+    documents.where(is_active: true, requires_renewal: true)
+             .where("expiry_date BETWEEN ? AND ?", Date.current, Date.current + days.days)
+             .order(expiry_date: :asc)
+  end
+  
+  # ========================================
+  # INSTANCE METHODS - Activity Logging
+  # ========================================
+  
+  def log_activity!(activity_params)
+    activities.create!(activity_params.merge(
+      created_by: activity_params[:created_by] || activity_params[:related_user]
+    ))
+    touch(:last_activity_date)
+  end
+  
+  # ========================================
+  # SOFT DELETE
+  # ========================================
+  
+  def destroy!
+    update_attribute(:deleted, true)
+  end
+  
+  def restore!
+    update_attribute(:deleted, false)
+  end
+  
+  private
+  
+  # ========================================
+  # PRIVATE METHODS - Callbacks
+  # ========================================
+  
+  def generate_code
+    self.code = self.class.generate_next_code if code.blank?
+  end
+  
+  def normalize_data
+    self.code = code.upcase.strip if code.present?
+    self.email = email.downcase.strip if email.present?
+    self.primary_contact_email = primary_contact_email.downcase.strip if primary_contact_email.present?
+    self.secondary_contact_email = secondary_contact_email.downcase.strip if secondary_contact_email.present?
+  end
+  
+  def calculate_available_credit
+    if credit_limit.present? && current_balance.present?
+      self.available_credit = [credit_limit.to_d - current_balance.to_d, 0].max
+    end
+  end
+  
+  def set_customer_since
+    self.customer_since ||= Date.current if new_record?
+  end
+  
+  def update_last_modified
+    self.last_modified_by = Current.user if defined?(Current) && Current.respond_to?(:user)
+  end
+  
+  def set_defaults
+    self.is_active = true if is_active.nil?
+    self.default_currency ||= "USD"
+    self.customer_category ||= "NEW"
+    self.credit_limit ||= 0
+    self.current_balance ||= 0
+    self.on_time_payment_rate ||= 100.0
+    self.marketing_emails_allowed = true if marketing_emails_allowed.nil?
+    self.auto_invoice_email = true if auto_invoice_email.nil?
+    self.late_fee_applicable = true if late_fee_applicable.nil?
+    self.allow_backorders = true if allow_backorders.nil?
   end
 end
 
 # ============================================================
-# Model 6: cycle_count
+# Model 6: customer_activity
+# File: app/models/customer_activity.rb
+# ============================================================
+
+class CustomerActivity < ApplicationRecord
+  # ========================================
+  # ASSOCIATIONS
+  # ========================================
+  belongs_to :customer, inverse_of: :activities, touch: :last_activity_date
+  belongs_to :customer_contact, optional: true
+  belongs_to :related_user, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
+  
+  # Polymorphic association for linking to orders, quotes, etc.
+  belongs_to :related_entity, polymorphic: true, optional: true
+  
+  # ========================================
+  # CONSTANTS
+  # ========================================
+  ACTIVITY_TYPES = {
+    "CALL"      => "Phone Call",
+    "EMAIL"     => "Email",
+    "MEETING"   => "Meeting",
+    "NOTE"      => "Note/Comment",
+    "QUOTE"     => "Quote Sent",
+    "ORDER"     => "Order Placed",
+    "COMPLAINT" => "Complaint/Issue",
+    "VISIT"     => "Site Visit",
+    "FOLLOWUP"  => "Follow-up"
+  }.freeze
+  
+  ACTIVITY_STATUSES = {
+    "SCHEDULED" => "Scheduled",
+    "COMPLETED" => "Completed",
+    "CANCELLED" => "Cancelled",
+    "OVERDUE"   => "Overdue"
+  }.freeze
+  
+  OUTCOMES = {
+    "SUCCESS"      => "Successful",
+    "NO_ANSWER"    => "No Answer",
+    "VOICEMAIL"    => "Left Voicemail",
+    "RESCHEDULED"  => "Rescheduled",
+    "NOT_INTERESTED" => "Not Interested",
+    "PENDING"      => "Pending Response",
+    "RESOLVED"     => "Resolved",
+    "ESCALATED"    => "Escalated"
+  }.freeze
+  
+  COMMUNICATION_METHODS = {
+    "PHONE"      => "Phone",
+    "EMAIL"      => "Email",
+    "IN_PERSON"  => "In Person",
+    "VIDEO_CALL" => "Video Call",
+    "SMS"        => "SMS",
+    "PORTAL"     => "Customer Portal"
+  }.freeze
+  
+  DIRECTIONS = {
+    "INBOUND"  => "Inbound",
+    "OUTBOUND" => "Outbound"
+  }.freeze
+  
+  SENTIMENTS = {
+    "POSITIVE" => "Positive",
+    "NEUTRAL"  => "Neutral",
+    "NEGATIVE" => "Negative",
+    "URGENT"   => "Urgent"
+  }.freeze
+  
+  PRIORITIES = {
+    "LOW"    => "Low",
+    "NORMAL" => "Normal",
+    "HIGH"   => "High",
+    "URGENT" => "Urgent"
+  }.freeze
+  
+  CATEGORIES = {
+    "SALES"   => "Sales",
+    "SUPPORT" => "Support",
+    "BILLING" => "Billing",
+    "GENERAL" => "General"
+  }.freeze
+  
+  # ========================================
+  # VALIDATIONS
+  # ========================================
+  validates :activity_type, presence: true, inclusion: { in: ACTIVITY_TYPES.keys }
+  validates :activity_status, inclusion: { in: ACTIVITY_STATUSES.keys }, allow_blank: true
+  validates :subject, presence: true, length: { maximum: 255 }
+  validates :activity_date, presence: true
+  
+  validates :outcome, inclusion: { in: OUTCOMES.keys }, allow_blank: true
+  validates :communication_method, inclusion: { in: COMMUNICATION_METHODS.keys }, allow_blank: true
+  validates :direction, inclusion: { in: DIRECTIONS.keys }, allow_blank: true
+  validates :customer_sentiment, inclusion: { in: SENTIMENTS.keys }, allow_blank: true
+  validates :priority, inclusion: { in: PRIORITIES.keys }, allow_blank: true
+  validates :category, inclusion: { in: CATEGORIES.keys }, allow_blank: true
+  
+  validates :duration_minutes, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  
+  # ========================================
+  # CALLBACKS
+  # ========================================
+  before_validation :set_defaults, on: :create
+  after_save :check_for_followup_reminder
+  
+  # ========================================
+  # SCOPES
+  # ========================================
+  scope :completed, -> { where(activity_status: "COMPLETED", deleted: false) }
+  scope :scheduled, -> { where(activity_status: "SCHEDULED", deleted: false) }
+  scope :overdue, -> { where("followup_date < ? AND activity_status = ?", Date.current, "SCHEDULED").where(deleted: false) }
+  scope :requires_followup, -> { where(followup_required: true, deleted: false) }
+  
+  scope :by_type, ->(type) { where(activity_type: type, deleted: false) }
+  scope :by_user, ->(user_id) { where(related_user_id: user_id, deleted: false) }
+  scope :by_date_range, ->(start_date, end_date) { where(activity_date: start_date..end_date, deleted: false) }
+  scope :this_week, -> { where(activity_date: Date.current.beginning_of_week..Date.current.end_of_week, deleted: false) }
+  scope :this_month, -> { where(activity_date: Date.current.beginning_of_month..Date.current.end_of_month, deleted: false) }
+  
+  scope :urgent, -> { where(priority: "URGENT", deleted: false) }
+  scope :negative_sentiment, -> { where(customer_sentiment: "NEGATIVE", deleted: false) }
+  
+  # ========================================
+  # INSTANCE METHODS
+  # ========================================
+  
+  def is_overdue?
+    activity_status == "SCHEDULED" && followup_date.present? && followup_date < Date.current
+  end
+  
+  def mark_completed!(outcome_value = nil, notes = nil)
+    update!(
+      activity_status: "COMPLETED",
+      outcome: outcome_value,
+      description: [description, notes].compact.join("\n\n")
+    )
+  end
+  
+  def reschedule!(new_date)
+    update!(
+      followup_date: new_date,
+      activity_status: "SCHEDULED",
+      outcome: "RESCHEDULED"
+    )
+  end
+  
+  def contact_name
+    customer_contact&.full_name || "General"
+  end
+  
+  def user_name
+    related_user&.email || created_by&.email || "System"
+  end
+  
+  def status_badge_class
+    case activity_status
+    when "COMPLETED" then "success"
+    when "SCHEDULED" then "primary"
+    when "CANCELLED" then "secondary"
+    when "OVERDUE" then "danger"
+    else "secondary"
+    end
+  end
+  
+  def priority_badge_class
+    case priority
+    when "LOW" then "secondary"
+    when "NORMAL" then "primary"
+    when "HIGH" then "warning"
+    when "URGENT" then "danger"
+    else "secondary"
+    end
+  end
+  
+  def sentiment_badge_class
+    case customer_sentiment
+    when "POSITIVE" then "success"
+    when "NEUTRAL" then "secondary"
+    when "NEGATIVE" then "danger"
+    when "URGENT" then "warning"
+    else "secondary"
+    end
+  end
+  
+  # ========================================
+  # SOFT DELETE
+  # ========================================
+  
+  def destroy!
+    update_attribute(:deleted, true)
+  end
+  
+  def restore!
+    update_attribute(:deleted, false)
+  end
+  
+  private
+  
+  def set_defaults
+    self.activity_status ||= "COMPLETED"
+    self.priority ||= "NORMAL"
+    self.category ||= "GENERAL"
+    self.activity_date ||= Time.current
+  end
+  
+  def check_for_followup_reminder
+    return unless saved_change_to_followup_date? && followup_required? && !reminder_sent?
+    
+    # TODO: Schedule reminder
+    # FollowupReminderJob.set(wait_until: followup_date).perform_later(self.id)
+  end
+end
+
+# ============================================================
+# Model 7: customer_address
+# File: app/models/customer_address.rb
+# ============================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# MODEL: CustomerAddress
+# ============================================================================
+# Manages multiple addresses per customer (billing, shipping, warehouse, etc.)
+# ============================================================================
+
+class CustomerAddress < ApplicationRecord
+  # ========================================
+  # ASSOCIATIONS
+  # ========================================
+  belongs_to :customer, inverse_of: :addresses
+  belongs_to :created_by, class_name: "User", optional: true
+  
+  # ========================================
+  # CONSTANTS
+  # ========================================
+  ADDRESS_TYPES = {
+    "BILLING"   => "Billing Only",
+    "SHIPPING"  => "Shipping Only",
+    "BOTH"      => "Billing & Shipping",
+    "WAREHOUSE" => "Warehouse/Pickup",
+    "OTHER"     => "Other"
+  }.freeze
+  
+  COUNTRIES = {
+    "US" => "United States",
+    "CA" => "Canada"
+  }.freeze
+  
+  # ========================================
+  # VALIDATIONS
+  # ========================================
+  validates :address_type, presence: true, inclusion: { in: ADDRESS_TYPES.keys }
+  validates :street_address_1, presence: true, length: { maximum: 255 }
+  validates :street_address_2, length: { maximum: 255 }, allow_blank: true
+  validates :city, presence: true, length: { maximum: 100 }
+  validates :state_province, length: { maximum: 100 }, allow_blank: true
+  validates :postal_code, presence: true, length: { maximum: 20 }
+  validates :country, presence: true, inclusion: { in: COUNTRIES.keys }
+  
+  validates :address_label, length: { maximum: 100 }, allow_blank: true
+  validates :attention_to, length: { maximum: 100 }, allow_blank: true
+  validates :contact_phone, length: { maximum: 20 }, allow_blank: true
+  validates :contact_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  
+  validates :latitude, numericality: { greater_than_or_equal_to: -90, less_than_or_equal_to: 90 }, allow_nil: true
+  validates :longitude, numericality: { greater_than_or_equal_to: -180, less_than_or_equal_to: 180 }, allow_nil: true
+  
+  # Only one default address per type per customer
+  validates :is_default, uniqueness: { scope: [:customer_id, :address_type, :deleted], 
+                                      message: "only one default address allowed per type" },
+                        if: -> { is_default? && deleted == false }
+  
+  # ========================================
+  # CALLBACKS
+  # ========================================
+  before_validation :normalize_data
+  after_save :ensure_single_default, if: :saved_change_to_is_default?
+  
+  # ========================================
+  # SCOPES
+  # ========================================
+  scope :active, -> { where(is_active: true, deleted: false) }
+  scope :billing, -> { where(address_type: ["BILLING", "BOTH"], deleted: false) }
+  scope :shipping, -> { where(address_type: ["SHIPPING", "BOTH"], deleted: false) }
+  scope :defaults, -> { where(is_default: true, deleted: false) }
+  scope :by_type, ->(type) { where(address_type: type, deleted: false) }
+  
+  # ========================================
+  # INSTANCE METHODS
+  # ========================================
+  
+  def full_address
+    parts = [street_address_1]
+    parts << street_address_2 if street_address_2.present?
+    parts << "#{city}, #{state_province} #{postal_code}"
+    parts << COUNTRIES[country]
+    parts.join("\n")
+  end
+  
+  def single_line_address
+    parts = [street_address_1]
+    parts << street_address_2 if street_address_2.present?
+    parts << city
+    parts << state_province if state_province.present?
+    parts << postal_code
+    parts << country
+    parts.join(", ")
+  end
+  
+  def display_label
+    address_label.presence || ADDRESS_TYPES[address_type]
+  end
+  
+  def can_use_for_billing?
+    address_type.in?(["BILLING", "BOTH"])
+  end
+  
+  def can_use_for_shipping?
+    address_type.in?(["SHIPPING", "BOTH"])
+  end
+  
+  def make_default!
+    transaction do
+      # Remove default from other addresses of same type
+      self.class.where(customer_id: customer_id, address_type: address_type, is_default: true)
+                .where.not(id: id)
+                .update_all(is_default: false)
+      
+      update!(is_default: true)
+    end
+  end
+  
+  # ========================================
+  # SOFT DELETE
+  # ========================================
+  
+  def destroy!
+    update_attribute(:deleted, true)
+  end
+  
+  def restore!
+    update_attribute(:deleted, false)
+  end
+  
+  private
+  
+  def normalize_data
+    self.postal_code = postal_code.upcase.strip if postal_code.present?
+    self.country = country.upcase if country.present?
+    self.contact_email = contact_email.downcase.strip if contact_email.present?
+  end
+  
+  def ensure_single_default
+    return unless is_default?
+    
+    # Unset default from other addresses of same type for this customer
+    self.class.where(customer_id: customer_id, address_type: address_type, deleted: false)
+              .where.not(id: id)
+              .update_all(is_default: false)
+  end
+end
+
+# ============================================================
+# Model 8: customer_contact
+# File: app/models/customer_contact.rb
+# ============================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# MODEL: CustomerContact
+# ============================================================================
+# Manages multiple contact persons per customer with roles and communication prefs
+# ============================================================================
+
+class CustomerContact < ApplicationRecord
+  # ========================================
+  # ASSOCIATIONS
+  # ========================================
+  belongs_to :customer, inverse_of: :contacts
+  belongs_to :created_by, class_name: "User", optional: true
+  
+  has_many :activities, 
+           class_name: "CustomerActivity",
+           foreign_key: :customer_contact_id,
+           dependent: :nullify
+  
+  # ========================================
+  # CONSTANTS
+  # ========================================
+  CONTACT_ROLES = {
+    "PRIMARY"        => "Primary Contact",
+    "PURCHASING"     => "Purchasing",
+    "FINANCE"        => "Finance/Accounts Payable",
+    "TECHNICAL"      => "Technical/Engineering",
+    "SHIPPING"       => "Shipping/Receiving",
+    "DECISION_MAKER" => "Decision Maker",
+    "QUALITY"        => "Quality Assurance",
+    "MANAGEMENT"     => "Management",
+    "OTHER"          => "Other"
+  }.freeze
+  
+  CONTACT_METHODS = {
+    "EMAIL" => "Email",
+    "PHONE" => "Phone",
+    "BOTH"  => "Email & Phone",
+    "SMS"   => "SMS"
+  }.freeze
+  
+  # ========================================
+  # VALIDATIONS
+  # ========================================
+  validates :first_name, presence: true, length: { maximum: 100 }
+  validates :last_name, presence: true, length: { maximum: 100 }
+  validates :contact_role, presence: true, inclusion: { in: CONTACT_ROLES.keys }
+  
+  validates :title, :department, length: { maximum: 100 }, allow_blank: true
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true, length: { maximum: 255 }
+  validates :phone, :mobile, :fax, length: { maximum: 20 }, allow_blank: true
+  validates :extension, length: { maximum: 10 }, allow_blank: true
+  validates :skype_id, length: { maximum: 100 }, allow_blank: true
+  
+  validates :preferred_contact_method, inclusion: { in: CONTACT_METHODS.keys }, allow_blank: true
+  
+  # Only one primary contact per customer
+  validates :is_primary_contact, uniqueness: { scope: [:customer_id, :deleted],
+                                              message: "only one primary contact allowed" },
+                                if: -> { is_primary_contact? && deleted == false }
+  
+  # At least email or phone must be present
+  validate :must_have_contact_method
+  
+  # ========================================
+  # CALLBACKS
+  # ========================================
+  before_validation :normalize_data
+  after_save :ensure_single_primary, if: :saved_change_to_is_primary_contact?
+  
+  # ========================================
+  # SCOPES
+  # ========================================
+  scope :active, -> { where(is_active: true, deleted: false) }
+  scope :primary, -> { where(is_primary_contact: true, deleted: false) }
+  scope :decision_makers, -> { where(is_decision_maker: true, deleted: false) }
+  scope :by_role, ->(role) { where(contact_role: role, deleted: false) }
+  scope :by_department, ->(dept) { where(department: dept, deleted: false) }
+  
+  scope :search, ->(query) {
+    where("first_name ILIKE ? OR last_name ILIKE ? OR email ILIKE ? OR title ILIKE ?",
+          "%#{query}%", "%#{query}%", "%#{query}%", "%#{query}%")
+  }
+  
+  # ========================================
+  # INSTANCE METHODS
+  # ========================================
+  
+  def full_name
+    "#{first_name} #{last_name}".strip
+  end
+  
+  def full_name_with_title
+    parts = [full_name]
+    parts << title if title.present?
+    parts.join(" - ")
+  end
+  
+  def display_name
+    parts = [full_name]
+    parts << "(#{title})" if title.present?
+    parts << "[#{CONTACT_ROLES[contact_role]}]"
+    parts.join(" ")
+  end
+  
+  def primary_email
+    email.presence || customer.email
+  end
+  
+  def primary_phone
+    phone.presence || mobile.presence || customer.phone_number
+  end
+  
+  def can_receive_orders?
+    contact_role.in?(["PRIMARY", "PURCHASING", "MANAGEMENT", "DECISION_MAKER"])
+  end
+  
+  def can_receive_invoices?
+    contact_role.in?(["PRIMARY", "FINANCE", "MANAGEMENT"]) || receive_invoice_copies?
+  end
+  
+  def make_primary!
+    transaction do
+      # Remove primary from other contacts
+      self.class.where(customer_id: customer_id, is_primary_contact: true, deleted: false)
+                .where.not(id: id)
+                .update_all(is_primary_contact: false)
+      
+      update!(is_primary_contact: true, is_active: true)
+    end
+  end
+  
+  def log_interaction!(notes:, method: "PHONE")
+    update!(
+      last_contacted_at: Time.current,
+      last_contacted_by: Current.user&.email || "System",
+      last_interaction_notes: notes
+    )
+  end
+  
+  def has_birthday_soon?(days = 7)
+    return false if birthday.blank?
+    
+    today = Date.current
+    this_year_birthday = Date.new(today.year, birthday.month, birthday.day)
+    
+    (this_year_birthday - today).to_i.between?(0, days)
+  end
+  
+  # ========================================
+  # SOFT DELETE
+  # ========================================
+  
+  def destroy!
+    # If deleting primary contact, make another contact primary
+    if is_primary_contact?
+      next_contact = customer.contacts.where.not(id: id).first
+      next_contact&.make_primary!
+    end
+    
+    update_attribute(:deleted, true)
+  end
+  
+  def restore!
+    update_attribute(:deleted, false)
+  end
+  
+  private
+  
+  def normalize_data
+    self.first_name = first_name.strip.titleize if first_name.present?
+    self.last_name = last_name.strip.titleize if last_name.present?
+    self.email = email.downcase.strip if email.present?
+  end
+  
+  def must_have_contact_method
+    if email.blank? && phone.blank? && mobile.blank?
+      errors.add(:base, "Must provide at least email, phone, or mobile number")
+    end
+  end
+  
+  def ensure_single_primary
+    return unless is_primary_contact?
+    
+    # Unset primary from other contacts for this customer
+    self.class.where(customer_id: customer_id, deleted: false)
+              .where.not(id: id)
+              .update_all(is_primary_contact: false)
+  end
+end
+
+# ============================================================
+# Model 9: customer_document
+# File: app/models/customer_document.rb
+# ============================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# MODEL: CustomerDocument
+# ============================================================================
+# Manages document attachments with ActiveStorage integration
+# ============================================================================
+
+class CustomerDocument < ApplicationRecord
+  # ========================================
+  # ASSOCIATIONS
+  # ========================================
+  belongs_to :customer, inverse_of: :documents
+  belongs_to :uploaded_by, class_name: "User", optional: true
+  belongs_to :superseded_by_document, class_name: "CustomerDocument", foreign_key: :superseded_by_id, optional: true
+  
+  # ActiveStorage for file uploads
+  has_one_attached :file
+  
+  # ========================================
+  # CONSTANTS
+  # ========================================
+  DOCUMENT_TYPES = {
+    "CONTRACT"         => "Contract/Agreement",
+    "TAX_CERT"         => "Tax Exemption Certificate",
+    "NDA"              => "Non-Disclosure Agreement",
+    "CREDIT_APP"       => "Credit Application",
+    "QUALITY_AGREEMENT"=> "Quality Agreement",
+    "INSURANCE_CERT"   => "Insurance Certificate",
+    "BUSINESS_LICENSE" => "Business License",
+    "W9_FORM"          => "W-9 Form",
+    "OTHER"            => "Other Document"
+  }.freeze
+  
+  DOCUMENT_CATEGORIES = {
+    "LEGAL"      => "Legal",
+    "FINANCIAL"  => "Financial",
+    "QUALITY"    => "Quality",
+    "COMPLIANCE" => "Compliance",
+    "GENERAL"    => "General"
+  }.freeze
+  
+  # ========================================
+  # VALIDATIONS
+  # ========================================
+  validates :document_type, presence: true, inclusion: { in: DOCUMENT_TYPES.keys }
+  validates :document_category, inclusion: { in: DOCUMENT_CATEGORIES.keys }, allow_blank: true
+  validates :document_title, presence: true, length: { maximum: 255 }
+  validates :version, length: { maximum: 20 }, allow_blank: true
+  
+  validate :expiry_date_must_be_future, if: :effective_date
+  
+  # ========================================
+  # CALLBACKS
+  # ========================================
+  before_validation :set_file_metadata, if: -> { file.attached? }
+  after_save :check_for_expiry_alert
+  
+  # ========================================
+  # SCOPES
+  # ========================================
+  scope :active, -> { where(is_active: true, deleted: false) }
+  scope :expired, -> { where("expiry_date < ?", Date.current).where(deleted: false) }
+  scope :expiring_soon, ->(days = 30) { 
+    where("expiry_date BETWEEN ? AND ?", Date.current, Date.current + days.days)
+    .where(deleted: false, requires_renewal: true)
+  }
+  scope :by_type, ->(type) { where(document_type: type, deleted: false) }
+  scope :by_category, ->(cat) { where(document_category: cat, deleted: false) }
+  scope :latest_versions, -> { where(is_latest_version: true, deleted: false) }
+  
+  # ========================================
+  # INSTANCE METHODS
+  # ========================================
+  
+  def expired?
+    expiry_date.present? && expiry_date < Date.current
+  end
+  
+  def expiring_soon?(days = 30)
+    return false unless expiry_date.present? && requires_renewal?
+    expiry_date.between?(Date.current, Date.current + days.days)
+  end
+  
+  def days_until_expiry
+    return nil unless expiry_date.present?
+    (expiry_date - Date.current).to_i
+  end
+  
+  def file_attached?
+    file.attached?
+  end
+  
+  def file_url_or_attachment
+    file_url.presence || (file.attached? ? Rails.application.routes.url_helpers.rails_blob_path(file, only_path: true) : nil)
+  end
+  
+  def supersede_with!(new_document)
+    transaction do
+      update!(
+        is_latest_version: false,
+        superseded_by_id: new_document.id,
+        is_active: false
+      )
+      new_document.update!(
+        version: increment_version,
+        is_latest_version: true
+      )
+    end
+  end
+  
+  def increment_version
+    return "1.0" if version.blank?
+    major, minor = version.split('.').map(&:to_i)
+    "#{major}.#{minor + 1}"
+  end
+  
+  # ========================================
+  # SOFT DELETE
+  # ========================================
+  
+  def destroy!
+    update_attribute(:deleted, true)
+  end
+  
+  def restore!
+    update_attribute(:deleted, false)
+  end
+  
+  private
+  
+  def set_file_metadata
+    return unless file.attached?
+    
+    self.file_name = file.filename.to_s
+    self.file_type = file.content_type
+    self.file_size = file.byte_size
+  end
+  
+  def expiry_date_must_be_future
+    if expiry_date.present? && effective_date.present? && expiry_date < effective_date
+      errors.add(:expiry_date, "must be after effective date")
+    end
+  end
+  
+  def check_for_expiry_alert
+    return unless saved_change_to_expiry_date? && expiring_soon?(renewal_reminder_days)
+    
+    # TODO: Trigger alert/notification
+    # ExpiryAlertJob.perform_later(self.id)
+  end
+end
+
+# ============================================================
+# Model 10: cycle_count
 # File: app/models/cycle_count.rb
 # ============================================================
 
@@ -568,7 +1685,7 @@ class CycleCount < ApplicationRecord
 end
 
 # ============================================================
-# Model 7: cycle_count_line
+# Model 11: cycle_count_line
 # File: app/models/cycle_count_line.rb
 # ============================================================
 
@@ -709,7 +1826,7 @@ class CycleCountLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 8: goods_receipt
+# Model 12: goods_receipt
 # File: app/models/goods_receipt.rb
 # ============================================================
 
@@ -861,7 +1978,7 @@ class GoodsReceipt < ApplicationRecord
 end
 
 # ============================================================
-# Model 9: goods_receipt_line
+# Model 13: goods_receipt_line
 # File: app/models/goods_receipt_line.rb
 # ============================================================
 
@@ -968,7 +2085,7 @@ class GoodsReceiptLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 10: journal_entry
+# Model 14: journal_entry
 # File: app/models/journal_entry.rb
 # ============================================================
 
@@ -1045,7 +2162,7 @@ class JournalEntry < ApplicationRecord
 end
 
 # ============================================================
-# Model 11: journal_line
+# Model 15: journal_line
 # File: app/models/journal_line.rb
 # ============================================================
 
@@ -1071,7 +2188,7 @@ class JournalLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 12: labor_time_entry
+# Model 16: labor_time_entry
 # File: app/models/labor_time_entry.rb
 # ============================================================
 
@@ -1220,7 +2337,7 @@ class LaborTimeEntry < ApplicationRecord
 end
 
 # ============================================================
-# Model 13: location
+# Model 17: location
 # File: app/models/location.rb
 # ============================================================
 
@@ -1252,7 +2369,7 @@ class Location < ApplicationRecord
 end
 
 # ============================================================
-# Model 14: product
+# Model 18: product
 # File: app/models/product.rb
 # ============================================================
 
@@ -1287,6 +2404,10 @@ class Product < ApplicationRecord
   validate :validate_batch_tracking
   validate :validate_serial_batch_conflict
 
+  def name_with_sku
+    "#{self.sku} - #{self.name}"
+  end
+  
   def validate_inventory_account
     if self.is_stocked && self.inventory_account.blank?
       errors.add(:inventory_account, "Stocked product must have an inventory account")
@@ -1377,7 +2498,7 @@ class Product < ApplicationRecord
 end
 
 # ============================================================
-# Model 15: product_category
+# Model 19: product_category
 # File: app/models/product_category.rb
 # ============================================================
 
@@ -1398,7 +2519,114 @@ class ProductCategory < ApplicationRecord
 end
 
 # ============================================================
-# Model 16: purchase_order
+# Model 20: product_supplier
+# File: app/models/product_supplier.rb
+# ============================================================
+
+class ProductSupplier < ApplicationRecord
+  belongs_to :product
+  belongs_to :supplier
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  
+  validates :product_id, uniqueness: { scope: :supplier_id }
+  validates :current_unit_price, presence: true, numericality: { greater_than: 0 }
+  validates :lead_time_days, presence: true, numericality: { greater_than: 0 }
+  validates :minimum_order_quantity, numericality: { greater_than_or_equal_to: 1 }
+  
+  scope :active, -> { where(is_active: true) }
+  scope :approved, -> { where(is_approved_supplier: true) }
+  scope :preferred, -> { where(is_preferred_supplier: true) }
+  scope :available, -> { where(available_for_order: true) }
+  scope :by_price, -> { order(:current_unit_price) }
+  scope :by_lead_time, -> { order(:lead_time_days) }
+  scope :by_quality, -> { order(quality_rating: :desc) }
+  scope :by_rank, -> { order(:supplier_rank) }
+  
+  # ============================================================================
+  # VENDOR SELECTION LOGIC (FOR MRP!)
+  # ============================================================================
+  def selection_score(criteria = {})
+    urgency = criteria[:urgency] || 'normal'
+    
+    case urgency.to_s.downcase
+    when 'critical', 'urgent'
+      # Speed is priority
+      lead_time_score = (100 - lead_time_days * 2).clamp(0, 100)
+      quality_weight = 0.3
+      speed_weight = 0.5
+      price_weight = 0.2
+    when 'cost_sensitive'
+      # Price is priority
+      price_score = calculate_price_competitiveness
+      quality_weight = 0.2
+      speed_weight = 0.2
+      price_weight = 0.6
+    else
+      # Balanced
+      quality_weight = 0.4
+      speed_weight = 0.3
+      price_weight = 0.3
+    end
+    
+    lead_time_score ||= (100 - lead_time_days * 2).clamp(0, 100)
+    price_score ||= calculate_price_competitiveness
+    
+    (quality_rating * quality_weight) + (lead_time_score * speed_weight) + (price_score * price_weight)
+  end
+  
+  def calculate_price_competitiveness
+    # Compare with other suppliers for same product
+    all_prices = product.product_suppliers.active.pluck(:current_unit_price)
+    return 100 if all_prices.size <= 1
+    
+    min_price = all_prices.min
+    max_price = all_prices.max
+    range = max_price - min_price
+    return 100 if range.zero?
+    
+    # Lower price = higher score
+    ((max_price - current_unit_price) / range * 100).round(2)
+  end
+  
+  def update_price!(new_price, effective_date = Date.current)
+    self.previous_unit_price = current_unit_price
+    self.current_unit_price = new_price
+    self.price_effective_date = effective_date
+    
+    if previous_unit_price.present?
+      change = ((new_price - previous_unit_price) / previous_unit_price * 100).round(2)
+      self.price_change_percentage = change
+      self.price_trend = change > 2 ? 'INCREASING' : (change < -2 ? 'DECREASING' : 'STABLE')
+    end
+    
+    save!
+  end
+  
+  def get_price_for_quantity(qty)
+    return current_unit_price if qty < (price_break_1_qty || Float::INFINITY)
+    return price_break_1_price if price_break_1_qty && qty >= price_break_1_qty && qty < (price_break_2_qty || Float::INFINITY)
+    return price_break_2_price if price_break_2_qty && qty >= price_break_2_qty && qty < (price_break_3_qty || Float::INFINITY)
+    return price_break_3_price if price_break_3_qty && qty >= price_break_3_qty
+    current_unit_price
+  end
+  
+  def record_purchase!(quantity, price, order_date = Date.current)
+    self.last_purchase_date = order_date
+    self.last_purchase_price = price
+    self.last_purchase_quantity = quantity
+    self.total_orders_count += 1
+    self.total_quantity_purchased = (total_quantity_purchased || 0) + quantity
+    self.total_value_purchased = (total_value_purchased || 0) + (quantity * price)
+    self.average_purchase_price = total_value_purchased / total_quantity_purchased
+    self.days_since_last_order = 0
+    self.first_purchase_date ||= order_date
+    save!
+  end
+end
+
+# ============================================================
+# Model 21: purchase_order
 # File: app/models/purchase_order.rb
 # ============================================================
 
@@ -1681,7 +2909,7 @@ class PurchaseOrder < ApplicationRecord
 end
 
 # ============================================================
-# Model 17: purchase_order_line
+# Model 22: purchase_order_line
 # File: app/models/purchase_order_line.rb
 # ============================================================
 
@@ -1857,7 +3085,760 @@ class PurchaseOrderLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 18: routing
+# Model 23: rfq
+# File: app/models/rfq.rb
+# ============================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# MODEL: Rfq (Request for Quote)
+# Complete RFQ management with vendor selection algorithm
+# ============================================================================
+class Rfq < ApplicationRecord
+  # ============================================================================
+  # ASSOCIATIONS
+  # ============================================================================
+  # Line Items
+  has_many :rfq_items, dependent: :destroy
+  has_many :products, through: :rfq_items
+  
+  # Supplier Invitations
+  has_many :rfq_suppliers, dependent: :destroy
+  has_many :suppliers, through: :rfq_suppliers
+  
+  # Quotes
+  has_many :vendor_quotes, dependent: :destroy
+  
+  # Awarded/Selected
+  belongs_to :awarded_supplier, class_name: 'Supplier', optional: true
+  belongs_to :recommended_supplier, class_name: 'Supplier', optional: true
+  
+  # Users
+  belongs_to :created_by, class_name: 'User'
+  belongs_to :requester, class_name: 'User', optional: true
+  belongs_to :buyer_assigned, class_name: 'User', optional: true
+  belongs_to :approver, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  belongs_to :deleted_by, class_name: 'User', optional: true
+  
+  # Future: Purchase Order
+  # belongs_to :purchase_order, optional: true
+  
+  # ============================================================================
+  # NESTED ATTRIBUTES
+  # ============================================================================
+  accepts_nested_attributes_for :rfq_items, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :rfq_suppliers, allow_destroy: true
+  
+  # ============================================================================
+  # VALIDATIONS
+  # ============================================================================
+  validates :rfq_number, presence: true, uniqueness: { case_sensitive: false }
+  validates :title, presence: true, length: { maximum: 255 }
+  validates :rfq_date, :due_date, :response_deadline, presence: true
+  validates :status, presence: true, inclusion: { 
+    in: %w[DRAFT SENT RESPONSES_RECEIVED UNDER_REVIEW AWARDED CLOSED CANCELLED],
+    message: "%{value} is not a valid status"
+  }
+  validate :due_date_after_rfq_date
+  validate :response_deadline_valid
+  
+  # ============================================================================
+  # CALLBACKS
+  # ============================================================================
+  before_validation :generate_rfq_number, on: :create
+  before_validation :set_defaults
+  after_create :initialize_scoring_weights
+  before_save :calculate_totals
+  after_update :update_supplier_counts, if: :saved_change_to_status?
+
+  before_save :set_items_line_numbers
+  before_create :set_supplier_invited_date_stamps
+
+  
+  # ============================================================================
+  # SCOPES
+  # ============================================================================
+  scope :non_deleted, -> { where(is_deleted: false) }
+  scope :active, -> { non_deleted.where.not(status: ['CLOSED', 'CANCELLED']) }
+  scope :draft, -> { where(status: 'DRAFT') }
+  scope :sent, -> { where(status: 'SENT') }
+  scope :with_responses, -> { where(status: 'RESPONSES_RECEIVED') }
+  scope :under_review, -> { where(status: 'UNDER_REVIEW') }
+  scope :awarded, -> { where(status: 'AWARDED') }
+  scope :closed, -> { where(status: 'CLOSED') }
+  scope :urgent, -> { where(is_urgent: true) }
+  scope :overdue, -> { where('response_deadline < ? AND status NOT IN (?)', Date.current, ['CLOSED', 'CANCELLED']) }
+  scope :recent, -> { order(rfq_date: :desc) }
+  scope :by_number, -> { order(rfq_number: :desc) }
+  
+  # ============================================================================
+  # SERIALIZATION
+  # ============================================================================
+  store_accessor :scoring_weights, :price_weight, :delivery_weight, :quality_weight, :service_weight
+
+
+  # ============================================================================
+  # CLASS METHODS
+  # ============================================================================
+
+
+  def self.generate_next_number
+    last_rfq = where("rfq_number LIKE 'RFQ-%'").order(rfq_number: :desc).first
+    if last_rfq && last_rfq.rfq_number =~ /RFQ-(\d+)/
+      next_number = $1.to_i + 1
+    else
+      next_number = 1
+    end
+    "RFQ-#{Date.current.strftime('%Y')}-#{next_number.to_s.rjust(5, '0')}"
+  end
+  
+  def self.statuses
+    %w[DRAFT SENT RESPONSES_RECEIVED UNDER_REVIEW AWARDED CLOSED CANCELLED]
+  end
+  
+  def self.comparison_bases
+    %w[PRICE_ONLY DELIVERY_WEIGHTED QUALITY_WEIGHTED BALANCED]
+  end
+  
+  # ============================================================================
+  # DISPLAY METHODS
+  # ============================================================================
+  def display_name
+    "#{rfq_number} - #{title}"
+  end
+  
+  def to_s
+    display_name
+  end
+  
+  def status_badge_class
+    case status
+    when 'DRAFT' then 'secondary'
+    when 'SENT' then 'primary'
+    when 'RESPONSES_RECEIVED' then 'info'
+    when 'UNDER_REVIEW' then 'warning'
+    when 'AWARDED' then 'success'
+    when 'CLOSED' then 'dark'
+    when 'CANCELLED' then 'danger'
+    else 'secondary'
+    end
+  end
+  
+  # ============================================================================
+  # STATUS WORKFLOW METHODS
+  # ============================================================================
+  def send_to_suppliers!(user = nil)
+    # Validation
+    raise "Cannot send RFQ without items" if rfq_items.empty?
+    raise "Cannot send RFQ without suppliers" if rfq_suppliers.empty?
+    raise "Cannot send RFQ that is not in DRAFT status" unless draft?
+    
+    # Update status
+    self.status = 'SENT'
+    self.sent_at = Time.current
+    self.requester = user
+    
+    # Mark all suppliers as invited
+    rfq_suppliers.each do |rfq_supplier|
+      rfq_supplier.update!(
+        invitation_status: 'INVITED',
+        invited_at: Time.current,
+        invited_by: user
+      )
+      
+      # Send email notification if auto_email_enabled
+      if auto_email_enabled?
+        begin
+          supplier = rfq_supplier.supplier
+          contact = rfq_supplier.supplier_contact || supplier.primary_contact
+          
+          if contact && contact.email.present?
+            # Send email asynchronously
+            RfqMailer.rfq_notification(self, supplier, contact).deliver_now
+            
+            # Update email tracking
+            rfq_supplier.update!(
+              email_sent_at: Time.current,
+              contact_email_used: contact.email
+            )
+            
+            Rails.logger.info "RFQ #{rfq_number}: Email sent to #{supplier.display_name} (#{contact.email})"
+          else
+            Rails.logger.warn "RFQ #{rfq_number}: No email for supplier #{supplier.display_name}"
+          end
+        rescue => e
+          Rails.logger.error "RFQ #{rfq_number}: Failed to send email to #{supplier.display_name}: #{e.message}"
+          # Don't raise - continue with other suppliers
+        end
+      end
+    end
+    
+    save!
+    
+    Rails.logger.info "RFQ #{rfq_number} sent to #{rfq_suppliers.count} suppliers"
+    true
+  end
+
+  def send_reminders!(user = nil)
+    return unless sent?
+    
+    # Find suppliers who haven't responded yet
+    non_responding_suppliers = rfq_suppliers.where(invitation_status: ['INVITED', 'VIEWED'])
+    
+    non_responding_suppliers.each do |rfq_supplier|
+      supplier = rfq_supplier.supplier
+      contact = rfq_supplier.supplier_contact || supplier.primary_contact
+      
+      if contact && contact.email.present?
+        begin
+          RfqMailer.rfq_reminder(self, supplier, contact).deliver_now
+          
+          # Track reminder
+          self.increment!(:reminder_count)
+          self.update!(last_reminder_sent_at: Time.current)
+          
+          Rails.logger.info "RFQ #{rfq_number}: Reminder sent to #{supplier.display_name}"
+        rescue => e
+          Rails.logger.error "RFQ #{rfq_number}: Failed to send reminder to #{supplier.display_name}: #{e.message}"
+        end
+      end
+    end
+    
+    true
+  end
+  
+  def mark_response_received!(updated_by_user)
+    update!(
+      status: 'RESPONSES_RECEIVED',
+      updated_by: updated_by_user
+    ) if sent? && quotes_received_count > 0
+  end
+  
+  def mark_under_review!(updated_by_user)
+    update!(
+      status: 'UNDER_REVIEW',
+      updated_by: updated_by_user
+    )
+  end
+  
+  def award_to_supplier!(supplier, awarded_by_user, reason: nil)
+    transaction do
+      update!(
+        status: 'AWARDED',
+        awarded_supplier: supplier,
+        award_date: Date.current,
+        award_reason: reason,
+        updated_by: awarded_by_user
+      )
+      
+      # Mark supplier as selected
+      rfq_suppliers.find_by(supplier: supplier)&.update!(is_selected: true, selected_date: Date.current)
+      
+      # Calculate awarded amount
+      calculate_awarded_amount!
+    end
+  end
+  
+  def close!(closed_by_user, reason: nil)
+    update!(
+      status: 'CLOSED',
+      closed_at: Time.current,
+      internal_notes: [internal_notes, "Closed: #{reason}"].compact.join("\n"),
+      updated_by: closed_by_user
+    )
+  end
+  
+  def cancel!(cancelled_by_user, reason: nil)
+    update!(
+      status: 'CANCELLED',
+      internal_notes: [internal_notes, "Cancelled: #{reason}"].compact.join("\n"),
+      updated_by: cancelled_by_user
+    )
+  end
+  
+  def draft?
+    status == 'DRAFT'
+  end
+  
+  def sent?
+    status == 'SENT'
+  end
+  
+  def can_be_sent?
+    draft? && rfq_items.any? && rfq_suppliers.any?
+  end
+  
+  def can_be_awarded?
+    ['RESPONSES_RECEIVED', 'UNDER_REVIEW'].include?(status) && vendor_quotes.any?
+  end
+  
+  # ============================================================================
+  # SUPPLIER INVITATION METHODS
+  # ============================================================================
+  def invite_supplier!(supplier, invited_by_user, contact: nil)
+    rfq_suppliers.create!(
+      supplier: supplier,
+      invited_by: invited_by_user,
+      invited_at: Time.current,
+      supplier_contact: contact || supplier.primary_contact,
+      contact_email_used: (contact || supplier.primary_contact)&.email
+    )
+    
+    increment!(:suppliers_invited_count)
+  end
+  
+  def invite_multiple_suppliers!(supplier_ids, invited_by_user)
+    supplier_ids.each do |supplier_id|
+      supplier = Supplier.find(supplier_id)
+      invite_supplier!(supplier, invited_by_user) unless rfq_suppliers.exists?(supplier_id: supplier_id)
+    end
+  end
+  
+  def remove_supplier!(supplier)
+    rfq_suppliers.find_by(supplier: supplier)&.destroy
+    decrement!(:suppliers_invited_count)
+  end
+  
+  # ============================================================================
+  # QUOTE MANAGEMENT METHODS
+  # ============================================================================
+  def record_quote_received!(rfq_supplier)
+    increment!(:quotes_received_count)
+    decrement!(:quotes_pending_count) if quotes_pending_count > 0
+    
+    rfq_supplier.update!(
+      invitation_status: 'QUOTED',
+      quoted_at: Time.current,
+      response_time_hours: ((Time.current - rfq_supplier.invited_at) / 1.hour).to_i
+    )
+    
+    mark_response_received!(updated_by) if quotes_received_count == suppliers_invited_count
+  end
+  
+  def all_responses_received?
+    quotes_received_count == suppliers_invited_count
+  end
+  
+  def response_rate
+    return 0 if suppliers_invited_count.zero?
+    (quotes_received_count.to_f / suppliers_invited_count * 100).round(2)
+  end
+  
+  # ============================================================================
+  # COMPARISON & ANALYSIS METHODS
+  # ============================================================================
+  def calculate_quote_statistics!
+    return if vendor_quotes.empty?
+    
+    amounts = vendor_quotes.group(:supplier_id).sum(:total_price).values
+    
+    update_columns(
+      lowest_quote_amount: amounts.min,
+      highest_quote_amount: amounts.max,
+      average_quote_amount: (amounts.sum / amounts.size.to_f).round(2)
+    )
+  end
+  
+  def calculate_cost_savings!
+    return unless awarded_total_amount && highest_quote_amount
+    
+    savings = highest_quote_amount - awarded_total_amount
+    percentage = (savings / highest_quote_amount * 100).round(2)
+    
+    update_columns(
+      cost_savings: savings,
+      cost_savings_percentage: percentage
+    )
+  end
+  
+  # ============================================================================
+  # SCORING & RECOMMENDATION ALGORITHM
+  # ============================================================================
+  def calculate_recommendations!
+    return if vendor_quotes.empty?
+    
+    # Calculate scores for each quote
+    vendor_quotes.includes(:supplier).find_each do |quote|
+      quote.calculate_scores!(self)
+    end
+    
+    # Find best overall score
+    best_quote = vendor_quotes.order(overall_score: :desc).first
+    
+    if best_quote
+      update!(
+        recommended_supplier: best_quote.supplier,
+        recommended_supplier_score: best_quote.overall_score
+      )
+      
+      best_quote.update!(is_recommended: true)
+    end
+  end
+  
+  def weights
+    {
+      price: (price_weight || 40).to_f,
+      delivery: (delivery_weight || 20).to_f,
+      quality: (quality_weight || 25).to_f,
+      service: (service_weight || 15).to_f
+    }
+  end
+  
+  def set_weights(price:, delivery:, quality:, service:)
+    total = price + delivery + quality + service
+    raise ArgumentError, "Weights must sum to 100" unless total == 100
+    
+    update!(
+      scoring_weights: {
+        price_weight: price,
+        delivery_weight: delivery,
+        quality_weight: quality,
+        service_weight: service
+      }
+    )
+  end
+  
+  # ============================================================================
+  # COMPARISON VIEW
+  # ============================================================================
+  def comparison_matrix
+    # Returns structured data for comparison dashboard
+    items = rfq_items.includes(:product, vendor_quotes: :supplier).order(:line_number)
+    
+    items.map do |item|
+      {
+        item: item,
+        quotes: item.vendor_quotes.includes(:supplier).order(:overall_rank).map do |quote|
+          {
+            supplier: quote.supplier,
+            unit_price: quote.unit_price,
+            total_price: quote.total_price,
+            lead_time: quote.lead_time_days,
+            total_cost: quote.total_cost,
+            overall_score: quote.overall_score,
+            is_lowest_price: quote.is_lowest_price,
+            is_fastest_delivery: quote.is_fastest_delivery,
+            is_best_value: quote.is_best_value,
+            is_recommended: quote.is_recommended
+          }
+        end
+      }
+    end
+  end
+  
+  # ============================================================================
+  # ANALYTICS & REPORTING
+  # ============================================================================
+  def days_open
+    if closed_at
+      (closed_at.to_date - rfq_date).to_i
+    else
+      (Date.current - rfq_date).to_i
+    end
+  end
+  
+  def days_until_deadline
+    (response_deadline - Date.current).to_i
+  end
+  
+  def is_overdue?
+    response_deadline < Date.current && !['CLOSED', 'CANCELLED'].include?(status)
+  end
+  
+  def completion_percentage
+    return 100 if closed? || awarded?
+    return 0 if draft?
+    
+    steps = {
+      'SENT' => 25,
+      'RESPONSES_RECEIVED' => 50,
+      'UNDER_REVIEW' => 75
+    }
+    
+    steps[status] || 0
+  end
+  
+  # ============================================================================
+  # CONVERSION TO PO
+  # ============================================================================
+  def convert_to_purchase_order!(converted_by_user)
+    # Will implement when PO module exists
+    # Creates PO from awarded quotes
+    transaction do
+      # po = PurchaseOrder.create_from_rfq!(self, converted_by_user)
+      update!(
+        converted_to_po: true,
+        po_created_date: Date.current
+        # purchase_order: po
+      )
+      # po
+    end
+  end
+  
+  # ============================================================================
+  # SOFT DELETE
+  # ============================================================================
+  def soft_delete!(deleted_by_user)
+    update!(
+      is_deleted: true,
+      deleted_at: Time.current,
+      deleted_by: deleted_by_user
+    )
+  end
+  
+  private
+  
+  # ============================================================================
+  # PRIVATE CALLBACK METHODS
+  # ============================================================================
+
+  def set_items_line_numbers
+    self.rfq_items.each_with_index do |item, i|
+      item.line_number = (i+1)*10
+    end
+  end
+
+  def set_supplier_invited_date_stamps
+    self.rfq_suppliers.each do |rs| 
+      rs.invited_at = DateTime.now
+    end
+    self.suppliers_invited_count = self.rfq_suppliers.length
+  end  
+
+  def generate_rfq_number
+    self.rfq_number ||= self.class.generate_next_number
+  end
+  
+  def set_defaults
+    self.rfq_date ||= Date.current
+    self.due_date ||= 14.days.from_now.to_date
+    self.response_deadline ||= due_date
+    self.status ||= 'DRAFT'
+    self.priority ||= 'NORMAL'
+  end
+  
+  def initialize_scoring_weights
+    return if scoring_weights.present?
+    
+    self.scoring_weights = {
+      price_weight: 40,
+      delivery_weight: 20,
+      quality_weight: 25,
+      service_weight: 15
+    }
+    save if persisted?
+  end
+  
+  def calculate_totals
+    self.total_items_count = rfq_items.count
+    self.total_quantity_requested = rfq_items.sum(:quantity_requested)
+  end
+  
+  def update_supplier_counts
+    self.suppliers_invited_count = rfq_suppliers.count
+    self.quotes_pending_count = suppliers_invited_count - quotes_received_count
+  end
+  
+  def calculate_awarded_amount!
+    if awarded_supplier
+      awarded_amount = vendor_quotes.where(supplier: awarded_supplier, is_selected: true).sum(:total_price)
+      update_column(:awarded_total_amount, awarded_amount)
+      calculate_cost_savings!
+    end
+  end
+  
+  def due_date_after_rfq_date
+    return if rfq_date.blank? || due_date.blank?
+    errors.add(:due_date, "must be after RFQ date") if due_date < rfq_date
+  end
+  
+  def response_deadline_valid
+    return if response_deadline.blank?
+    errors.add(:response_deadline, "cannot be in the past") if response_deadline < Date.current && new_record?
+  end
+end
+
+# ============================================================
+# Model 24: rfq_item
+# File: app/models/rfq_item.rb
+# ============================================================
+
+# frozen_string_literal: true
+
+# ============================================================================
+# ALL REMAINING RFQ MODELS
+# Split into separate files during implementation
+# ============================================================================
+
+# ============================================================================
+# MODEL: RfqItem
+# ============================================================================
+class RfqItem < ApplicationRecord
+  belongs_to :rfq
+  belongs_to :product
+  belongs_to :selected_supplier, class_name: 'Supplier', optional: true
+  belongs_to :last_purchased_from, class_name: 'Supplier', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  
+  has_many :vendor_quotes, dependent: :destroy
+  
+  validates :line_number, presence: true, uniqueness: { scope: :rfq_id }
+  validates :quantity_requested, presence: true, numericality: { greater_than: 0 }
+  
+  scope :critical, -> { where(is_critical_item: true) }
+  scope :long_lead, -> { where(is_long_lead_item: true) }
+  scope :by_line_number, -> { order(:line_number) }
+  
+  before_validation :set_line_number, on: :create
+  before_save :calculate_target_total
+  
+  def display_name
+     product&.name_with_sku.presence || item_description.presence
+  end
+  
+  def calculate_quote_statistics!
+    return if vendor_quotes.empty?
+    
+    prices = vendor_quotes.pluck(:unit_price)
+    lead_times = vendor_quotes.pluck(:lead_time_days)
+    
+    update_columns(
+      quotes_received_count: vendor_quotes.count,
+      lowest_quoted_price: prices.min,
+      highest_quoted_price: prices.max,
+      average_quoted_price: (prices.sum / prices.size.to_f).round(4),
+      best_delivery_days: lead_times.min
+    )
+  end
+  
+  def select_quote!(quote, selected_by_user, reason: nil)
+    transaction do
+      update!(
+        selected_supplier: quote.supplier,
+        selected_unit_price: quote.unit_price,
+        selected_total_price: quote.total_price,
+        selected_lead_time_days: quote.lead_time_days,
+        selection_reason: reason
+      )
+      
+      quote.update!(is_selected: true, selected_by: selected_by_user, selected_date: Date.current)
+      calculate_variance!
+    end
+  end
+  
+  def calculate_variance!
+    if selected_unit_price && target_unit_price
+      variance = selected_unit_price - target_unit_price
+      percentage = (variance / target_unit_price * 100).round(2)
+      
+      update_columns(
+        price_variance_vs_target: variance * quantity_requested,
+        price_variance_percentage: percentage
+      )
+    end
+    
+    if selected_unit_price && last_purchase_price
+      variance = (selected_unit_price - last_purchase_price) * quantity_requested
+      update_column(:price_variance_vs_last, variance)
+    end
+    
+    if selected_total_price && highest_quoted_price
+      savings = (highest_quoted_price - selected_unit_price) * quantity_requested
+      update_column(:savings_vs_highest_quote, savings)
+    end
+  end
+  
+  private
+  
+  def set_line_number
+    self.line_number ||= (rfq.rfq_items.maximum(:line_number) || 0) + 10
+  end
+  
+  def calculate_target_total
+    if target_unit_price && quantity_requested
+      self.target_total_price = target_unit_price * quantity_requested
+    end
+  end
+end
+
+
+# ============================================================
+# Model 25: rfq_supplier
+# File: app/models/rfq_supplier.rb
+# ============================================================
+
+# ============================================================================
+# MODEL: RfqSupplier (Join table with invitation tracking)
+# ============================================================================
+class RfqSupplier < ApplicationRecord
+  belongs_to :rfq
+  belongs_to :supplier
+  belongs_to :supplier_contact, optional: true
+  belongs_to :invited_by, class_name: 'User', optional: true
+  
+  has_many :vendor_quotes, dependent: :destroy
+  
+  validates :rfq_id, uniqueness: { scope: :supplier_id }
+  
+  scope :invited, -> { where(invitation_status: 'INVITED') }
+  scope :quoted, -> { where(invitation_status: 'QUOTED') }
+  scope :declined, -> { where(invitation_status: 'DECLINED') }
+  scope :no_response, -> { where(invitation_status: 'NO_RESPONSE') }
+  scope :selected, -> { where(is_selected: true) }
+  
+  def mark_quoted!
+    update!(
+      invitation_status: 'QUOTED',
+      quoted_at: Time.current,
+      response_time_hours: calculate_response_time
+    )
+    
+    check_response_timeliness!
+  end
+  
+  def mark_declined!(reason)
+    update!(
+      invitation_status: 'DECLINED',
+      declined_at: Time.current,
+      decline_reason: reason
+    )
+  end
+  
+  def mark_no_response!
+    update!(invitation_status: 'NO_RESPONSE')
+  end
+  
+  def calculate_response_time
+    return nil unless invited_at
+    ((Time.current - invited_at) / 1.hour).to_i
+  end
+  
+  def check_response_timeliness!
+    return unless rfq.response_deadline && quoted_at
+    
+    if quoted_at.to_date > rfq.response_deadline
+      days_late = (quoted_at.to_date - rfq.response_deadline).to_i
+      update!(responded_on_time: false, days_overdue: days_late)
+    end
+  end
+  
+  def calculate_quote_summary!
+    quotes = vendor_quotes.where(is_latest_revision: true)
+    
+    update!(
+      total_quoted_amount: quotes.sum(:total_price),
+      items_quoted_count: quotes.count,
+      items_not_quoted_count: rfq.rfq_items.count - quotes.count,
+      quoted_all_items: quotes.count == rfq.rfq_items.count
+    )
+  end
+end
+
+# ============================================================
+# Model 26: routing
 # File: app/models/routing.rb
 # ============================================================
 
@@ -2138,7 +4119,7 @@ class Routing < ApplicationRecord
 end
 
 # ============================================================
-# Model 19: routing_operation
+# Model 27: routing_operation
 # File: app/models/routing_operation.rb
 # ============================================================
 
@@ -2311,7 +4292,7 @@ class RoutingOperation < ApplicationRecord
 end
 
 # ============================================================
-# Model 20: stock_adjustment
+# Model 28: stock_adjustment
 # File: app/models/stock_adjustment.rb
 # ============================================================
 
@@ -2473,7 +4454,7 @@ class StockAdjustment < ApplicationRecord
 end
 
 # ============================================================
-# Model 21: stock_adjustment_line
+# Model 29: stock_adjustment_line
 # File: app/models/stock_adjustment_line.rb
 # ============================================================
 
@@ -2612,7 +4593,7 @@ class StockAdjustmentLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 22: stock_batch
+# Model 30: stock_batch
 # File: app/models/stock_batch.rb
 # ============================================================
 
@@ -3167,7 +5148,7 @@ class StockBatch < ApplicationRecord
 end
 
 # ============================================================
-# Model 23: stock_issue
+# Model 31: stock_issue
 # File: app/models/stock_issue.rb
 # ============================================================
 
@@ -3218,7 +5199,7 @@ class StockIssue < ApplicationRecord
 end
 
 # ============================================================
-# Model 24: stock_issue_line
+# Model 32: stock_issue_line
 # File: app/models/stock_issue_line.rb
 # ============================================================
 
@@ -3254,7 +5235,7 @@ class StockIssueLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 25: stock_level
+# Model 33: stock_level
 # File: app/models/stock_level.rb
 # ============================================================
 
@@ -3330,7 +5311,7 @@ class StockLevel < ApplicationRecord
 end
 
 # ============================================================
-# Model 26: stock_transaction
+# Model 34: stock_transaction
 # File: app/models/stock_transaction.rb
 # ============================================================
 
@@ -3447,7 +5428,7 @@ class StockTransaction < ApplicationRecord
 end
 
 # ============================================================
-# Model 27: stock_transfer
+# Model 35: stock_transfer
 # File: app/models/stock_transfer.rb
 # ============================================================
 
@@ -3553,7 +5534,7 @@ class StockTransfer < ApplicationRecord
 end
 
 # ============================================================
-# Model 28: stock_transfer_line
+# Model 36: stock_transfer_line
 # File: app/models/stock_transfer_line.rb
 # ============================================================
 
@@ -3607,45 +5588,892 @@ class StockTransferLine < ApplicationRecord
 end
 
 # ============================================================
-# Model 29: supplier
+# Model 37: supplier
 # File: app/models/supplier.rb
 # ============================================================
 
+# frozen_string_literal: true
+
+# ============================================================================
+# MODEL: Supplier
+# Core supplier/vendor management with performance tracking and rating system
+# ============================================================================
 class Supplier < ApplicationRecord
-  belongs_to :created_by, class_name: "User", optional: true
-
-  # Soft delete default
-  attribute :deleted, :boolean, default: false
-  attribute :is_active, :boolean, default: true
-  attribute :lead_time_days, :integer, default: 7
-  attribute :on_time_delivery_rate, :decimal, default: 100.00
-
-  validates :code, presence: true, uniqueness: true, length: { maximum: 20 }
-  validates :name, presence: true, length: { maximum: 255 }
-
-  validates :email, 
-            allow_blank: true, 
-            format: { with: URI::MailTo::EMAIL_REGEXP }
-
-  validates :phone, length: { maximum: 50 }, allow_blank: true
-
-  validates :billing_address, presence: true
-
-  validates :lead_time_days,
-            numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-
-  validates :on_time_delivery_rate,
-            numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
-
-  scope :active, -> { where(deleted: false) }
-
+  # ============================================================================
+  # ASSOCIATIONS
+  # ============================================================================
+  # Related Models
+  has_many :addresses, class_name: 'SupplierAddress', dependent: :destroy
+  has_many :contacts, class_name: 'SupplierContact', dependent: :destroy
+  has_many :documents, class_name: 'SupplierDocument', dependent: :destroy
+  has_many :quality_issues, class_name: 'SupplierQualityIssue', dependent: :destroy
+  has_many :activities, class_name: 'SupplierActivity', dependent: :destroy
+  has_many :performance_reviews, class_name: 'SupplierPerformanceReview', dependent: :destroy
+  
+  # Product Catalog (many-to-many)
+  has_many :product_suppliers, dependent: :destroy
+  has_many :products, through: :product_suppliers
+  
+  # Purchase Orders (will add when PO module exists)
+  # has_many :purchase_orders, dependent: :restrict_with_error
+  
+  # User References
+  belongs_to :approved_by, class_name: 'User', optional: true
+  belongs_to :default_buyer, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  belongs_to :deleted_by, class_name: 'User', optional: true
+  
+  # ============================================================================
+  # NESTED ATTRIBUTES
+  # ============================================================================
+  accepts_nested_attributes_for :addresses, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :contacts, allow_destroy: true, reject_if: :all_blank
+  
+  # ============================================================================
+  # VALIDATIONS
+  # ============================================================================
+  validates :code, presence: true, uniqueness: { case_sensitive: false, conditions: -> { where(is_deleted: false) } }
+  validates :legal_name, presence: true, length: { maximum: 255 }
+  validates :supplier_type, presence: true, inclusion: { 
+    in: %w[MANUFACTURER DISTRIBUTOR SERVICE_PROVIDER TRADER IMPORTER],
+    message: "%{value} is not a valid supplier type"
+  }
+  validates :supplier_status, presence: true, inclusion: { 
+    in: %w[PENDING APPROVED SUSPENDED BLACKLISTED INACTIVE],
+    message: "%{value} is not a valid status"
+  }
+  validates :currency, presence: true, inclusion: { in: %w[USD CAD EUR GBP MXN], message: "%{value} is not supported" }
+  validates :primary_email, format: { with: URI::MailTo::EMAIL_REGEXP, allow_blank: true }
+  validates :website, format: { with: URI::DEFAULT_PARSER.make_regexp(%w[http https]), allow_blank: true }
+  
+  # Financial validations
+  validates :credit_limit_extended, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :current_payable_balance, numericality: { greater_than_or_equal_to: 0 }
+  validates :early_payment_discount_percentage, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
+  validates :tax_withholding_percentage, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }, allow_nil: true
+  
+  # Rating validations
+  validates :overall_rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :quality_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :delivery_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :price_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  
+  # ============================================================================
+  # CALLBACKS
+  # ============================================================================
+  before_validation :generate_code, on: :create
+  before_validation :set_display_name
+  before_validation :normalize_fields
+  before_save :calculate_rating_label
+  after_create :log_creation
+  after_update :log_status_change, if: :saved_change_to_supplier_status?
+  
+  # ============================================================================
+  # SCOPES
+  # ============================================================================
+  # Status Scopes
+  scope :non_deleted, -> { where(is_deleted: false) }
+  scope :active, -> { non_deleted.where(is_active: true) }
+  scope :inactive, -> { non_deleted.where(is_active: false) }
+  scope :approved, -> { non_deleted.where(supplier_status: 'APPROVED') }
+  scope :pending, -> { non_deleted.where(supplier_status: 'PENDING') }
+  scope :suspended, -> { non_deleted.where(supplier_status: 'SUSPENDED') }
+  scope :blacklisted, -> { non_deleted.where(supplier_status: 'BLACKLISTED') }
+  
+  # Type Scopes
+  scope :manufacturers, -> { where(supplier_type: 'MANUFACTURER') }
+  scope :distributors, -> { where(supplier_type: 'DISTRIBUTOR') }
+  scope :service_providers, -> { where(supplier_type: 'SERVICE_PROVIDER') }
+  
+  # Category Scopes
+  scope :raw_material_suppliers, -> { where(supplier_category: 'RAW_MATERIAL') }
+  scope :component_suppliers, -> { where(supplier_category: 'COMPONENTS') }
+  scope :packaging_suppliers, -> { where(supplier_category: 'PACKAGING') }
+  
+  # Strategic Scopes
+  scope :preferred, -> { where(is_preferred_supplier: true) }
+  scope :strategic, -> { where(is_strategic_supplier: true) }
+  scope :local, -> { where(is_local_supplier: true) }
+  scope :minority_owned, -> { where(is_minority_owned: true) }
+  scope :woman_owned, -> { where(is_woman_owned: true) }
+  
+  # Performance Scopes
+  scope :high_rated, -> { where('overall_rating >= ?', 80) }
+  scope :medium_rated, -> { where('overall_rating >= ? AND overall_rating < ?', 60, 80) }
+  scope :low_rated, -> { where('overall_rating < ?', 60) }
+  scope :excellent, -> { where(rating_label: 'EXCELLENT') }
+  scope :good, -> { where(rating_label: 'GOOD') }
+  
+  # Can Receive Scopes
+  scope :can_receive_pos, -> { where(can_receive_pos: true) }
+  scope :can_receive_rfqs, -> { where(can_receive_rfqs: true) }
+  
+  # Ordering
+  scope :by_name, -> { order(:legal_name) }
+  scope :by_rating, -> { order(overall_rating: :desc) }
+  scope :by_total_spend, -> { order(total_purchase_value: :desc) }
+  scope :recent, -> { order(created_at: :desc) }
+  
+  # Search
+  scope :search, ->(term) {
+    return all if term.blank?
+    where('legal_name ILIKE ? OR trade_name ILIKE ? OR code ILIKE ? OR primary_email ILIKE ?',
+          "%#{term}%", "%#{term}%", "%#{term}%", "%#{term}%")
+  }
+  
+  # ============================================================================
+  # SERIALIZATION
+  # ============================================================================
+  serialize :manufacturing_processes, type: Array, coder: JSON
+  serialize :quality_control_capabilities, type: Array, coder: JSON
+  serialize :testing_capabilities, type: Array, coder: JSON
+  serialize :materials_specialization, type: Array, coder: JSON
+  serialize :geographic_coverage, type: Array, coder: JSON
+  serialize :factory_locations, type: Array, coder: JSON
+  serialize :certifications, type: Array, coder: JSON
+  serialize :risk_factors, type: Array, coder: JSON
+  
+  # ============================================================================
+  # CLASS METHODS
+  # ============================================================================
+  def self.generate_next_code
+    last_supplier = where("code LIKE 'SUP-%'").order(code: :desc).first
+    if last_supplier && last_supplier.code =~ /SUP-(\d+)/
+      next_number = $1.to_i + 1
+    else
+      next_number = 1
+    end
+    "SUP-#{next_number.to_s.rjust(5, '0')}"
+  end
+  
+  def self.rating_labels
+    %w[EXCELLENT GOOD FAIR POOR CRITICAL]
+  end
+  
+  def self.supplier_types
+    %w[MANUFACTURER DISTRIBUTOR SERVICE_PROVIDER TRADER IMPORTER]
+  end
+  
+  def self.supplier_categories
+    %w[RAW_MATERIAL COMPONENTS PACKAGING SERVICES MRO CAPITAL_EQUIPMENT]
+  end
+  
+  def self.supplier_statuses
+    %w[PENDING APPROVED SUSPENDED BLACKLISTED INACTIVE]
+  end
+  
+  # ============================================================================
+  # DISPLAY METHODS
+  # ============================================================================
+  def display_name
+    trade_name.presence || legal_name
+  end
+  
+  def full_display_name
+    "#{display_name} (#{code})"
+  end
+  
   def to_s
-    "#{code} - #{name}"
+    full_display_name
+  end
+  
+  # ============================================================================
+  # STATUS MANAGEMENT
+  # ============================================================================
+  def approve!(approved_by_user, notes: nil)
+    update!(
+      supplier_status: 'APPROVED',
+      approved_date: Date.current,
+      approved_by: approved_by_user,
+      status_effective_date: Date.current,
+      status_reason: notes
+    )
+  end
+  
+  def suspend!(reason, suspended_by_user)
+    update!(
+      supplier_status: 'SUSPENDED',
+      status_reason: reason,
+      status_effective_date: Date.current,
+      can_receive_pos: false,
+      updated_by: suspended_by_user
+    )
+  end
+  
+  def blacklist!(reason, blacklisted_by_user)
+    update!(
+      supplier_status: 'BLACKLISTED',
+      status_reason: reason,
+      status_effective_date: Date.current,
+      can_receive_pos: false,
+      can_receive_rfqs: false,
+      is_active: false,
+      updated_by: blacklisted_by_user
+    )
+  end
+  
+  def reactivate!(reactivated_by_user, notes: nil)
+    update!(
+      supplier_status: 'APPROVED',
+      status_reason: notes,
+      status_effective_date: Date.current,
+      can_receive_pos: true,
+      can_receive_rfqs: true,
+      is_active: true,
+      updated_by: reactivated_by_user
+    )
+  end
+  
+  def approved?
+    supplier_status == 'APPROVED'
+  end
+  
+  def pending_approval?
+    supplier_status == 'PENDING'
+  end
+  
+  def suspended?
+    supplier_status == 'SUSPENDED'
+  end
+  
+  def blacklisted?
+    supplier_status == 'BLACKLISTED'
+  end
+  
+  # ============================================================================
+  # RATING & PERFORMANCE METHODS
+  # ============================================================================
+  def calculate_overall_rating!
+    # Weighted calculation: Quality 30%, Delivery 40%, Price 30%
+    new_rating = (quality_score * 0.30) + (delivery_score * 0.40) + (price_score * 0.30)
+    update_columns(
+      overall_rating: new_rating.round(2),
+      rating_last_calculated_at: Time.current
+    )
+    calculate_rating_label
+    save if changed?
+  end
+  
+  def rating_label
+    case overall_rating
+    when 90..100 then 'EXCELLENT'
+    when 75..89 then 'GOOD'
+    when 60..74 then 'FAIR'
+    when 40..59 then 'POOR'
+    else 'CRITICAL'
+    end
+  end
+  
+  def rating_badge_class
+    case rating_label
+    when 'EXCELLENT' then 'success'
+    when 'GOOD' then 'primary'
+    when 'FAIR' then 'warning'
+    when 'POOR' then 'danger'
+    when 'CRITICAL' then 'dark'
+    end
+  end
+  
+  def status_badge_class
+    case supplier_status
+    when 'APPROVED' then 'success'
+    when 'PENDING' then 'warning'
+    when 'SUSPENDED' then 'danger'
+    when 'BLACKLISTED' then 'dark'
+    when 'INACTIVE' then 'secondary'
+    end
+  end
+  
+  # ============================================================================
+  # FINANCIAL METHODS
+  # ============================================================================
+  def available_credit
+    credit_limit_extended - current_payable_balance
+  end
+  
+  def credit_utilization_percentage
+    return 0 if credit_limit_extended.zero?
+    (current_payable_balance / credit_limit_extended * 100).round(2)
+  end
+  
+  def over_credit_limit?
+    current_payable_balance > credit_limit_extended
+  end
+  
+  def can_extend_credit?(amount)
+    (current_payable_balance + amount) <= credit_limit_extended
+  end
+  
+  def update_payable_balance!
+    # Calculate from purchase orders/invoices when those modules exist
+    # self.current_payable_balance = purchase_orders.unpaid.sum(:total_amount)
+    # save
+  end
+  
+  # ============================================================================
+  # PERFORMANCE TRACKING METHODS
+  # ============================================================================
+  def update_performance_metrics!
+    # Will be called after each PO receipt/delivery
+    calculate_delivery_performance!
+    calculate_quality_performance!
+    calculate_order_statistics!
+    calculate_overall_rating!
+  end
+  
+  def calculate_delivery_performance!
+    # Logic when PO module exists
+    # total_deliveries = purchase_order_receipts.count
+    # on_time = purchase_order_receipts.on_time.count
+    # late = purchase_order_receipts.late.count
+    # self.on_time_delivery_rate = (on_time.to_f / total_deliveries * 100).round(2)
+    # self.late_deliveries_count = late
+    # Calculate delivery_score
+  end
+  
+  def calculate_quality_performance!
+    total_issues = quality_issues.count
+    critical_issues = quality_issues.where(severity: 'CRITICAL').count
+    
+    # Quality score calculation
+    base_score = 100
+    deduction = (critical_issues * 10) + ((total_issues - critical_issues) * 2)
+    self.quality_score = [base_score - deduction, 0].max
+    self.quality_issues_count = total_issues
+  end
+  
+  def calculate_order_statistics!
+    # Will calculate from PO data when available
+    # self.total_po_count = purchase_orders.count
+    # self.total_purchase_value = purchase_orders.sum(:total_amount)
+    # etc.
+  end
+  
+  # ============================================================================
+  # PRODUCT CATALOG METHODS
+  # ============================================================================
+  def supplies_product?(product)
+    product_suppliers.where(product: product, is_active: true).exists?
+  end
+  
+  def add_product(product, attributes = {})
+    product_suppliers.create!(
+      product: product,
+      current_unit_price: attributes[:unit_price],
+      lead_time_days: attributes[:lead_time_days] || default_lead_time_days,
+      minimum_order_quantity: attributes[:moq] || minimum_order_quantity,
+      **attributes
+    )
+  end
+  
+  def remove_product(product)
+    product_suppliers.where(product: product).destroy_all
+  end
+  
+  def product_catalog
+    product_suppliers.includes(:product).where(is_active: true)
+  end
+  
+  def preferred_products
+    product_suppliers.where(is_preferred_supplier: true, is_active: true)
+  end
+  
+  def get_product_price(product)
+    product_suppliers.find_by(product: product, is_active: true)&.current_unit_price
+  end
+  
+  def get_product_lead_time(product)
+    product_suppliers.find_by(product: product, is_active: true)&.lead_time_days || default_lead_time_days
+  end
+  
+  # ============================================================================
+  # QUALITY ISSUE METHODS
+  # ============================================================================
+  def log_quality_issue!(attributes)
+    quality_issues.create!(attributes)
+    calculate_quality_performance!
+    calculate_overall_rating!
+  end
+  
+  def open_quality_issues
+    quality_issues.where(status: 'OPEN')
+  end
+  
+  def critical_quality_issues
+    quality_issues.where(severity: 'CRITICAL')
+  end
+  
+  def has_open_critical_issues?
+    critical_quality_issues.where(status: 'OPEN').exists?
+  end
+  
+  # ============================================================================
+  # ACTIVITY LOGGING
+  # ============================================================================
+  def log_activity!(activity_type, subject, description, user, attributes = {})
+    activities.create!(
+      activity_type: activity_type,
+      subject: subject,
+      description: description,
+      activity_date: Time.current,
+      related_user: user,
+      created_by: user,
+      **attributes
+    )
+  end
+  
+  def recent_activities(limit = 10)
+    activities.order(activity_date: :desc).limit(limit)
+  end
+  
+  # ============================================================================
+  # CONTACT METHODS
+  # ============================================================================
+  def primary_contact
+    contacts.find_by(is_primary_contact: true, is_active: true)
+  end
+  
+  def sales_contacts
+    contacts.where(contact_role: 'SALES', is_active: true)
+  end
+  
+  def accounts_payable_contacts
+    contacts.where(contact_role: 'ACCOUNTS_PAYABLE', is_active: true)
+  end
+  
+  def technical_contacts
+    contacts.where(contact_role: 'TECHNICAL', is_active: true)
+  end
+  
+  # ============================================================================
+  # ADDRESS METHODS
+  # ============================================================================
+  def primary_address
+    addresses.find_by(address_type: 'PRIMARY_OFFICE', is_default: true, is_active: true) ||
+    addresses.find_by(is_default: true, is_active: true) ||
+    addresses.where(is_active: true).first
+  end
+  
+  def factory_addresses
+    addresses.where(address_type: 'FACTORY', is_active: true)
+  end
+  
+  def warehouse_addresses
+    addresses.where(address_type: 'WAREHOUSE', is_active: true)
+  end
+  
+  def billing_address
+    addresses.find_by(address_type: 'BILLING', is_active: true) || primary_address
+  end
+  
+  # ============================================================================
+  # CERTIFICATION METHODS
+  # ============================================================================
+  def has_certification?(cert_name)
+    certifications.to_a.include?(cert_name)
+  end
+  
+  def iso_certified?
+    iso_9001_certified? || iso_14001_certified? || iso_45001_certified?
+  end
+  
+  def certifications_expiring_soon?(days = 90)
+    [iso_9001_expiry, iso_14001_expiry, iso_45001_expiry].compact.any? { |date| date <= days.days.from_now.to_date }
+  end
+  
+  # ============================================================================
+  # DOCUMENT METHODS
+  # ============================================================================
+  def active_documents
+    documents.where(is_active: true)
+  end
+  
+  def expired_documents
+    documents.where('expiry_date < ?', Date.current)
+  end
+  
+  def expiring_documents(days = 30)
+    documents.where('expiry_date BETWEEN ? AND ?', Date.current, days.days.from_now.to_date)
+  end
+  
+  def has_valid_contract?
+    documents.where(document_type: 'CONTRACT', is_active: true)
+            .where('expiry_date > ? OR expiry_date IS NULL', Date.current)
+            .exists?
+  end
+  
+  # ============================================================================
+  # SOFT DELETE
+  # ============================================================================
+  def soft_delete!(deleted_by_user)
+    update!(
+      is_deleted: true,
+      deleted_at: Time.current,
+      deleted_by: deleted_by_user,
+      is_active: false
+    )
+  end
+  
+  def restore!
+    update!(
+      is_deleted: false,
+      deleted_at: nil,
+      deleted_by: nil,
+      is_active: true
+    )
+  end
+  
+  private
+  
+  # ============================================================================
+  # PRIVATE CALLBACK METHODS
+  # ============================================================================
+  def generate_code
+    self.code ||= self.class.generate_next_code
+  end
+  
+  def set_display_name
+    self.display_name = trade_name.presence || legal_name
+  end
+  
+  def normalize_fields
+    self.legal_name = legal_name.strip if legal_name.present?
+    self.trade_name = trade_name.strip if trade_name.present?
+    self.primary_email = primary_email.downcase.strip if primary_email.present?
+  end
+  
+  def calculate_rating_label
+    self.rating_label = case overall_rating
+    when 90..100 then 'EXCELLENT'
+    when 75..89 then 'GOOD'
+    when 60..74 then 'FAIR'
+    when 40..59 then 'POOR'
+    else 'CRITICAL'
+    end
+  end
+  
+  def log_creation
+    log_activity!('NOTE', 'Supplier Created', "Supplier #{code} was created", created_by) if created_by
+  end
+  
+  def log_status_change
+    if saved_change_to_supplier_status?
+      old_status, new_status = saved_change_to_supplier_status
+      log_activity!('NOTE', 'Status Changed', "Status changed from #{old_status} to #{new_status}", updated_by) if updated_by
+    end
   end
 end
 
 # ============================================================
-# Model 30: tax_code
+# Model 38: supplier_activity
+# File: app/models/supplier_activity.rb
+# ============================================================
+
+class SupplierActivity < ApplicationRecord
+  belongs_to :supplier
+  belongs_to :supplier_contact, optional: true
+  belongs_to :related_user, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :related_record, polymorphic: true, optional: true
+  
+  validates :activity_type, presence: true
+  validates :subject, presence: true
+  validates :activity_date, presence: true
+  
+  serialize :tags, type: Array, coder: JSON
+  
+  scope :recent, -> { order(activity_date: :desc) }
+  scope :by_type, ->(type) { where(activity_type: type) }
+  scope :completed, -> { where(activity_status: 'COMPLETED') }
+  scope :scheduled, -> { where(activity_status: 'SCHEDULED') }
+  scope :overdue, -> { where(is_overdue: true) }
+  
+  def mark_completed!(outcome = nil, completed_by_user)
+    update!(
+      activity_status: 'COMPLETED',
+      outcome: outcome,
+      is_overdue: false
+    )
+  end
+  
+  def reschedule!(new_date)
+    update!(activity_date: new_date, is_overdue: false)
+  end
+end
+
+# ============================================================
+# Model 39: supplier_address
+# File: app/models/supplier_address.rb
+# ============================================================
+
+class SupplierAddress < ApplicationRecord
+  belongs_to :supplier
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  
+  validates :address_type, presence: true, inclusion: { in: %w[PRIMARY_OFFICE FACTORY WAREHOUSE BILLING RETURNS OTHER] }
+  validates :street_address_1, :city, :postal_code, :country, presence: true
+  
+  serialize :equipment_available, type: Array, coder: JSON
+  serialize :certifications_at_location, type: Array, coder: JSON
+  
+  scope :active, -> { where(is_active: true) }
+  scope :default_addresses, -> { where(is_default: true) }
+  scope :factories, -> { where(address_type: 'FACTORY') }
+  scope :warehouses, -> { where(address_type: 'WAREHOUSE') }
+  
+  before_save :ensure_single_default, if: :is_default?
+  
+  def display_label
+    address_label.presence || "#{address_type.titleize} Address"
+  end
+  
+  def full_address
+    [street_address_1, street_address_2, city, state_province, postal_code, country].compact.join(', ')
+  end
+  
+  def single_line_address
+    [street_address_1, city, state_province, postal_code].compact.join(', ')
+  end
+  
+  def make_default!
+    transaction do
+      supplier.addresses.where(address_type: address_type).update_all(is_default: false)
+      update!(is_default: true)
+    end
+  end
+  
+  private
+  
+  def ensure_single_default
+    if is_default? && is_default_changed?
+      supplier.addresses.where(address_type: address_type).where.not(id: id).update_all(is_default: false)
+    end
+  end
+end
+
+# ============================================================
+# Model 40: supplier_contact
+# File: app/models/supplier_contact.rb
+# ============================================================
+
+class SupplierContact < ApplicationRecord
+  belongs_to :supplier
+  belongs_to :last_contacted_by, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  
+  validates :first_name, :last_name, :email, :phone, presence: true
+  validates :contact_role, presence: true, inclusion: { 
+    in: %w[SALES TECHNICAL ACCOUNTS_PAYABLE QUALITY SHIPPING MANAGEMENT PRIMARY OTHER]
+  }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
+  
+  serialize :languages_spoken, type: Array, coder: JSON
+  
+  scope :active, -> { where(is_active: true) }
+  scope :primary, -> { where(is_primary_contact: true) }
+  scope :decision_makers, -> { where(is_decision_maker: true) }
+  
+  before_save :ensure_single_primary, if: :is_primary_contact?
+  
+  def full_name
+    "#{first_name} #{last_name}"
+  end
+  
+  def name_with_title
+    title.present? ? "#{full_name}, #{title}" : full_name
+  end
+  
+  def make_primary!
+    transaction do
+      supplier.contacts.update_all(is_primary_contact: false)
+      update!(is_primary_contact: true)
+    end
+  end
+  
+  def record_contact!(contacted_by_user)
+    update!(
+      last_contacted_at: Time.current,
+      last_contacted_by: contacted_by_user,
+      total_interactions_count: total_interactions_count + 1
+    )
+  end
+  
+  private
+  
+  def ensure_single_primary
+    if is_primary_contact? && is_primary_contact_changed?
+      supplier.contacts.where.not(id: id).update_all(is_primary_contact: false)
+    end
+  end
+end
+
+# ============================================================
+# Model 41: supplier_document
+# File: app/models/supplier_document.rb
+# ============================================================
+
+class SupplierDocument < ApplicationRecord
+  belongs_to :supplier
+  belongs_to :uploaded_by, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :superseded_by, class_name: 'SupplierDocument', optional: true
+  
+  mount_uploader :file, AttachmentUploader
+  
+  validates :document_type, presence: true
+  validates :document_title, presence: true
+  
+  scope :active, -> { where(is_active: true) }
+  scope :expired, -> { where('expiry_date < ?', Date.current) }
+  scope :expiring_soon, ->(days = 30) { where('expiry_date BETWEEN ? AND ?', Date.current, days.days.from_now) }
+  scope :by_type, ->(type) { where(document_type: type) }
+  
+  def expired?
+    expiry_date.present? && expiry_date < Date.current
+  end
+  
+  def expiring_soon?(days = 30)
+    expiry_date.present? && expiry_date.between?(Date.current, days.days.from_now)
+  end
+  
+  def days_until_expiry
+    return nil unless expiry_date.present?
+    (expiry_date - Date.current).to_i
+  end
+  
+  def file_attached?
+    file.attached?
+  end
+  
+  def file_name
+    file.attached? ? file.filename.to_s : super
+  end
+  
+  def file_size
+    file.attached? ? file.byte_size : super
+  end
+end
+
+
+# ============================================================
+# Model 42: supplier_performance_review
+# File: app/models/supplier_performance_review.rb
+# ============================================================
+
+class SupplierPerformanceReview < ApplicationRecord
+  belongs_to :supplier
+  belongs_to :reviewed_by, class_name: 'User', optional: true
+  belongs_to :approved_by, class_name: 'User', optional: true
+  belongs_to :shared_by, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  
+  validates :period_start_date, :period_end_date, :review_date, presence: true
+  validates :review_type, inclusion: { in: %w[MONTHLY QUARTERLY SEMI_ANNUAL ANNUAL AD_HOC] }
+  validates :review_status, inclusion: { in: %w[DRAFT COMPLETED APPROVED SHARED_WITH_SUPPLIER] }
+  
+  scope :by_period, ->(start_date, end_date) { where('period_start_date >= ? AND period_end_date <= ?', start_date, end_date) }
+  scope :approved, -> { where(review_status: 'APPROVED') }
+  scope :recent, -> { order(review_date: :desc) }
+  
+  def approve!(approved_by_user)
+    update!(
+      review_status: 'APPROVED',
+      approved_by: approved_by_user,
+      approved_date: Date.current
+    )
+  end
+  
+  def share_with_supplier!(shared_by_user)
+    update!(
+      shared_with_supplier: true,
+      shared_date: Date.current,
+      shared_by: shared_by_user
+    )
+  end
+  
+  def calculate_overall_score
+    scores = [quality_score, delivery_score, cost_score, service_score, responsiveness_score].compact
+    return 0 if scores.empty?
+    (scores.sum / scores.size).round(2)
+  end
+end
+
+# ============================================================
+# Model 43: supplier_quality_issue
+# File: app/models/supplier_quality_issue.rb
+# ============================================================
+
+class SupplierQualityIssue < ApplicationRecord
+  belongs_to :supplier
+  belongs_to :product, optional: true
+  belongs_to :reported_by, class_name: 'User', optional: true
+  belongs_to :assigned_to, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :related_issue, class_name: 'SupplierQualityIssue', optional: true
+  
+  has_many_attached :attachments
+  
+  validates :issue_title, :issue_description, :severity, :issue_date, presence: true
+  validates :severity, inclusion: { in: %w[CRITICAL MAJOR MINOR] }
+  validates :status, inclusion: { in: %w[OPEN IN_PROGRESS RESOLVED CLOSED RECURRING] }
+  
+  before_create :generate_issue_number
+  after_create :notify_stakeholders
+  after_update :update_supplier_rating, if: :saved_change_to_status?
+  
+  scope :open, -> { where(status: 'OPEN') }
+  scope :critical, -> { where(severity: 'CRITICAL') }
+  scope :resolved, -> { where(status: 'RESOLVED') }
+  scope :closed, -> { where(status: 'CLOSED') }
+  scope :repeat_issues, -> { where(is_repeat_issue: true) }
+  
+  def generate_issue_number
+    last_issue = SupplierQualityIssue.order(issue_number: :desc).first
+    if last_issue && last_issue.issue_number =~ /QI-(\d+)/
+      next_number = $1.to_i + 1
+    else
+      next_number = 1
+    end
+    self.issue_number = "QI-#{next_number.to_s.rjust(5, '0')}"
+  end
+  
+  def mark_resolved!(resolution_notes, resolved_by_user)
+    update!(
+      status: 'RESOLVED',
+      resolution_date: Date.current,
+      root_cause_analysis: resolution_notes,
+      days_to_resolve: (Date.current - issue_date).to_i
+    )
+    
+    supplier.log_activity!('ISSUE_RESOLUTION', "Quality Issue Resolved", 
+                          "Issue #{issue_number} resolved", resolved_by_user)
+  end
+  
+  def close!(closed_by_user)
+    update!(
+      status: 'CLOSED',
+      closed_date: Date.current
+    )
+  end
+  
+  private
+  
+  def notify_stakeholders
+    # Send email notifications (implement when mailer exists)
+  end
+  
+  def update_supplier_rating
+    return unless saved_change_to_status? && status == 'CLOSED'
+    supplier.calculate_quality_performance!
+    supplier.calculate_overall_rating!
+  end
+end
+
+# ============================================================
+# Model 44: tax_code
 # File: app/models/tax_code.rb
 # ============================================================
 
@@ -3757,7 +6585,7 @@ class TaxCode < ApplicationRecord
 end
 
 # ============================================================
-# Model 31: unit_of_measure
+# Model 45: unit_of_measure
 # File: app/models/unit_of_measure.rb
 # ============================================================
 
@@ -3770,7 +6598,7 @@ class UnitOfMeasure < ApplicationRecord
 end
 
 # ============================================================
-# Model 32: user
+# Model 46: user
 # File: app/models/user.rb
 # ============================================================
 
@@ -3786,7 +6614,257 @@ class User < ApplicationRecord
 end
 
 # ============================================================
-# Model 33: warehouse
+# Model 47: vendor_quote
+# File: app/models/vendor_quote.rb
+# ============================================================
+
+class VendorQuote < ApplicationRecord
+  belongs_to :rfq
+  belongs_to :rfq_item
+  belongs_to :supplier
+  belongs_to :rfq_supplier
+  belongs_to :selected_by, class_name: 'User', optional: true
+  belongs_to :reviewed_by, class_name: 'User', optional: true
+  belongs_to :created_by, class_name: 'User', optional: true
+  belongs_to :updated_by, class_name: 'User', optional: true
+  belongs_to :superseded_by, class_name: 'VendorQuote', optional: true
+  
+  validates :quote_date, :unit_price, :total_price, :lead_time_days, presence: true
+  validates :unit_price, :total_price, numericality: { greater_than: 0 }
+  validates :lead_time_days, numericality: { greater_than: 0 }
+  
+  scope :latest, -> { where(is_latest_revision: true) }
+  scope :selected, -> { where(is_selected: true) }
+  scope :lowest_price, -> { where(is_lowest_price: true) }
+  scope :fastest_delivery, -> { where(is_fastest_delivery: true) }
+  scope :best_value, -> { where(is_best_value: true) }
+  scope :recommended, -> { where(is_recommended: true) }
+  scope :by_rank, -> { order(:overall_rank) }
+  scope :by_price, -> { order(:unit_price) }
+  scope :by_delivery, -> { order(:lead_time_days) }
+  
+  before_save :calculate_total_cost
+  after_create :update_rfq_item_statistics
+  after_save :calculate_rankings, if: :saved_change_to_unit_price?
+  
+  def calculate_scores!(rfq)
+    # Get all competing quotes for this item
+    competing_quotes = rfq_item.vendor_quotes.latest
+    
+    # 1. PRICE SCORE (0-100, lower price = higher score)
+    prices = competing_quotes.pluck(:unit_price)
+    min_price = prices.min
+    max_price = prices.max
+    price_range = max_price - min_price
+    
+    if price_range.zero?
+      self.price_score = 100
+    else
+      # Inverse scoring: lowest price gets 100, highest gets 0
+      self.price_score = ((max_price - unit_price) / price_range * 100).round(2)
+    end
+    
+    # 2. DELIVERY SCORE (0-100, faster = higher score)
+    lead_times = competing_quotes.pluck(:lead_time_days)
+    min_lead_time = lead_times.min
+    max_lead_time = lead_times.max
+    lead_time_range = max_lead_time - min_lead_time
+    
+    if lead_time_range.zero?
+      self.delivery_score = 100
+    else
+      # Inverse scoring: shortest lead time gets 100
+      self.delivery_score = ((max_lead_time - lead_time_days) / lead_time_range * 100).round(2)
+    end
+    
+    # 3. QUALITY SCORE (from supplier's overall rating)
+    self.quality_score = supplier.overall_rating || 75
+    
+    # 4. SERVICE SCORE (from supplier's service rating)
+    self.service_score = supplier.service_score || 75
+    
+    # 5. OVERALL WEIGHTED SCORE
+    weights = rfq.weights
+    self.overall_score = (
+      (price_score * weights[:price] / 100) +
+      (delivery_score * weights[:delivery] / 100) +
+      (quality_score * weights[:quality] / 100) +
+      (service_score * weights[:service] / 100)
+    ).round(2)
+    
+    save if changed?
+  end
+  
+  def calculate_total_price!(quote)
+    # Base price
+    base = unit_price × quantity_requested
+    
+    # Additional costs
+    additional = tooling_cost + 
+                 setup_cost + 
+                 shipping_cost + 
+                 other_charges
+    
+    total_price = base + additional
+  end
+
+  def generate_quote_number(supplier)
+    # Format: QT-SUP001-20241223-001
+    prefix = supplier.supplier_code || supplier.id.to_s.rjust(3, '0')
+    date_part = Date.current.strftime('%Y%m%d')
+    sequence = VendorQuote.where(supplier: supplier).count + 1
+    
+    "QT-#{prefix}-#{date_part}-#{sequence.to_s.rjust(3, '0')}"
+  end
+
+  def calculate_rankings
+    # Rank among all quotes for this RFQ item
+    quotes = rfq_item.vendor_quotes.latest.order(:unit_price)
+    
+    # Price rankings
+    quotes.each_with_index do |quote, index|
+      quote.update_column(:price_rank, index + 1)
+      quote.update_column(:is_lowest_price, index.zero?)
+    end
+    
+    # Delivery rankings
+    quotes_by_delivery = rfq_item.vendor_quotes.latest.order(:lead_time_days)
+    quotes_by_delivery.each_with_index do |quote, index|
+      quote.update_column(:delivery_rank, index + 1)
+      quote.update_column(:is_fastest_delivery, index.zero?)
+    end
+    
+    # Total cost rankings
+    quotes_by_cost = rfq_item.vendor_quotes.latest.order(:total_cost)
+    quotes_by_cost.each_with_index do |quote, index|
+      quote.update_column(:total_cost_rank, index + 1)
+    end
+    
+    # Overall rankings (by score)
+    quotes_by_score = rfq_item.vendor_quotes.latest.order(overall_score: :desc)
+    quotes_by_score.each_with_index do |quote, index|
+      quote.update_column(:overall_rank, index + 1)
+      quote.update_column(:is_best_value, index.zero?)
+    end
+  end
+  
+  def calculate_price_comparisons!
+    # Compare with lowest price
+    lowest = rfq_item.lowest_quoted_price
+    if lowest && lowest > 0
+      diff = ((unit_price - lowest) / lowest * 100).round(2)
+      update_column(:price_vs_lowest_percentage, diff)
+    end
+    
+    # Compare with average
+    average = rfq_item.average_quoted_price
+    if average && average > 0
+      diff = ((unit_price - average) / average * 100).round(2)
+      update_column(:price_vs_average_percentage, diff)
+    end
+    
+    # Compare with target
+    if rfq_item.target_unit_price && rfq_item.target_unit_price > 0
+      diff = ((unit_price - rfq_item.target_unit_price) / rfq_item.target_unit_price * 100).round(2)
+      update_column(:price_vs_target_percentage, diff)
+    end
+    
+    # Compare with last purchase
+    if rfq_item.last_purchase_price && rfq_item.last_purchase_price > 0
+      diff = ((unit_price - rfq_item.last_purchase_price) / rfq_item.last_purchase_price * 100).round(2)
+      update_column(:price_vs_last_purchase_percentage, diff)
+    end
+  end
+  
+  # ============================================================================
+  # QUOTE MANAGEMENT
+  # ============================================================================
+  def create_revision!(attributes, updated_by_user)
+    new_quote = self.class.new(
+      attributes.merge(
+        rfq: rfq,
+        rfq_item: rfq_item,
+        supplier: supplier,
+        rfq_supplier: rfq_supplier,
+        quote_revision: quote_revision + 1,
+        created_by: updated_by_user,
+        superseded_by: nil,
+        is_latest_revision: true
+      )
+    )
+    
+    if new_quote.save
+      update!(is_latest_revision: false, superseded_by: new_quote)
+      new_quote
+    end
+  end
+  
+  def select!(selected_by_user, reason: nil)
+    update!(
+      is_selected: true,
+      selected_by: selected_by_user,
+      selected_date: Date.current,
+      selection_reason: reason,
+      quote_status: 'ACCEPTED'
+    )
+    
+    rfq_item.select_quote!(self, selected_by_user, reason: reason)
+  end
+  
+  def reject!(reviewed_by_user, reason: nil)
+    update!(
+      quote_status: 'REJECTED',
+      reviewed_by: reviewed_by_user,
+      reviewed_at: Time.current,
+      review_notes: reason
+    )
+  end
+  
+  # ============================================================================
+  # DISPLAY HELPERS
+  # ============================================================================
+  def price_difference_from_lowest
+    return 0 unless rfq_item.lowest_quoted_price
+    unit_price - rfq_item.lowest_quoted_price
+  end
+  
+  def is_competitive?
+    price_vs_average_percentage && price_vs_average_percentage <= 5
+  end
+  
+  def delivery_status
+    if can_meet_required_date
+      'On Time'
+    else
+      "#{days_after_required_date} days late"
+    end
+  end
+  
+  def highlight_class
+    return 'best-value' if is_best_value
+    return 'lowest-price' if is_lowest_price
+    return 'fastest-delivery' if is_fastest_delivery
+    nil
+  end
+  
+  private
+  
+  def calculate_total_cost
+    self.total_cost = total_price + 
+                      (tooling_cost || 0) + 
+                      (setup_cost || 0) + 
+                      (shipping_cost || 0) + 
+                      (other_charges || 0)
+  end
+  
+  def update_rfq_item_statistics
+    rfq_item.calculate_quote_statistics!
+    rfq_supplier.calculate_quote_summary!
+  end
+end
+
+# ============================================================
+# Model 48: warehouse
 # File: app/models/warehouse.rb
 # ============================================================
 
@@ -3803,7 +6881,7 @@ class Warehouse < ApplicationRecord
 end
 
 # ============================================================
-# Model 34: work_center
+# Model 49: work_center
 # File: app/models/work_center.rb
 # ============================================================
 
@@ -3988,7 +7066,7 @@ class WorkCenter < ApplicationRecord
 end
 
 # ============================================================
-# Model 35: work_order
+# Model 50: work_order
 # File: app/models/work_order.rb
 # ============================================================
 
@@ -4578,7 +7656,7 @@ class WorkOrder < ApplicationRecord
 end
 
 # ============================================================
-# Model 36: work_order_material
+# Model 51: work_order_material
 # File: app/models/work_order_material.rb
 # ============================================================
 
@@ -4841,7 +7919,7 @@ class WorkOrderMaterial < ApplicationRecord
 end
 
 # ============================================================
-# Model 37: work_order_operation
+# Model 52: work_order_operation
 # File: app/models/work_order_operation.rb
 # ============================================================
 

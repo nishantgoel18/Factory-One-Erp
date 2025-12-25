@@ -11,38 +11,35 @@ module Suppliers
         format.json { render json: @product_suppliers }
       end
     end
-    
-    def new
-      @product_supplier = @supplier.product_suppliers.build
-      @available_products = Product.where.not(id: @supplier.products.pluck(:id))
-      respond_to do |format|
-        format.html { render partial: 'suppliers/products/form', locals: { supplier: @supplier, product_supplier: @product_supplier, available_products: @available_products }, layout: false }
-      end
-    end
-    
+
+
     def create
       @product_supplier = @supplier.product_suppliers.build(product_supplier_params)
       @product_supplier.created_by = current_user
       @product_supplier.first_purchase_date = Date.current
       
       if @product_supplier.save
-        render json: { success: true, message: 'Product added to catalog' }
+        redirect_to @supplier, notice: "Product added to catalog."
       else
-        render json: { success: false, errors: @product_supplier.errors.full_messages }, status: :unprocessable_entity
+        render :new, status: :unprocessable_entity
       end
     end
     
     def edit
-      respond_to do |format|
-        format.html { render partial: 'suppliers/products/form', locals: { supplier: @supplier, product_supplier: @product_supplier }, layout: false }
-      end
+      
     end
+    
+    def new
+      @product_supplier = @supplier.product_suppliers.build
+      @available_products = Product.where.not(id: @supplier.products.pluck(:id))
+    end
+    
     
     def update
       if @product_supplier.update(product_supplier_params)
-        render json: { success: true, message: 'Product catalog updated' }
+        redirect_to @supplier, notice: "Product updated!"
       else
-        render json: { success: false, errors: @product_supplier.errors.full_messages }, status: :unprocessable_entity
+        render :edit, status: :unprocessable_entity
       end
     end
     

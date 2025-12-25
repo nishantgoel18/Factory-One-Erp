@@ -6,33 +6,32 @@ module Suppliers
     
     def new
       @address = @supplier.addresses.build(is_active: true)
-      respond_to do |format|
-        format.html { render partial: 'suppliers/addresses/form', locals: { supplier: @supplier, address: @address }, layout: false }
-      end
     end
     
     def create
       @address = @supplier.addresses.build(address_params)
       @address.created_by = current_user
       
-      if @address.save
-        render json: { success: true, message: 'Address added successfully' }
-      else
-        render json: { success: false, errors: @address.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @address.save
+          format.html { redirect_to @supplier, notice: "Address was successfully created." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
       end
     end
     
     def edit
-      respond_to do |format|
-        format.html { render partial: 'suppliers/addresses/form', locals: { supplier: @supplier, address: @address }, layout: false }
-      end
+      
     end
     
     def update
-      if @address.update(address_params)
-        render json: { success: true, message: 'Address updated successfully' }
-      else
-        render json: { success: false, errors: @address.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @address.update(address_params)
+          format.html { redirect_to @supplier, notice: "Address was successfully updated." }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+        end
       end
     end
     
@@ -40,10 +39,10 @@ module Suppliers
       @address.destroy!
       render json: { success: true, message: 'Address deleted successfully' }
     end
-    
+
     def make_default
       @address.make_default!
-      render json: { success: true, message: 'Set as default address' }
+      render json: { success: true, message: 'Address marked as default successfully' }
     end
     
     private

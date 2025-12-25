@@ -1,0 +1,296 @@
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // ===================================
+    // CONVERSION FORM HANDLING
+    // ===================================
+    
+    const conversionForm = document.querySelector('form[action*="conversion"]');
+    
+    if (conversionForm) {
+      initializeConversionForm(conversionForm);
+    }
+    
+    // ===================================
+    // CONVERSION FORM INITIALIZATION
+    // ===================================
+    
+    function initializeConversionForm(form) {
+      const warehouseSelect = form.querySelector('#warehouse_id');
+      const paymentTermsSelect = form.querySelector('#payment_terms');
+      const expectedDateInput = form.querySelector('#expected_date');
+      const submitButton = form.querySelector('button[type="submit"]');
+      
+      // Warehouse validation
+      if (warehouseSelect) {
+        warehouseSelect.addEventListener('change', function() {
+          validateWarehouse(this);
+          updateSubmitButton();
+        });
+      }
+      
+      // Expected date validation
+      if (expectedDateInput) {
+        expectedDateInput.addEventListener('change', function() {
+          validateExpectedDate(this);
+          updateSubmitButton();
+        });
+      }
+      
+      // Form submission confirmation
+      if (submitButton) {
+        form.addEventListener('submit', function(e) {
+          if (!confirmConversion(form)) {
+            e.preventDefault();
+          }
+        });
+      }
+      
+      // Initial validation
+      updateSubmitButton();
+    }
+    
+    // ===================================
+    // VALIDATION FUNCTIONS
+    // ===================================
+    
+    function validateWarehouse(select) {
+      const isValid = select.value !== '';
+      
+      if (isValid) {
+        select.classList.remove('is-invalid');
+        select.classList.add('is-valid');
+        removeError(select);
+      } else {
+        select.classList.remove('is-valid');
+        select.classList.add('is-invalid');
+        showError(select, 'Please select a receiving warehouse');
+      }
+      
+      return isValid;
+    }
+    
+    function validateExpectedDate(input) {
+      const selectedDate = new Date(input.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const isValid = !input.value || selectedDate >= today;
+      
+      if (isValid) {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        removeError(input);
+      } else {
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+        showError(input, 'Expected date cannot be in the past');
+      }
+      
+      return isValid;
+    }
+    
+    function updateSubmitButton() {
+      const form = document.querySelector('form[action*="conversion"]');
+      if (!form) return;
+      
+      const submitButton = form.querySelector('button[type="submit"]');
+      const warehouseSelect = form.querySelector('#warehouse_id');
+      
+      if (!submitButton || !warehouseSelect) return;
+      
+      const isValid = warehouseSelect.value !== '';
+      submitButton.disabled = !isValid;
+      
+      if (!isValid) {
+        submitButton.classList.add('disabled');
+      } else {
+        submitButton.classList.remove('disabled');
+      }
+    }
+    
+    // ===================================
+    // ERROR DISPLAY HELPERS
+    // ===================================
+    
+    function showError(element, message) {
+      removeError(element);
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'invalid-feedback';
+      errorDiv.textContent = message;
+      errorDiv.dataset.errorFor = element.id;
+      
+      element.parentElement.appendChild(errorDiv);
+    }
+    
+    function removeError(element) {
+      const existingError = element.parentElement.querySelector(`[data-error-for="${element.id}"]`);
+      if (existingError) {
+        existingError.remove();
+      }
+    }
+    
+    // ===================================
+    // CONFIRMATION DIALOG
+    // ===================================
+    
+    function confirmConversion(form) {
+      const summaryCard = document.querySelector('.card.border-primary');
+      if (!summaryCard) return true;
+      
+      // Extract summary data
+      const poCount = extractTextContent(summaryCard, 'Purchase Orders');
+      const lineCount = extractTextContent(summaryCard, 'Total Line Items');
+      const grandTotal = extractTextContent(summaryCard, 'Grand Total');
+      
+      const message = `
+        You are about to create ${poCount} Purchase Order(s) with ${lineCount} line items.
+        
+        Total Amount: ${grandTotal}
+        
+        Purchase Orders will be created in DRAFT status.
+        
+        Do you want to proceed?
+      `;
+      
+      return confirm(message);
+    }
+    
+    function extractTextContent(container, label) {
+      const cells = container.querySelectorAll('td');
+      for (let i = 0; i < cells.length; i++) {
+        if (cells[i].textContent.includes(label) && cells[i + 1]) {
+          return cells[i + 1].textContent.trim();
+        }
+      }
+      return 'N/A';
+    }
+    
+    // ===================================
+    // CALCULATION PREVIEW (Optional Enhancement)
+    // ===================================
+    
+    function updateTotalPreview() {
+      // This can be enhanced to recalculate totals
+      // if user adds shipping costs, etc.
+      const shippingCostInput = document.querySelector('#shipping_cost');
+      if (!shippingCostInput) return;
+      
+      shippingCostInput.addEventListener('input', function() {
+        recalculateGrandTotal();
+      });
+    }
+    
+    function recalculateGrandTotal() {
+      const summaryCard = document.querySelector('.card.border-primary');
+      if (!summaryCard) return;
+      
+      const subtotalElement = summaryCard.querySelector('[data-subtotal]');
+      const shippingInput = document.querySelector('#shipping_cost');
+      const grandTotalElement = summaryCard.querySelector('[data-grand-total]');
+      
+      if (!subtotalElement || !grandTotalElement) return;
+      
+      const subtotal = parseFloat(subtotalElement.dataset.subtotal) || 0;
+      const shipping = parseFloat(shippingInput?.value) || 0;
+      const grandTotal = subtotal + shipping;
+      
+      grandTotalElement.textContent = formatCurrency(grandTotal);
+    }
+    
+    // ===================================
+    // UTILITY FUNCTIONS
+    // ===================================
+    
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount);
+    }
+    
+    // ===================================
+    // SUPPLIER SECTION TOGGLES (Optional)
+    // ===================================
+    
+    function initializeSupplierToggles() {
+      const supplierCards = document.querySelectorAll('.card[data-supplier-id]');
+      
+      supplierCards.forEach(card => {
+        const header = card.querySelector('.card-header');
+        if (!header) return;
+        
+        // Make header clickable to collapse/expand
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+          const body = card.querySelector('.card-body');
+          if (body) {
+            body.classList.toggle('d-none');
+          }
+        });
+      });
+    }
+    
+    // Initialize supplier toggles if needed
+    initializeSupplierToggles();
+  });
+
+  // ============================================================================
+  // PRICE VARIANCE HIGHLIGHTING
+  // ============================================================================
+
+  function highlightPriceVariances() {
+    const priceVarianceBadges = document.querySelectorAll('[data-price-variance]');
+    
+    priceVarianceBadges.forEach(badge => {
+      const variance = parseFloat(badge.dataset.priceVariance);
+      
+      if (variance <= 0) {
+        badge.classList.add('bg-success');
+      } else if (variance <= 5) {
+        badge.classList.add('bg-warning', 'text-dark');
+      } else {
+        badge.classList.add('bg-danger');
+      }
+    });
+  }
+
+  // Run on page load
+  document.addEventListener('DOMContentLoaded', highlightPriceVariances);
+
+  // ============================================================================
+  // LOADING STATE MANAGEMENT
+  // ============================================================================
+
+  function showLoadingState(button) {
+    const originalText = button.innerHTML;
+    button.dataset.originalText = originalText;
+    button.disabled = true;
+    button.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+      Creating Purchase Orders...
+    `;
+  }
+
+  function hideLoadingState(button) {
+    const originalText = button.dataset.originalText;
+    if (originalText) {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }
+  }
+
+  // Apply loading state to conversion form
+  document.addEventListener('DOMContentLoaded', function() {
+    const conversionForm = document.querySelector('form[action*="conversion"]');
+    if (!conversionForm) return;
+    
+    conversionForm.addEventListener('submit', function(e) {
+      const submitButton = this.querySelector('button[type="submit"]');
+      if (submitButton && !submitButton.disabled) {
+        showLoadingState(submitButton);
+      }
+    });
+  });
+</script>

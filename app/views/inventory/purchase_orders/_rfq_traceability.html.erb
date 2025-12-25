@@ -1,0 +1,147 @@
+<!-- ========================================================================== -->
+<!-- PURCHASE ORDER RFQ TRACEABILITY BADGE                                    -->
+<!-- Location: app/views/purchase_orders/_rfq_traceability.html.erb          -->
+<!-- Usage: Add this to your PO show page to display RFQ linkage             -->
+<!-- ========================================================================== -->
+
+<% if @purchase_order.from_rfq? %>
+  <div class="card border-info shadow-sm mb-4">
+    <div class="card-header bg-info bg-opacity-10 border-info">
+      <h6 class="mb-0 text-info">
+        <i class="bi bi-link-45deg"></i>
+        <strong>Source: Request for Quotation</strong>
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">RFQ Number:</dt>
+            <dd class="col-sm-8">
+              <%= link_to @purchase_order.rfq.rfq_number, 
+                  rfq_path(@purchase_order.rfq), 
+                  class: "fw-bold text-decoration-none" %>
+            </dd>
+
+            <dt class="col-sm-4 text-muted">RFQ Description:</dt>
+            <dd class="col-sm-8">
+              <%= @purchase_order.rfq.description.presence || 'N/A' %>
+            </dd>
+
+            <dt class="col-sm-4 text-muted">Award Date:</dt>
+            <dd class="col-sm-8">
+              <% if @purchase_order.rfq.award_date.present? %>
+                <%= @purchase_order.rfq.award_date.strftime('%B %d, %Y') %>
+              <% else %>
+                <em class="text-muted">Not specified</em>
+              <% end %>
+            </dd>
+
+            <% if @purchase_order.rfq.cost_savings.present? && @purchase_order.rfq.cost_savings > 0 %>
+              <dt class="col-sm-4 text-muted">Cost Savings:</dt>
+              <dd class="col-sm-8">
+                <span class="text-success fw-bold">
+                  <%= number_to_currency(@purchase_order.rfq.cost_savings) %>
+                </span>
+                <span class="badge bg-success ms-2">
+                  <%= number_to_percentage(@purchase_order.rfq.cost_savings_percentage, precision: 2) %>
+                </span>
+              </dd>
+            <% end %>
+          </dl>
+        </div>
+
+        <div class="col-md-4 text-end">
+          <%= link_to rfq_path(@purchase_order.rfq), 
+              class: "btn btn-outline-info" do %>
+            <i class="bi bi-box-arrow-up-right"></i>
+            View Original RFQ
+          <% end %>
+
+          <% if @purchase_order.rfq.status == 'AWARDED' %>
+            <div class="mt-2">
+              <span class="badge bg-success">
+                <i class="bi bi-trophy"></i> RFQ Awarded
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Traceability Status -->
+      <% if @purchase_order.fully_traceable_to_rfq? %>
+        <div class="alert alert-success mt-3 mb-0 py-2">
+          <small>
+            <i class="bi bi-check-circle-fill"></i>
+            <strong>Full Traceability:</strong> 
+            All <%= @purchase_order.lines.count %> line items are linked to RFQ items.
+          </small>
+        </div>
+      <% else %>
+        <div class="alert alert-warning mt-3 mb-0 py-2">
+          <small>
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Partial Traceability:</strong> 
+            Some line items may not be linked to original RFQ items.
+          </small>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Cost Savings Detail (if available) -->
+  <% if @purchase_order.rfq_cost_savings_summary.present? %>
+    <% savings = @purchase_order.rfq_cost_savings_summary %>
+    <div class="card border-success shadow-sm mb-4">
+      <div class="card-header bg-success bg-opacity-10 border-success">
+        <h6 class="mb-0 text-success">
+          <i class="bi bi-piggy-bank"></i>
+          <strong>RFQ Cost Savings Analysis</strong>
+        </h6>
+      </div>
+      <div class="card-body">
+        <div class="row text-center">
+          <div class="col-md-3">
+            <div class="mb-2">
+              <small class="text-muted d-block">Lowest Quote</small>
+              <strong class="fs-5"><%= number_to_currency(savings[:lowest_quote]) %></strong>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <small class="text-muted d-block">Highest Quote</small>
+              <strong class="fs-5"><%= number_to_currency(savings[:highest_quote]) %></strong>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <small class="text-muted d-block">Awarded Amount</small>
+              <strong class="fs-5 text-primary"><%= number_to_currency(savings[:awarded_amount]) %></strong>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="mb-2">
+              <small class="text-muted d-block">Total Savings</small>
+              <strong class="fs-5 text-success">
+                <%= number_to_currency(savings[:total_savings]) %>
+              </strong>
+              <div class="badge bg-success">
+                <%= number_to_percentage(savings[:savings_percentage], precision: 2) %>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% if savings[:comparison_basis].present? %>
+          <p class="text-muted text-center mb-0 mt-2">
+            <small>
+              <i class="bi bi-info-circle"></i>
+              Comparison Basis: <%= savings[:comparison_basis] %>
+            </small>
+          </p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+<% end %>
+

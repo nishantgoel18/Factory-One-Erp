@@ -10,7 +10,7 @@ class SupplierContact < ApplicationRecord
   }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
   
-  serialize :languages_spoken, Array
+  serialize :languages_spoken, type: Array, coder: JSON
   
   scope :active, -> { where(is_active: true) }
   scope :primary, -> { where(is_primary_contact: true) }

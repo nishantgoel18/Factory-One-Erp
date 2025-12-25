@@ -90,6 +90,8 @@
     </div>
   </div>
 
+  <%= render 'inventory/purchase_orders/rfq_traceability', purchase_order: @purchase_order %>
+
   <div class="row">
     <!-- Left Column: PO Details -->
     <div class="col-md-8">
@@ -183,107 +185,341 @@
 
       <!-- Line Items -->
       <div class="card mb-4">
-        <div class="card-header bg-primary d-flex align-items-center">
-          <h5 class="mb-0">Line Items</h5>
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-list-check"></i>
+            Line Items
+            <span class="badge bg-secondary"><%= @purchase_order.lines.count %></span>
+          </h5>
+          
+          <% if @purchase_order.from_rfq? %>
+            <%= full_traceability_badge(@purchase_order) %>
+          <% end %>
         </div>
+        
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>#</th>
-                  <th>Product</th>
-                  <th class="text-center">Ordered</th>
-                  <th class="text-center">Received</th>
-                  <th class="text-end">Unit Price</th>
-                  <th class="text-end">Total</th>
-                  <th class="text-center">Status</th>
+                  <th width="8%">Line</th>
+                  <th width="12%">Product Code</th>
+                  <th>Description</th>
+                  <th width="10%" class="text-center">Ordered Qty</th>
+                  <th width="10%" class="text-center">Received</th>
+                  <th width="12%" class="text-end">Unit Price</th>
+                  <th width="12%" class="text-end">Line Total</th>
+                  <th width="10%">Status</th>
                 </tr>
               </thead>
               <tbody>
-                <% @lines.each_with_index do |line, index| %>
-                  <tr>
-                    <td><%= index + 1 %></td>
-                    <td>
-                      <strong><%= line.product.sku %></strong><br>
-                      <small class="text-muted"><%= line.product.name %></small>
-                      <% if line.line_note.present? %>
-                        <br><small class="text-info">
-                          <i class="bi bi-info-circle"></i> <%= line.line_note %>
+                <% @purchase_order.lines.each_with_index do |line, index| %>
+                  <tr class="<%= 'table-info' if line.from_rfq? %>">
+                    <!-- Line Number -->
+                    <td class="text-center">
+                      <span class="badge bg-secondary"><%= index + 1 %></span>
+                      <% if line.from_rfq? %>
+                        <br>
+                        <small class="badge bg-info mt-1">
+                          <i class="bi bi-link-45deg"></i> RFQ
                         </small>
                       <% end %>
                     </td>
-                    <td class="text-center">
-                      <%= line.ordered_qty.to_i %> <%= line.uom.symbol %>
+                    
+                    <!-- Product Code -->
+                    <td>
+                      <code class="text-primary"><%= line.product.sku %></code>
+                      
+                      <!-- RFQ Reference -->
+                      <%= po_line_rfq_reference(line) %>
                     </td>
-                    <td class="text-center">
-                      <% if line.received_qty > 0 %>
-                        <strong class="text-success"><%= line.received_qty.to_i %></strong> <%= line.uom.symbol %>
-                        <br><small class="text-muted"><%= line.receiving_percentage.round(0) %>%</small>
-                      <% else %>
-                        <span class="text-muted">-</span>
+                    
+                    <!-- Description -->
+                    <td>
+                      <strong><%= line.product.name %></strong>
+                      
+                      <!-- Line Notes -->
+                      <% if line.line_note.present? %>
+                        <br>
+                        <small class="text-muted">
+                          <%= truncate(line.line_note, length: 80) %>
+                        </small>
+                      <% end %>
+                      
+                      <!-- Traceability Chain -->
+                      <% if line.from_rfq? %>
+                        <br>
+                        <%= traceability_chain(line) %>
                       <% end %>
                     </td>
-                    <td class="text-end">
-                      <%= number_to_currency(line.unit_price, 
-                          unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
-                    </td>
-                    <td class="text-end">
-                      <strong>
-                        <%= number_to_currency(line.line_total, 
-                            unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
-                      </strong>
-                    </td>
+                    
+                    <!-- Ordered Quantity -->
                     <td class="text-center">
-                      <%= render 'shared/status_badge', status: line.line_status %>
+                      <strong><%= number_with_delimiter(line.ordered_qty) %></strong>
+                      <br>
+                      <small class="text-muted"><%= line.uom.symbol %></small>
+                    </td>
+                    
+                    <!-- Received Quantity -->
+                    <td class="text-center">
+                      <% if line.received_qty > 0 %>
+                        <span class="text-success fw-bold">
+                          <%= number_with_delimiter(line.received_qty) %>
+                        </span>
+                        <br>
+                        <small class="text-muted">
+                          <%= number_to_percentage((line.received_qty / line.ordered_qty * 100), precision: 0) %>
+                        </small>
+                      <% else %>
+                        <span class="text-muted">0</span>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Unit Price -->
+                    <td class="text-end">
+                      <strong><%= number_to_currency(line.unit_price) %></strong>
+                      
+                      <!-- Price Comparison with RFQ Target -->
+                      <%= po_line_price_comparison(line) %>
+                      
+                      <!-- Vendor Quote Score -->
+                      <%= po_line_quote_score(line) %>
+                    </td>
+                    
+                    <!-- Line Total -->
+                    <td class="text-end">
+                      <strong class="fs-5"><%= number_to_currency(line.line_total) %></strong>
+                      
+                      <% if line.tax_amount > 0 %>
+                        <br>
+                        <small class="text-muted">
+                          + <%= number_to_currency(line.tax_amount) %> tax
+                        </small>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Status -->
+                    <td>
+                      <% case line.line_status %>
+                      <% when 'OPEN', 'PENDING' %>
+                        <span class="badge bg-warning text-dark">
+                          <i class="bi bi-hourglass-split"></i>
+                          <%= line.line_status.titleize %>
+                        </span>
+                      <% when 'PARTIALLY_RECEIVED' %>
+                        <span class="badge bg-info">
+                          <i class="bi bi-arrow-down-circle"></i>
+                          Partial
+                        </span>
+                      <% when 'FULLY_RECEIVED' %>
+                        <span class="badge bg-success">
+                          <i class="bi bi-check-circle"></i>
+                          Received
+                        </span>
+                      <% when 'CLOSED' %>
+                        <span class="badge bg-secondary">
+                          <i class="bi bi-x-circle"></i>
+                          Closed
+                        </span>
+                      <% else %>
+                        <span class="badge bg-secondary">
+                          <%= line.line_status %>
+                        </span>
+                      <% end %>
+                      
+                      <!-- Expected Delivery -->
+                      <% if line.expected_delivery_date.present? %>
+                        <br>
+                        <small class="text-muted">
+                          <i class="bi bi-calendar-event"></i>
+                          <%= line.expected_delivery_date.strftime('%b %d') %>
+                        </small>
+                      <% end %>
                     </td>
                   </tr>
+                  
+                  <!-- Expanded Details Row (Optional - toggle with JS) -->
+                  <% if line.from_rfq? && line.vendor_quote.present? %>
+                    <tr class="collapse" id="line-details-<%= line.id %>">
+                      <td colspan="8" class="bg-light">
+                        <div class="p-3">
+                          <h6 class="text-muted mb-3">
+                            <i class="bi bi-info-circle"></i>
+                            RFQ Source Details
+                          </h6>
+                          
+                          <div class="row">
+                            <!-- RFQ Item Info -->
+                            <div class="col-md-6">
+                              <dl class="row mb-0">
+                                <dt class="col-sm-5 text-muted">RFQ Line:</dt>
+                                <dd class="col-sm-7">
+                                  <code><%= line.rfq_item.line_number %></code>
+                                </dd>
+                                
+                                <dt class="col-sm-5 text-muted">Target Price:</dt>
+                                <dd class="col-sm-7">
+                                  <%= number_to_currency(line.rfq_item.target_unit_price) %>
+                                </dd>
+                                
+                                <dt class="col-sm-5 text-muted">Required Date:</dt>
+                                <dd class="col-sm-7">
+                                  <%= line.rfq_item.required_delivery_date&.strftime('%B %d, %Y') || 'Not specified' %>
+                                </dd>
+                              </dl>
+                            </div>
+                            
+                            <!-- Vendor Quote Info -->
+                            <div class="col-md-6">
+                              <dl class="row mb-0">
+                                <dt class="col-sm-5 text-muted">Quote Price:</dt>
+                                <dd class="col-sm-7">
+                                  <%= number_to_currency(line.vendor_quote.unit_price) %>
+                                </dd>
+                                
+                                <dt class="col-sm-5 text-muted">Lead Time:</dt>
+                                <dd class="col-sm-7">
+                                  <%= line.vendor_quote.lead_time_days %> days
+                                </dd>
+                                
+                                <dt class="col-sm-5 text-muted">Quote Score:</dt>
+                                <dd class="col-sm-7">
+                                  <span class="badge bg-success">
+                                    <%= line.vendor_quote.overall_score&.round(1) || 'N/A' %>
+                                  </span>
+                                </dd>
+                              </dl>
+                            </div>
+                          </div>
+                          
+                          <!-- Quote Notes -->
+                          <% if line.vendor_quote.delivery_notes.present? %>
+                            <div class="mt-2">
+                              <strong class="text-muted">Delivery Notes:</strong>
+                              <p class="mb-0 text-muted small">
+                                <%= line.vendor_quote.delivery_notes %>
+                              </p>
+                            </div>
+                          <% end %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
                 <% end %>
               </tbody>
+              
+              <!-- Totals Footer -->
+              <tfoot class="table-light">
+                <tr>
+                  <th colspan="3" class="text-end">Subtotal:</th>
+                  <th class="text-center">
+                    <%= number_with_delimiter(@purchase_order.total_ordered_qty) %>
+                  </th>
+                  <th class="text-center">
+                    <%= number_with_delimiter(@purchase_order.total_received_qty) %>
+                  </th>
+                  <th></th>
+                  <th class="text-end">
+                    <%= number_to_currency(@purchase_order.subtotal) %>
+                  </th>
+                  <th></th>
+                </tr>
+                
+                <% if @purchase_order.tax_amount > 0 %>
+                  <tr>
+                    <th colspan="6" class="text-end">Tax:</th>
+                    <th class="text-end">
+                      <%= number_to_currency(@purchase_order.tax_amount) %>
+                    </th>
+                    <th></th>
+                  </tr>
+                <% end %>
+                
+                <% if @purchase_order.shipping_cost > 0 %>
+                  <tr>
+                    <th colspan="6" class="text-end">Shipping:</th>
+                    <th class="text-end">
+                      <%= number_to_currency(@purchase_order.shipping_cost) %>
+                    </th>
+                    <th></th>
+                  </tr>
+                <% end %>
+                
+                <tr class="table-primary">
+                  <th colspan="6" class="text-end fs-5">Total Amount:</th>
+                  <th class="text-end fs-5">
+                    <strong><%= number_to_currency(@purchase_order.total_amount) %></strong>
+                  </th>
+                  <th></th>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
-
-        <!-- Totals Footer -->
-        <div class="card-footer">
-          <div class="row">
-            <div class="col-md-8"></div>
-            <div class="col-md-4">
-              <dl class="row mb-0">
-                <dt class="col-6">Subtotal:</dt>
-                <dd class="col-6 text-end">
-                  <%= number_to_currency(@purchase_order.subtotal, 
-                      unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
-                </dd>
-
-                <% if @purchase_order.tax_amount > 0 %>
-                  <dt class="col-6">Tax:</dt>
-                  <dd class="col-6 text-end">
-                    <%= number_to_currency(@purchase_order.tax_amount, 
-                        unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
-                  </dd>
-                <% end %>
-
-                <% if @purchase_order.shipping_cost.to_f > 0 %>
-                  <dt class="col-6">Shipping:</dt>
-                  <dd class="col-6 text-end">
-                    <%= number_to_currency(@purchase_order.shipping_cost, 
-                        unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
-                  </dd>
-                <% end %>
-
-                <dt class="col-6 border-top pt-2"><strong>Total:</strong></dt>
-                <dd class="col-6 text-end border-top pt-2">
-                  <strong class="h5 text-primary mb-0">
-                    <%= number_to_currency(@purchase_order.total_amount, 
-                        unit: @purchase_order.currency == 'CAD' ? 'CAD $' : '$') %>
-                  </strong>
-                </dd>
-              </dl>
+        
+        <!-- Footer Info -->
+        <% if @purchase_order.from_rfq? %>
+          <div class="card-footer bg-light">
+            <div class="row align-items-center">
+              <div class="col-md-6">
+                <small class="text-muted">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Lines with <span class="badge bg-info">RFQ</span> badge are linked to 
+                  <%= link_to "RFQ #{@purchase_order.rfq.rfq_number}", 
+                      rfq_path(@purchase_order.rfq), 
+                      class: "fw-bold" %>
+                </small>
+              </div>
+              <div class="col-md-6 text-end">
+                <button class="btn btn-sm btn-outline-secondary" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="[id^='line-details-']">
+                  <i class="bi bi-arrows-expand"></i>
+                  Toggle RFQ Details
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        <% end %>
       </div>
+
+      <style>
+        .table-hover tbody tr.table-info:hover {
+          background-color: #d1ecf1 !important;
+        }
+        
+        tr.collapse {
+          display: none;
+        }
+        
+        tr.collapse.show {
+          display: table-row;
+        }
+      </style>
+
+      <script>
+        // Toggle all details rows
+        document.addEventListener('DOMContentLoaded', function() {
+          const toggleButton = document.querySelector('[data-bs-target="[id^=\'line-details-\']"]');
+          if (!toggleButton) return;
+          
+          toggleButton.addEventListener('click', function() {
+            const detailRows = document.querySelectorAll('[id^="line-details-"]');
+            detailRows.forEach(row => {
+              row.classList.toggle('show');
+            });
+            
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('bi-arrows-expand')) {
+              icon.classList.replace('bi-arrows-expand', 'bi-arrows-collapse');
+              this.innerHTML = '<i class="bi bi-arrows-collapse"></i> Hide RFQ Details';
+            } else {
+              icon.classList.replace('bi-arrows-collapse', 'bi-arrows-expand');
+              this.innerHTML = '<i class="bi bi-arrows-expand"></i> Toggle RFQ Details';
+            }
+          });
+        });
+      </script>
 
       <!-- Related Goods Receipts -->
       <% if @purchase_order.goods_receipts.any? %>

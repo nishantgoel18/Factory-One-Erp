@@ -9,7 +9,7 @@ class SupplierActivity < ApplicationRecord
   validates :subject, presence: true
   validates :activity_date, presence: true
   
-  serialize :tags, Array
+  serialize :tags, type: Array, coder: JSON
   
   scope :recent, -> { order(activity_date: :desc) }
   scope :by_type, ->(type) { where(activity_type: type) }

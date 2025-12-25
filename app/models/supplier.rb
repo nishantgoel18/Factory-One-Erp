@@ -131,14 +131,14 @@ class Supplier < ApplicationRecord
   # ============================================================================
   # SERIALIZATION
   # ============================================================================
-  serialize :manufacturing_processes, Array
-  serialize :quality_control_capabilities, Array
-  serialize :testing_capabilities, Array
-  serialize :materials_specialization, Array
-  serialize :geographic_coverage, Array
-  serialize :factory_locations, Array
-  serialize :certifications, Array
-  serialize :risk_factors, Array
+  serialize :manufacturing_processes, type: Array, coder: JSON
+  serialize :quality_control_capabilities, type: Array, coder: JSON
+  serialize :testing_capabilities, type: Array, coder: JSON
+  serialize :materials_specialization, type: Array, coder: JSON
+  serialize :geographic_coverage, type: Array, coder: JSON
+  serialize :factory_locations, type: Array, coder: JSON
+  serialize :certifications, type: Array, coder: JSON
+  serialize :risk_factors, type: Array, coder: JSON
   
   # ============================================================================
   # CLASS METHODS

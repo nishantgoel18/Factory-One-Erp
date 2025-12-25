@@ -6,33 +6,32 @@ module Suppliers
     
     def new
       @contact = @supplier.contacts.build(is_active: true)
-      respond_to do |format|
-        format.html { render partial: 'suppliers/contacts/form', locals: { supplier: @supplier, contact: @contact }, layout: false }
-      end
     end
     
     def create
       @contact = @supplier.contacts.build(contact_params)
       @contact.created_by = current_user
       
-      if @contact.save
-        render json: { success: true, message: 'Contact added successfully' }
-      else
-        render json: { success: false, errors: @contact.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @contact.save
+          format.html { redirect_to @supplier, notice: "Contact was successfully created." }
+        else
+          format.html { render :new, status: :unprocessable_entity }
+        end
       end
     end
     
     def edit
-      respond_to do |format|
-        format.html { render partial: 'suppliers/contacts/form', locals: { supplier: @supplier, contact: @contact }, layout: false }
-      end
+      
     end
     
     def update
-      if @contact.update(contact_params)
-        render json: { success: true, message: 'Contact updated successfully' }
-      else
-        render json: { success: false, errors: @contact.errors.full_messages }, status: :unprocessable_entity
+      respond_to do |format|
+        if @contact.update(contact_params)
+          format.html { redirect_to @supplier, notice: "Contact was successfully updated." }
+        else
+          format.html { render :edit, status: :unprocessable_entity }
+        end
       end
     end
     
@@ -43,7 +42,7 @@ module Suppliers
     
     def make_primary
       @contact.make_primary!
-      render json: { success: true, message: 'Set as primary contact' }
+      redirect_to @supplier, notice: 'Set as primary contact'
     end
     
     private

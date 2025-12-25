@@ -15,55 +15,466 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-lg-12">
-      <div class="card">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="mb-0">
+        <i class="bi bi-building"></i> Supplier Management
+      </h2>
+      <p class="text-muted mb-0">Manage your supplier relationships and vendor catalog</p>
+    </div>
+    <div class="col-auto">
+      <%= link_to new_supplier_path, class: 'btn btn-primary' do %>
+        <i class="bi bi-plus-circle"></i> Add New Supplier
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-3">
+    <!-- Total Suppliers -->
+    <div class="col-md-3">
+      <div class="card h-100">
         <div class="card-body">
-
-          <div class="m-t-10">
-            <%= link_to "New Supplier", new_supplier_path, class: "btn btn-primary btn-sm" %>
-            <br><br>
-
-            <div class="table-responsive">
-              <table class="table  admins_table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Lead Time</th>
-                    <th>Active</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <% @suppliers.each do |s| %>
-                    <tr>
-                      <td><%= s.id %></td>
-                      <td><%= s.code %></td>
-                      <td><%= s.name %></td>
-                      <td><%= s.email %></td>
-                      <td><%= s.phone %></td>
-                      <td><%= s.lead_time_days %> days</td>
-                      <td><%= s.is_active ? "Yes" : "No" %></td>
-                      <td>
-                        <%= link_to "View", supplier_path(s) %> |
-                        <%= link_to "Edit", edit_supplier_path(s) %> |
-                        <%= link_to "Delete", delete_supplier_path(s), method: :delete, data: { confirm: "Are you sure?" }, class: "confirm-delete"  %>
-                      </td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-red">
+              <i class="fa fa-building"></i>
             </div>
-
+            <div class="m-l-15">
+              <h2 class="m-b-0"><%= @stats[:total] %></h2>
+              <p class="m-b-0 text-muted">Total Suppliers</p>
+            </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Suppliers -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-green">
+              <i class="fa fa-check-circle"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0 text-success"><%= @stats[:active] %></h2>
+              <p class="m-b-0 text-muted">Active</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Approved Suppliers -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-blue">
+              <i class="fa fa-check"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0 text-primary"><%= @stats[:approved] %></h2>
+              <p class="m-b-0 text-muted">Approved</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Suppliers -->
+    <div class="col-md-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="media align-items-center">
+            <div class="avatar avatar-icon avatar-lg avatar-gold">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="m-l-15">
+              <h2 class="m-b-0 text-warning"><%= @stats[:pending] %></h2>
+              <p class="m-b-0 text-muted">Pending Approval</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Filters and Search Bar -->
+  <div class="card   mb-4">
+    <div class="card-body">
+      <%= form_with url: suppliers_path, method: :get, class: 'row g-3', id: 'filterForm' do |f| %>
+        <!-- Search -->
+        <div class="col-md-3">
+          <%= text_field_tag :search, params[:search], 
+              class: 'form-control', 
+              placeholder: 'Search suppliers...',
+              data: { action: 'input->suppliers#search' } %>
+        </div>
+        
+        <!-- Status Filter -->
+        <div class="col-md-2">
+          <%= select_tag :status, 
+              options_for_select([
+                ['All Statuses', ''],
+                ['Approved', 'APPROVED'],
+                ['Pending', 'PENDING'],
+                ['Suspended', 'SUSPENDED'],
+                ['Blacklisted', 'BLACKLISTED']
+              ], params[:status]),
+              class: 'form-control' %>
+        </div>
+        
+        <!-- Type Filter -->
+        <div class="col-md-2">
+          <%= select_tag :supplier_type,
+              options_for_select([
+                ['All Types', ''],
+                ['Manufacturer', 'MANUFACTURER'],
+                ['Distributor', 'DISTRIBUTOR'],
+                ['Service Provider', 'SERVICE_PROVIDER'],
+                ['Trader', 'TRADER'],
+                ['Importer', 'IMPORTER']
+              ], params[:supplier_type]),
+              class: 'form-control' %>
+        </div>
+        
+        <!-- Category Filter -->
+        <div class="col-md-2">
+          <%= select_tag :supplier_category,
+              options_for_select([
+                ['All Categories', ''],
+                ['Raw Material', 'RAW_MATERIAL'],
+                ['Components', 'COMPONENTS'],
+                ['Packaging', 'PACKAGING'],
+                ['Services', 'SERVICES'],
+                ['MRO', 'MRO']
+              ], params[:supplier_category]),
+              class: 'form-control' %>
+        </div>
+        
+        <!-- Rating Filter -->
+        <div class="col-md-2">
+          <%= select_tag :min_rating,
+              options_for_select([
+                ['Any Rating', ''],
+                ['90+ Excellent', '90'],
+                ['75+ Good', '75'],
+                ['60+ Fair', '60']
+              ], params[:min_rating]),
+              class: 'form-control' %>
+        </div>
+        
+        <div class="col-md-1">
+          <%= button_tag type: 'submit', class: 'btn btn-xs btn-primary w-100' do %>
+            Filter
+          <% end %>
+        </div>
+      <% end %>
+      
+      <!-- Quick Filters -->
+      <div class="row mt-3">
+        <div class="col">
+          <div class="btn-group btn-group-sm" role="group">
+            <%= link_to 'All', suppliers_path, class: "btn btn-outline-secondary #{'active' unless params[:preferred] || params[:strategic]}" %>
+            <%= link_to 'Preferred', suppliers_path(preferred: true), class: "btn btn-outline-secondary #{'active' if params[:preferred]}" %>
+            <%= link_to 'Strategic', suppliers_path(strategic: true), class: "btn btn-outline-secondary #{'active' if params[:strategic]}" %>
+            <%= link_to 'Local', suppliers_path(local: true), class: "btn btn-outline-secondary #{'active' if params[:local]}" %>
+          </div>
+        </div>
+        <div class="col-auto">
+          <%= link_to suppliers_path(format: :csv), class: 'btn btn-sm btn-outline-success' do %>
+            <i class="bi bi-file-earmark-excel"></i> Export CSV
+          <% end %>
+          <%= link_to suppliers_path(format: :pdf), class: 'btn btn-sm btn-outline-danger' do %>
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+          <% end %>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Bulk Action Bar (hidden by default) -->
+  <div id="bulkActionBar" class="card   mb-3" style="display: none;">
+    <div class="card-body py-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span id="selectedCount">0</span> suppliers selected
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="bulkAction('activate')">
+            <i class="bi bi-check-circle"></i> Activate
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-warning" onclick="bulkAction('deactivate')">
+            <i class="bi bi-x-circle"></i> Deactivate
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-primary" onclick="bulkAction('export_csv')">
+            <i class="bi bi-download"></i> Export Selected
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="bulkAction('delete')">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+          <button type="button" class="btn btn-sm btn-secondary" onclick="clearSelection()">
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Suppliers Table -->
+  <div class="card  ">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th width="40">
+                <input type="checkbox" id="selectAll" class="form-check-input">
+              </th>
+              <th>
+                <%= link_to suppliers_path(sort: 'code', direction: params[:direction] == 'asc' ? 'desc' : 'asc') do %>
+                  Code <i class="bi bi-arrow-down-up"></i>
+                <% end %>
+              </th>
+              <th>
+                <%= link_to suppliers_path(sort: 'name', direction: params[:direction] == 'asc' ? 'desc' : 'asc') do %>
+                  Supplier Name <i class="bi bi-arrow-down-up"></i>
+                <% end %>
+              </th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>
+                <%= link_to suppliers_path(sort: 'rating', direction: params[:direction] == 'asc' ? 'desc' : 'asc') do %>
+                  Rating <i class="bi bi-arrow-down-up"></i>
+                <% end %>
+              </th>
+              <th>Contact</th>
+              <th>
+                <%= link_to suppliers_path(sort: 'total_spend', direction: params[:direction] == 'asc' ? 'desc' : 'asc') do %>
+                  Total Spend <i class="bi bi-arrow-down-up"></i>
+                <% end %>
+              </th>
+              <th>Last Order</th>
+              <th width="120">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @suppliers.any? %>
+              <% @suppliers.each do |supplier| %>
+                <tr class="supplier-row" data-supplier-id="<%= supplier.id %>">
+                  <td>
+                    <input type="checkbox" class="form-check-input supplier-checkbox" value="<%= supplier.id %>">
+                  </td>
+                  <td>
+                    <strong><%= supplier.code %></strong>
+                  </td>
+                  <td>
+                    <%= link_to supplier_path(supplier), class: 'text-decoration-none' do %>
+                      <strong><%= supplier.display_name %></strong><br>
+                      <small class="text-muted"><%= supplier.legal_name %></small>
+                    <% end %>
+                    <% if supplier.is_preferred_supplier %>
+                      <span class="badge bg-warning ms-1" title="Preferred Supplier">
+                        <i class="bi bi-star-fill"></i>
+                      </span>
+                    <% end %>
+                    <% if supplier.is_strategic_supplier %>
+                      <span class="badge bg-info ms-1" title="Strategic">
+                        <i class="bi bi-shield-fill"></i>
+                      </span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary"><%= supplier.supplier_type&.titleize %></span>
+                  </td>
+                  <td>
+                    <small><%= supplier.supplier_category&.titleize %></small>
+                  </td>
+                  <td>
+                    <span class="badge bg-<%= supplier.status_badge_class %>">
+                      <%= supplier.supplier_status %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="rating-circle rating-<%= supplier.rating_badge_class %> me-2">
+                        <%= supplier.overall_rating.to_i %>
+                      </div>
+                      <small class="text-muted"><%= supplier.rating_label %></small>
+                    </div>
+                  </td>
+                  <td>
+                    <% if supplier.primary_contact %>
+                      <%= supplier.primary_contact.full_name %><br>
+                      <small class="text-muted">
+                        <i class="bi bi-envelope"></i> <%= supplier.primary_contact.email %>
+                      </small>
+                    <% else %>
+                      <small class="text-muted">No contact</small>
+                    <% end %>
+                  </td>
+                  <td>
+                    <strong><%= number_to_currency(supplier.total_purchase_value) %></strong><br>
+                    <small class="text-muted"><%= supplier.total_po_count %> orders</small>
+                  </td>
+                  <td>
+                    <% if supplier.last_po_date %>
+                      <%= time_ago_in_words(supplier.last_po_date) %> ago
+                    <% else %>
+                      <span class="text-muted">Never</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <%= link_to supplier_path(supplier), class: 'btn btn-outline-primary', title: 'View' do %>
+                        <i class="anticon anticon-eye"></i>
+                      <% end %>
+                      <%= link_to edit_supplier_path(supplier), class: 'btn btn-outline-secondary', title: 'Edit' do %>
+                        <i class="anticon anticon-edit"></i>
+                      <% end %>
+                      <%= link_to dashboard_supplier_path(supplier), class: 'btn btn-outline-info', title: 'Dashboard' do %>
+                        <i class="anticon anticon-bar-chart"></i>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="11" class="text-center py-5">
+                  <div class="text-muted">
+                    <i class="bi bi-building" style="font-size: 3rem;"></i>
+                    <p class="mt-3">No suppliers found</p>
+                    <%= link_to 'Add Your First Supplier', new_supplier_path, class: 'btn btn-primary' %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Pagination -->
+    <% if @suppliers.any? %>
+      <div class="card-footer bg-white ">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted">
+            Showing <%= @suppliers.offset_value + 1 %> to <%= [@suppliers.offset_value + @suppliers.length, @suppliers.total_count].min %> of <%= @suppliers.total_count %> suppliers
+          </div>
+          <div>
+            <%= paginate @suppliers %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
 </div>
+
+<!-- Styles -->
+<style>
+.stats-card {
+  transition: transform 0.2s;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+}
+
+.stats-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 1.5rem;
+}
+
+.rating-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.rating-success { background-color: #d4edda; color: #155724; }
+.rating-primary { background-color: #cfe2ff; color: #084298; }
+.rating-warning { background-color: #fff3cd; color: #664d03; }
+.rating-danger { background-color: #f8d7da; color: #842029; }
+
+.supplier-row:hover {
+  background-color: #f8f9fa;
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+// Bulk selection
+document.getElementById('selectAll')?.addEventListener('change', function() {
+  const checkboxes = document.querySelectorAll('.supplier-checkbox');
+  checkboxes.forEach(cb => cb.checked = this.checked);
+  updateBulkActionBar();
+});
+
+document.querySelectorAll('.supplier-checkbox').forEach(checkbox => {
+  checkbox.addEventListener('change', updateBulkActionBar);
+});
+
+function updateBulkActionBar() {
+  const checked = document.querySelectorAll('.supplier-checkbox:checked');
+  const bar = document.getElementById('bulkActionBar');
+  const count = document.getElementById('selectedCount');
+  
+  if (checked.length > 0) {
+    bar.style.display = 'block';
+    count.textContent = checked.length;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function bulkAction(action) {
+  const selected = Array.from(document.querySelectorAll('.supplier-checkbox:checked'))
+                       .map(cb => cb.value);
+  
+  if (selected.length === 0) {
+    alert('Please select suppliers first');
+    return;
+  }
+  
+  if (action === 'delete') {
+    if (!confirm(`Are you sure you want to delete ${selected.length} suppliers?`)) {
+      return;
+    }
+  }
+  
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '<%= bulk_action_suppliers_path %>';
+  
+  const csrfToken = document.querySelector('[name="csrf-token"]').content;
+  form.innerHTML = `
+    <input type="hidden" name="authenticity_token" value="${csrfToken}">
+    <input type="hidden" name="bulk_action" value="${action}">
+    ${selected.map(id => `<input type="hidden" name="supplier_ids[]" value="${id}">`).join('')}
+  `;
+  
+  document.body.appendChild(form);
+  form.submit();
+}
+
+function clearSelection() {
+  document.querySelectorAll('.supplier-checkbox').forEach(cb => cb.checked = false);
+  document.getElementById('selectAll').checked = false;
+  updateBulkActionBar();
+}
+</script>

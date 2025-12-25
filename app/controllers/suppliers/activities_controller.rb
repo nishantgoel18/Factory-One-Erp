@@ -2,7 +2,7 @@ module Suppliers
   class ActivitiesController < ApplicationController
     before_action :authenticate_user!
     before_action :set_supplier
-    before_action :set_activity, only: [:show, :edit, :update, :destroy, :complete]
+    before_action :set_activity, only: [:edit, :update, :destroy, :complete]
     
     def new
       @activity = @supplier.activities.build(
@@ -11,9 +11,6 @@ module Suppliers
         priority: 'NORMAL'
       )
       @contacts = @supplier.contacts.active
-      respond_to do |format|
-        format.html { render partial: 'suppliers/activities/form', locals: { supplier: @supplier, activity: @activity, contacts: @contacts }, layout: false }
-      end
     end
     
     def create
@@ -22,35 +19,33 @@ module Suppliers
       @activity.created_by = current_user
       
       if @activity.save
-        render json: { success: true, message: 'Activity logged successfully' }
+        redirect_to @supplier, notice: "Contact was successfully created."
       else
-        render json: { success: false, errors: @activity.errors.full_messages }, status: :unprocessable_entity
+        render :new, status: :unprocessable_entity
       end
     end
     
     def edit
       @contacts = @supplier.contacts.active
-      respond_to do |format|
-        format.html { render partial: 'suppliers/activities/form', locals: { supplier: @supplier, activity: @activity, contacts: @contacts }, layout: false }
-      end
+      
     end
     
     def update
       if @activity.update(activity_params)
-        render json: { success: true, message: 'Activity updated' }
+        redirect_to @supplier, notice: "Activity was successfully updated."
       else
-        render json: { success: false, errors: @activity.errors.full_messages }, status: :unprocessable_entity
+        render :edit, status: :unprocessable_entity
       end
     end
     
     def destroy
       @activity.destroy!
-      render json: { success: true, message: 'Activity deleted' }
+      rredirect_to @supplier, notice: 'Activity deleted successfully'
     end
     
     def complete
       @activity.mark_completed!(params[:outcome], current_user)
-      render json: { success: true, message: 'Activity marked as completed' }
+      redirect_to @supplier, notice: 'Activity marked as completed'
     end
     
     private

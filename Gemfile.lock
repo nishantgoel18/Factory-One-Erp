@@ -533,6 +533,7 @@ DEPENDENCIES
   kamal
   kaminari
   mini_magick
+  nokogiri
   oj
   pg (>= 0.18, < 2.0)
   propshaft

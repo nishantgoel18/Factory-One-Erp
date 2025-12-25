@@ -29,6 +29,10 @@ class Product < ApplicationRecord
   validate :validate_batch_tracking
   validate :validate_serial_batch_conflict
 
+  def name_with_sku
+    "#{self.sku} - #{self.name}"
+  end
+  
   def validate_inventory_account
     if self.is_stocked && self.inventory_account.blank?
       errors.add(:inventory_account, "Stocked product must have an inventory account")

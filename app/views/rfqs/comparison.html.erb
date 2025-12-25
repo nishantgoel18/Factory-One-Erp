@@ -1,0 +1,362 @@
+<!-- Header -->
+  <div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">RFQ: Vendor Quote Comparison</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Masters</a>
+        <a class="breadcrumb-item" href="<%= rfqs_path %>">RFQs</a>
+        <span class="breadcrumb-item active">RFQ: Vendor Quote Comparison</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- app/views/rfqs/comparison.html.erb -->
+
+<div class="container-fluid mt-4">
+  <!-- Header Section -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">
+        <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+        Vendor Quote Comparison
+      </h2>
+      <p class="text-muted mb-0">
+        RFQ #<%= @rfq.rfq_number %> - <%= @rfq.title %>
+      </p>
+    </div>
+    
+    <div class="btn-group">
+      <%= link_to rfq_path(@rfq), class: 'btn btn-outline-secondary' do %>
+        <i class="bi bi-arrow-left me-1"></i> Back to RFQ
+      <% end %>
+      <%= link_to comparison_rfq_path(@rfq, format: :pdf), 
+                  class: 'btn btn-outline-primary',
+                  target: '_blank' do %>
+        <i class="bi bi-file-pdf me-1"></i> Export PDF
+      <% end %>
+    </div>
+  </div>
+
+  <!-- RFQ Info Card -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <small class="text-muted d-block">Issue Date</small>
+          <strong><%= @rfq.rfq_date.strftime('%b %d, %Y') %></strong>
+        </div>
+        <div class="col-md-3">
+          <small class="text-muted d-block">Response Deadline</small>
+          <strong class="text-danger"><%= @rfq.response_deadline.strftime('%b %d, %Y') %></strong>
+        </div>
+        <div class="col-md-3">
+          <small class="text-muted d-block">Suppliers Invited</small>
+          <strong><%= @invited_suppliers.count %></strong>
+        </div>
+        <div class="col-md-3">
+          <small class="text-muted d-block">Quotes Received</small>
+          <strong class="text-success">
+            <%= @invited_suppliers.count { |rs| rs.invitation_status == 'quoted' } %>
+          </strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM WRAPPER STARTS HERE -->
+  <%= form_with url: select_quotes_rfq_path(@rfq), method: :post, id: 'quote-selection-form' do |f| %>
+    
+    <!-- Comparison Table -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 comparison-table">
+            <thead class="table-light sticky-top">
+              <tr>
+                <th style="width: 50px;" class="text-center">#</th>
+                <th style="width: 200px;">Product</th>
+                <th style="width: 100px;" class="text-center">Qty Required</th>
+                <th style="width: 80px;" class="text-center">UOM</th>
+                
+                <% @invited_suppliers.each do |rfq_supplier| %>
+                  <th class="text-center supplier-column" style="min-width: 180px;">
+                    <div class="supplier-header">
+                      <strong class="d-block"><%= rfq_supplier.supplier.name %></strong>
+                      <small class="text-muted">
+                        <%= rfq_supplier.supplier.code %>
+                      </small>
+                      <% if rfq_supplier.invitation_status == 'quoted' %>
+                        <span class="badge bg-success mt-1">Quoted</span>
+                      <% elsif rfq_supplier.invitation_status == 'declined' %>
+                        <span class="badge bg-danger mt-1">Declined</span>
+                      <% elsif rfq_supplier.invitation_status == 'accepted' %>
+                        <span class="badge bg-info mt-1">Accepted</span>
+                      <% else %>
+                        <span class="badge bg-warning mt-1">Pending</span>
+                      <% end %>
+                    </div>
+                  </th>
+                <% end %>
+              </tr>
+            </thead>
+            
+            <tbody>
+              <% @rfq_items.each do |item| %>
+                <tr class="item-row">
+                  <!-- Line Number -->
+                  <td class="text-center align-middle">
+                    <span class="badge bg-primary text-dark"><%= item.line_number %></span>
+                  </td>
+                  
+                  <!-- Product Info -->
+                  <td class="align-middle">
+                    <strong class="d-block"><%= item.product.name %></strong>
+                    <small class="text-muted"><%= item.product.sku %></small>
+                    <% if item.technical_specifications.present? %>
+                      <br><small class="text-info"><%= truncate(item.technical_specifications, length: 50) %></small>
+                    <% end %>
+                  </td>
+                  
+                  <!-- Quantity -->
+                  <td class="text-center align-middle">
+                    <strong><%= number_with_delimiter(item.quantity_requested) %></strong>
+                  </td>
+                  
+                  <!-- UOM -->
+                  <td class="text-center align-middle">
+                    <%= item.product.unit_of_measure.symbol %>
+                  </td>
+                  
+                  <!-- Supplier Quotes -->
+                  <% @invited_suppliers.each do |rfq_supplier| %>
+                    <% quote = @comparison_data[item.id][rfq_supplier.supplier_id] %>
+                    <td class="text-center align-middle supplier-column <%= lowest_quote_class(item.id, quote) %>">
+                      <% if quote.present? %>
+                        <!-- Unit Price -->
+                        <div class="quote-price">
+                          <strong class="text-primary fs-5">
+                            <%= number_to_currency(quote.unit_price) %>
+                          </strong>
+                          <small class="text-muted d-block">per <%= item.product.unit_of_measure.symbol %></small>
+                        </div>
+                        
+                        <!-- Line Total -->
+                        <div class="quote-total mt-2">
+                          <strong class="text-dark">
+                            <%= number_to_currency(item.quantity_requested * quote.unit_price) %>
+                          </strong>
+                          <small class="text-muted d-block">Total</small>
+                        </div>
+                        
+                        <!-- Delivery Date -->
+                        <% if quote.promised_delivery_date.present? %>
+                          <div class="mt-2">
+                            <small class="text-muted">
+                              <i class="bi bi-calendar-event me-1"></i>
+                              <%= quote.promised_delivery_date.strftime('%b %d') %>
+                            </small>
+                          </div>
+                        <% end %>
+                        
+                        <!-- Payment Terms -->
+                        <% if quote.payment_terms.present? %>
+                          <div class="mt-1">
+                            <small class="badge bg-info">
+                              <%= quote.payment_terms %>
+                            </small>
+                          </div>
+                        <% end %>
+                        
+                        <!-- Notes -->
+                        <% if quote.delivery_notes.present? %>
+                          <div class="mt-1">
+                            <small class="text-muted fst-italic" 
+                                   data-bs-toggle="tooltip" 
+                                   title="<%= quote.delivery_notes %>">
+                              <i class="bi bi-info-circle"></i> Notes
+                            </small>
+                          </div>
+                        <% end %>
+                        
+                        <!-- Selection Checkbox -->
+                        <div class="mt-2">
+                          <%= check_box_tag "selected_quotes[]", 
+                                           quote.id, 
+                                           quote.is_selected,
+                                           class: 'form-check-input quote-selector',
+                                           data: { 
+                                             item_id: item.id,
+                                             supplier_id: rfq_supplier.supplier_id
+                                           } %>
+                          <label class="form-check-label small">
+                            Select
+                          </label>
+                        </div>
+                      <% else %>
+                        <span class="text-muted fst-italic">No Quote</span>
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+              
+              <!-- Grand Totals Row -->
+              <tr class="table-primary fw-bold">
+                <td colspan="4" class="text-end align-middle">
+                  <h5 class="mb-0">GRAND TOTAL</h5>
+                </td>
+                
+                <% @invited_suppliers.each do |rfq_supplier| %>
+                  <td class="text-center align-middle supplier-column">
+                    <% total = @supplier_totals[rfq_supplier.supplier_id] %>
+                    <% if total > 0 %>
+                      <h4 class="mb-0 text-success">
+                        <%= number_to_currency(total) %>
+                      </h4>
+                      <% if total == @supplier_totals.values.reject(&:zero?).min %>
+                        <span class="badge bg-success mt-1">
+                          <i class="bi bi-trophy-fill"></i> Lowest Bid
+                        </span>
+                      <% end %>
+                    <% else %>
+                      <span class="text-muted">-</span>
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <% if @rfq.status == 'quotes_received' %>
+      <div class="card mt-4 border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-1">Ready to Award?</h5>
+              <p class="text-muted mb-0">
+                Select winning quotes above and proceed with awarding
+                <span id="selected-count" class="badge bg-primary ms-2">0 selected</span>
+              </p>
+            </div>
+            
+            <%= f.submit 'Award Selected Quotes',
+                        class: 'btn btn-secondary btn-lg',
+                        id: 'award-button',
+                        disabled: true,
+                        data: { 
+                          confirm: 'Are you sure you want to award the selected quotes? This will mark them as winners.' 
+                        } %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    
+  <% end %>
+  <!-- FORM WRAPPER ENDS HERE -->
+
+</div>
+
+<!-- Custom Styles -->
+<style>
+  .comparison-table {
+    font-size: 0.9rem;
+  }
+  
+  .supplier-column {
+    background-color: #f8f9fa;
+    border-left: 2px solid #dee2e6;
+  }
+  
+  .supplier-header {
+    padding: 0.5rem;
+  }
+  
+  .item-row:hover {
+    background-color: #f1f3f5;
+  }
+  
+  .quote-price {
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 0.25rem;
+    margin: 0.5rem 0;
+  }
+  
+  .quote-total {
+    padding: 0.5rem;
+    background-color: #e7f5ff;
+    border-radius: 0.25rem;
+  }
+  
+  .lowest-price {
+    background-color: #d3f9d8 !important;
+    border: 2px solid #51cf66 !important;
+  }
+  
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa !important;
+  }
+</style>
+
+<!-- JavaScript for Quote Selection -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const quoteSelectors = document.querySelectorAll('.quote-selector');
+    const awardButton = document.getElementById('award-button');
+    const selectedCount = document.getElementById('selected-count');
+    
+    quoteSelectors.forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const itemId = this.dataset.itemId;
+        
+        // Uncheck other quotes for the same item (single winner per item)
+        quoteSelectors.forEach(other => {
+          if (other.dataset.itemId === itemId && other !== this) {
+            other.checked = false;
+          }
+        });
+        
+        updateAwardButton();
+      });
+    });
+    
+    function updateAwardButton() {
+      const checkedCount = document.querySelectorAll('.quote-selector:checked').length;
+      
+      // Update count badge
+      selectedCount.textContent = `${checkedCount == null ? '' : checkedCount} selected`;
+      
+      if (awardButton) {
+        if (checkedCount > 0) {
+          awardButton.classList.remove('btn-secondary');
+          awardButton.classList.add('btn-success');
+          awardButton.disabled = false;
+        } else {
+          awardButton.classList.remove('btn-success');
+          awardButton.classList.add('btn-secondary');
+          awardButton.disabled = true;
+        }
+      }
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize on page load
+    updateAwardButton();
+  });
+</script>

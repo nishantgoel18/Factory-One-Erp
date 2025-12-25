@@ -1,0 +1,170 @@
+<!-- app/views/rfq_mailer/rfq_reminder.html.erb -->
+<!-- Reminder email for suppliers who haven't responded -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #ffc107; color: #333; padding: 20px; text-align: center; }
+    .content { background: #fff; padding: 20px; margin: 20px 0; border: 2px solid #ffc107; }
+    .footer { text-align: center; color: #6c757d; font-size: 12px; margin-top: 20px; }
+    .button { background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; margin: 10px 0; }
+    .urgent-box { background: #dc3545; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; margin: 20px 0; border-radius: 4px; }
+    .info-box { background: #f8f9fa; padding: 15px; margin: 15px 0; border-left: 4px solid #ffc107; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background: #e9ecef; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="header">
+      <h2><i style="font-size: 32px;">⚠️</i> REMINDER</h2>
+      <h3>Request for Quote - Response Needed</h3>
+    </div>
+    
+    <!-- Greeting -->
+    <div class="content">
+      <p>Dear <%= @contact.full_name || @supplier.display_name %>,</p>
+      
+      <!-- Urgent Message -->
+      <div class="urgent-box">
+        <% if @days_left > 0 %>
+          ONLY <%= @days_left %> DAY<%= @days_left == 1 ? '' : 'S' %> REMAINING!
+        <% else %>
+          RESPONSE DEADLINE HAS PASSED!
+        <% end %>
+      </div>
+      
+      <p>
+        This is a friendly reminder that we are still awaiting your quote for 
+        RFQ <strong><%= @rfq.rfq_number %></strong>.
+      </p>
+      
+      <!-- RFQ Details -->
+      <div class="info-box">
+        <h4>RFQ Details</h4>
+        <table>
+          <tr>
+            <td><strong>RFQ Number:</strong></td>
+            <td><%= @rfq.rfq_number %></td>
+          </tr>
+          <tr>
+            <td><strong>Title:</strong></td>
+            <td><%= @rfq.title %></td>
+          </tr>
+          <tr>
+            <td><strong>Original Issue Date:</strong></td>
+            <td><%= @rfq.rfq_date.strftime('%B %d, %Y') %></td>
+          </tr>
+          <tr>
+            <td><strong>Response Deadline:</strong></td>
+            <td style="<%= @days_left <= 0 ? 'color: #dc3545;' : 'color: #ffc107;' %> font-weight: bold;">
+              <%= @rfq.response_deadline.strftime('%B %d, %Y') %>
+              <% if @days_left > 0 %>
+                (<%= @days_left %> day<%= @days_left == 1 ? '' : 's' %> left)
+              <% else %>
+                (OVERDUE)
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Items:</strong></td>
+            <td><%= @rfq.rfq_items.count %> items requested</td>
+          </tr>
+        </table>
+      </div>
+      
+      <!-- Status Message -->
+      <% if @days_left > 0 %>
+        <p>
+          <strong>We understand you may be busy, but we would greatly appreciate receiving your quote 
+          within the next <%= @days_left %> day<%= @days_left == 1 ? '' : 's' %>.</strong>
+        </p>
+        
+        <p>
+          If you need any clarification or have questions about the requirements, please don't hesitate 
+          to contact us immediately.
+        </p>
+      <% else %>
+        <p style="color: #dc3545; font-weight: bold;">
+          The response deadline has passed. However, if you are still able to provide a quote, 
+          we would appreciate receiving it as soon as possible.
+        </p>
+      <% end %>
+      
+      <!-- Quick Summary -->
+      <div class="info-box">
+        <h4>Quick Summary</h4>
+        <p><strong>Items Requested:</strong></p>
+        <ul>
+          <% @rfq.rfq_items.order(:line_number).limit(5).each do |item| %>
+            <li><%= item.display_name %> - Qty: <%= item.quantity_requested %> <%= item.unit_of_measure %></li>
+          <% end %>
+          <% if @rfq.rfq_items.count > 5 %>
+            <li><em>...and <%= @rfq.rfq_items.count - 5 %> more items</em></li>
+          <% end %>
+        </ul>
+      </div>
+      
+      <!-- Call to Action -->
+      <div style="text-align: center; margin: 30px 0;">
+        <% quote_url = "#{ENV['APP_URL'] || 'http://localhost:3000'}/rfqs/#{@rfq.id}/submit_quote" %>
+        <a href="<%= quote_url %>" class="button">
+          SUBMIT YOUR QUOTE NOW
+        </a>
+      </div>
+      
+      <!-- Unable to Quote -->
+      <div style="background: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 4px;">
+        <p style="margin: 0;"><strong>Unable to provide a quote?</strong></p>
+        <p style="margin: 5px 0 0 0;">
+          Please reply to this email to let us know so we can update our records.
+        </p>
+      </div>
+      
+      <!-- Contact Information -->
+      <div class="info-box">
+        <h4>Contact Information</h4>
+        <% if @rfq.buyer_assigned %>
+          <p>
+            <strong>Buyer:</strong> <%= @rfq.buyer_assigned.full_name %><br>
+            <strong>Email:</strong> <%= @rfq.buyer_assigned.email %><br>
+            <% if @rfq.buyer_assigned.phone %>
+              <strong>Phone:</strong> <%= @rfq.buyer_assigned.phone %><br>
+            <% end %>
+          </p>
+        <% end %>
+        
+        <p>For questions or clarifications, please contact the buyer above.</p>
+      </div>
+      
+      <!-- Closing -->
+      <p>
+        We value your partnership and look forward to receiving your competitive quote.
+      </p>
+      
+      <p>
+        Best regards,<br>
+        <strong><%= @rfq.buyer_assigned&.full_name || 'Procurement Team' %></strong><br>
+        Procurement Department
+      </p>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <p>
+        This is a reminder for RFQ <%= @rfq.rfq_number %><br>
+        Original Issue Date: <%= @rfq.rfq_date.strftime('%B %d, %Y') %> | 
+        Deadline: <%= @rfq.response_deadline.strftime('%B %d, %Y') %>
+      </p>
+    </div>
+    
+  </div>
+</body>
+</html>

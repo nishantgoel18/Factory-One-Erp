@@ -1,0 +1,781 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">View RFQ</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <a class="breadcrumb-item" href="#">Masters</a>
+        <a class="breadcrumb-item" href="<%= rfqs_path %>">RFQs</a>
+        <span class="breadcrumb-item active">View RFQ</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-2">
+        <%= @rfq.rfq_number %>
+        <span class="badge badge-sm <%= rfq_status_badge_class(@rfq.status) %> ms-2">
+          <%= @rfq.status.titleize %>
+        </span>
+        <% if @rfq.is_urgent? %>
+          <span class="badge bg-danger ms-1">URGENT</span>
+        <% end %>
+      </h2>
+      <h4 class="text-muted mb-3"><%= @rfq.title %></h4>
+      
+      <!-- Key Info Bar -->
+      <div class="d-flex gap-4 text-muted">
+        <div>
+          <i class="bi bi-calendar me-1"></i>
+          <strong>Due:</strong> <%= @rfq.response_deadline.strftime('%b %d, %Y') %>
+          <% if @rfq.days_until_deadline && @rfq.days_until_deadline > 0 %>
+            <small class="text-success">(<%=@rfq.days_until_deadline %> days left)</small>
+          <% elsif @rfq.is_overdue? %>
+            <small class="text-danger">(OVERDUE)</small>
+          <% end %>
+        </div>
+        <div>
+          <i class="bi bi-box me-1"></i>
+          <strong>Items:</strong> <%= @rfq.rfq_items.count %>
+        </div>
+        <div>
+          <i class="bi bi-people me-1"></i>
+          <strong>Suppliers:</strong> <%= @rfq.suppliers_invited_count || 0 %> invited
+        </div>
+        <div>
+          <i class="bi bi-chat-quote me-1"></i>
+          <strong>Quotes:</strong> <%= @rfq.quotes_received_count || 0 %> received
+          <% if @rfq.all_responses_received? %>
+            <small class="text-success">(All received)</small>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="btn-group">
+      <% if @rfq.draft? %>
+        <%= link_to edit_rfq_path(@rfq), class: 'btn btn-primary btn-sm' do %>
+          <i class="bi bi-pencil me-1"></i>Edit
+        <% end %>
+      <% end %>
+      
+      <% if @rfq.can_be_sent? %>
+        <%= button_to send_to_suppliers_rfq_path(@rfq), 
+            method: :post,
+            class: 'btn btn-success btn-sm',
+            data: { confirm: "Send this RFQ to #{@rfq.suppliers_invited_count} suppliers?" } do %>
+          <i class="bi bi-send me-1"></i>Send to Suppliers
+        <% end %>
+      <% end %>
+      
+      <% if @rfq.quotes_received_count > 0 %>
+        <% if @rfq.can_compare_quotes? %>
+          <%= link_to comparison_rfq_path(@rfq), class: 'btn btn-info btn-sm' do %>
+            <i class="bi bi-bar-chart me-1"></i>Compare Quotes
+          <% end %>
+        <% end -%>
+      <% end %>
+      
+      <% if @rfq.can_be_awarded? %>
+        <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#awardModal">
+          <i class="bi bi-trophy me-1"></i>Award RFQ
+        </button>
+      <% end %>
+      <%= link_to 'Print', rfq_path(@rfq, format: :pdf), class: 'btn btn-primary-outline btn-sm', target: '_blank' %>
+      <%= link_to 'Export CSV', rfq_path(@rfq, format: :csv), class: 'btn btn-primary-outline btn-sm' %>
+      <% if @rfq.draft? %>
+        <%= link_to 'Delete RFQ', rfq_path(@rfq), 
+            method: :delete, 
+            class: 'btn btn-primary-outline btn-sm text-danger',
+            data: { confirm: 'Are you sure?' } %>
+      <% elsif @rfq.can_cancel_rfq? %>
+        <%= button_to cancel_rfq_path(@rfq), 
+            method: :post,
+            class: 'btn btn-primary-outline btn-sm text-danger',
+            data: { confirm: 'Cancel this RFQ?' } do %>
+          Cancel RFQ
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  <%= render 'conversion_buttons', rfq: @rfq %>
+  
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-4" id="rfqTabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab">
+        <i class="bi bi-info-circle me-1"></i>Overview
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="items-tab" data-toggle="tab" href="#items" role="tab">
+        <i class="bi bi-box-seam me-1"></i>Items <span class="badge bg-secondary ms-1"><%= @rfq.rfq_items.count %></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="suppliers-tab" data-toggle="tab" href="#suppliers" role="tab">
+        <i class="bi bi-people me-1"></i>Suppliers <span class="badge bg-secondary ms-1"><%= @rfq.suppliers_invited_count %></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="quotes-tab" data-toggle="tab" href="#quotes" role="tab">
+        <i class="bi bi-chat-quote me-1"></i>Quotes <span class="badge bg-secondary ms-1"><%= @rfq.quotes_received_count %></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="activity-tab" data-toggle="tab" href="#activity" role="tab">
+        <i class="bi bi-clock-history me-1"></i>Activity
+      </a>
+    </li>
+  </ul>
+  
+  <!-- Tab Content -->
+  <div class="tab-content" id="rfqTabContent">
+    
+    <!-- OVERVIEW TAB -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+      <div class="row">
+        
+        <!-- Left Column -->
+        <div class="col-md-8">
+          
+          <!-- Description -->
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+              <h5 class="mb-0">Description</h5>
+            </div>
+            <div class="card-body">
+              <%= simple_format(@rfq.description) || content_tag(:p, 'No description provided', class: 'text-muted') %>
+            </div>
+          </div>
+          
+          <!-- Items Summary -->
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+              <h5 class="mb-0">Items Summary</h5>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <thead>
+                    <tr>
+                      <th>Line</th>
+                      <th>Item</th>
+                      <th class="text-end">Quantity</th>
+                      <th class="text-end">Target Price</th>
+                      <th class="text-center">Quotes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% @rfq.rfq_items.order(:line_number).each do |item| %>
+                      <tr>
+                        <td><%= item.line_number %></td>
+                        <td>
+                          <%= item.display_name %>
+                          <% if item.is_critical_item? %>
+                            <span class="badge bg-danger badge-sm">Critical</span>
+                          <% end %>
+                        </td>
+                        <td class="text-end"><%= item.quantity_requested %> <%= item.unit_of_measure %></td>
+                        <td class="text-end">
+                          <%= number_to_currency(item.target_unit_price) if item.target_unit_price %>
+                        </td>
+                        <td class="text-center">
+                          <span class="badge bg-info"><%= item.quotes_received_count || 0 %></span>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+        <!-- Right Column -->
+        <div class="col-md-4">
+          
+          <!-- Key Dates -->
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+              <h6 class="mb-0">Key Dates</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <small class="text-muted d-block">RFQ Date</small>
+                <strong><%= @rfq.rfq_date.strftime('%B %d, %Y') %></strong>
+              </div>
+              <div class="mb-3">
+                <small class="text-muted d-block">Due Date</small>
+                <strong><%= @rfq.due_date.strftime('%B %d, %Y') %></strong>
+              </div>
+              <div class="mb-3">
+                <small class="text-muted d-block">Response Deadline</small>
+                <strong><%= @rfq.response_deadline.strftime('%B %d, %Y') %></strong>
+              </div>
+              <% if @rfq.sent_at %>
+                <div>
+                  <small class="text-muted d-block">Sent On</small>
+                  <strong><%= @rfq.sent_at.strftime('%B %d, %Y at %I:%M %p') %></strong>
+                </div>
+              <% end %>
+
+              <% if @rfq.cancelled_at %>
+                <div>
+                  <small class="text-muted d-block">Cancelled At</small>
+                  <strong><%= @rfq.cancelled_at.strftime('%B %d, %Y at %I:%M %p') %></strong>
+                </div>
+              <% end %>
+            </div>
+          </div>
+          
+          <!-- People -->
+          <div class="card mb-4">
+            <div class="card-header d-flex justify-content-start align-items-center bg-primary">
+              <h6 class="mb-0">People</h6>
+            </div>
+            <div class="card-body">
+              <% if @rfq.created_by %>
+                <div class="mb-3">
+                  <small class="text-muted d-block">Created By</small>
+                  <strong><%= @rfq.created_by.full_name || 'Not Available' %></strong>
+                </div>
+              <% end %>
+              <% if @rfq.buyer_assigned %>
+                <div class="mb-3">
+                  <small class="text-muted d-block">Buyer</small>
+                  <strong><%= @rfq.buyer_assigned.full_name || 'Not Available' %></strong>
+                </div>
+              <% end %>
+              <% if @rfq.requester %>
+                <div class="mb-3">
+                  <small class="text-muted d-block">Requester</small>
+                  <strong><%= @rfq.requester.full_name || 'Not Available' %></strong>
+                </div>
+              <% end %>
+
+              <% if @rfq.cancelled_by %>
+                <div>
+                  <small class="text-muted d-block">Cancelled By</small>
+                  <strong><%= @rfq.cancelled_by&.full_name || 'Not Available' %></strong>
+                </div>
+              <% end %>
+            </div>
+          </div>
+          
+          <!-- Award Info -->
+          <% if @rfq.awarded_supplier %>
+            <div class="card border-success mb-4">
+              <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-trophy me-1"></i>Awarded</h6>
+              </div>
+              <div class="card-body">
+                <div class="mb-2">
+                  <small class="text-muted d-block">Awarded To</small>
+                  <strong><%= @rfq.awarded_supplier.display_name %></strong>
+                </div>
+                <div class="mb-2">
+                  <small class="text-muted d-block">Award Date</small>
+                  <strong><%= @rfq.award_date.strftime('%B %d, %Y') %></strong>
+                </div>
+                <div class="mb-2">
+                  <small class="text-muted d-block">Amount</small>
+                  <strong><%= number_to_currency(@rfq.awarded_total_amount) %></strong>
+                </div>
+                <% if @rfq.award_reason %>
+                  <div>
+                    <small class="text-muted d-block">Reason</small>
+                    <%= @rfq.award_reason %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+          <!-- Cost Savings -->
+          <% if @rfq.cost_savings && @rfq.cost_savings > 0 %>
+            <div class="card border-success">
+              <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Cost Savings</h6>
+                <h3 class="text-success mb-1">
+                  <%= number_to_currency(@rfq.cost_savings) %>
+                </h3>
+                <small class="text-muted">
+                  <%= @rfq.cost_savings_percentage %>% below highest quote
+                </small>
+              </div>
+            </div>
+          <% end %>
+          
+        </div>
+      </div>
+    </div>
+    
+    <!-- ITEMS TAB -->
+    <div class="tab-pane fade" id="items" role="tabpanel">
+      <div class="card mb-4">
+        <div class="card-header bg-primary d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-list-ul"></i>
+            RFQ Items 
+            <span class="badge bg-secondary"><%= @rfq.rfq_items.count %></span>
+          </h5>
+          
+          <% if @rfq.status == 'AWARDED' %>
+            <div>
+              <%= rfq_conversion_status_badge(@rfq) %>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th width="6%">Line</th>
+                  <th width="12%">Product Code</th>
+                  <th>Description</th>
+                  <th width="10%" class="text-center">Quantity</th>
+                  <th width="12%" class="text-end">Target Price</th>
+                  <th width="12%" class="text-end">Selected Price</th>
+                  <th width="15%">Awarded To</th>
+                  <th width="10%" class="text-center">Status</th>
+                  <th class="text-center">Quotes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @rfq.rfq_items.order(:line_number).each do |item| %>
+                  <tr class="<%= 'table-success' if rfq_item_selected?(item) %>">
+                    <!-- Line Number -->
+                    <td class="text-center">
+                      <span class="badge bg-secondary"><%= item.line_number %></span>
+                    </td>
+                    
+                    <!-- Product Code -->
+                    <td>
+                      <code class="text-primary"><%= item.product.sku %></code>
+                      <% if item.is_critical_item? %>
+                        <span class="badge bg-danger ms-1">Critical</span>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Description -->
+                    <td>
+                      <%= item.product.name %>
+                      <% if item.item_description.present? %>
+                        <br>
+                        <small class="text-muted"><%= truncate(item.item_description, length: 60) %></small>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Quantity -->
+                    <td class="text-center">
+                      <strong><%= number_with_delimiter(item.quantity_requested) %></strong>
+                      <%= item.unit_of_measure %>
+                    </td>
+                    
+                    <!-- Target Price -->
+                    <td class="text-end">
+                      <% if item.target_unit_price.present? %>
+                        <%= number_to_currency(item.target_unit_price) %>
+                        <br>
+                        <small class="text-muted">
+                          <%= number_to_currency(item.target_total_price) %> total
+                        </small>
+                      <% else %>
+                        <em class="text-muted">Not set</em>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Selected Price -->
+                    <td class="text-end">
+                      <% if item.selected_unit_price.present? %>
+                        <strong class="text-success">
+                          <%= number_to_currency(item.selected_unit_price) %>
+                        </strong>
+                        <br>
+                        <small>
+                          <%= number_to_currency(item.selected_total_price) %> total
+                        </small>
+                        
+                        <!-- Price Variance Badge -->
+                        <% if item.target_unit_price.present? %>
+                          <br>
+                          <%= price_variance_badge(item.selected_unit_price, item.target_unit_price) %>
+                        <% end %>
+                      <% else %>
+                        <em class="text-muted">Not selected</em>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Awarded To -->
+                    <td>
+                      <%= rfq_item_selected_supplier(item) %>
+                      <% if item.selected_lead_time_days.present? %>
+                        <br>
+                        <small class="text-muted">
+                          <i class="bi bi-clock"></i>
+                          <%= item.selected_lead_time_days %> days
+                        </small>
+                      <% end %>
+                    </td>
+                    
+                    <!-- Status -->
+                    <td class="text-center">
+                      <%= rfq_item_selection_badge(item) %>
+                      
+                      <% if rfq_item_selected?(item) && @rfq.converted_to_po? %>
+                        <br>
+                        <small class="badge bg-info mt-1">
+                          <i class="bi bi-check-circle"></i> In PO
+                        </small>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <span class="badge <%= item.quotes_received_count > 0 ? 'bg-success' : 'bg-secondary' %>">
+                        <%= item.quotes_received_count || 0 %>
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+              
+              <!-- Summary Footer -->
+              <tfoot class="table-light">
+                <tr>
+                  <th colspan="4" class="text-end">
+                    <% selected_count = @rfq.selected_items.count %>
+                    <% if selected_count > 0 %>
+                      <span class="text-success">
+                        <%= selected_count %> of <%= @rfq.rfq_items.count %> items selected
+                      </span>
+                    <% else %>
+                      <span class="text-muted">No items selected</span>
+                    <% end %>
+                  </th>
+                  <th class="text-end">
+                    <% if @rfq.rfq_items.sum(:target_total_price) > 0 %>
+                      <%= number_to_currency(@rfq.rfq_items.sum(:target_total_price)) %>
+                    <% end %>
+                  </th>
+                  <th class="text-end">
+                    <% if @rfq.selected_items.sum(:selected_total_price) > 0 %>
+                      <strong class="text-success">
+                        <%= number_to_currency(@rfq.selected_items.sum(:selected_total_price)) %>
+                      </strong>
+                    <% end %>
+                  </th>
+                  <th colspan="3">
+                    <% if @rfq.cost_savings.present? && @rfq.cost_savings > 0 %>
+                      <%= cost_savings_display(@rfq.cost_savings, @rfq.cost_savings_percentage) %>
+                    <% end %>
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Footer with Conversion Info -->
+        <% if @rfq.converted_to_po? %>
+          <div class="card-footer bg-success bg-opacity-10">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                <strong>Converted to Purchase Order(s)</strong>
+                <%= rfq_conversion_timestamp(@rfq) %>
+              </div>
+              <div>
+                <%= rfq_linked_po_numbers(@rfq) %>
+              </div>
+            </div>
+          </div>
+        <% elsif @rfq.can_convert_to_po? %>
+          <div class="card-footer bg-warning bg-opacity-10">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <i class="bi bi-info-circle text-warning me-2"></i>
+                <strong><%= @rfq.selected_items.count %></strong> items ready for conversion
+                <% suppliers_count = @rfq.items_by_supplier.keys.count %>
+                <% if suppliers_count > 1 %>
+                  to <strong><%= suppliers_count %></strong> different suppliers
+                <% end %>
+              </div>
+              <div>
+                <%= link_to new_rfq_conversion_path(@rfq), class: "btn btn-success" do %>
+                  <i class="bi bi-arrow-right-circle"></i>
+                  Convert to PO
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Conversion Eligibility Message -->
+      <%= rfq_conversion_eligibility_message(@rfq) %>
+    </div>
+    
+    <!-- SUPPLIERS TAB -->
+    <div class="tab-pane fade" id="suppliers" role="tabpanel">
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Supplier</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Invited On</th>
+                  <th>Responded</th>
+                  <th class="text-center">Items Quoted</th>
+                  <th class="text-end">Total Amount</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @rfq.rfq_suppliers.includes(:supplier, :supplier_contact).each do |rfq_supplier| %>
+                  <tr>
+                    <td>
+                      <%= link_to rfq_supplier.supplier.display_name, supplier_path(rfq_supplier.supplier) %>
+                    </td>
+                    <td>
+                      <% if rfq_supplier.supplier_contact %>
+                        <%= rfq_supplier.supplier_contact.full_name %><br>
+                        <small class="text-muted"><%= rfq_supplier.contact_email_used %></small>
+                      <% else %>
+                        <span class="text-muted">-</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <span class="badge <%= supplier_invitation_status_badge(rfq_supplier.invitation_status) %>">
+                        <%= rfq_supplier.invitation_status %>
+                      </span>
+                    </td>
+                    <td><%= rfq_supplier.invited_at&.strftime('%b %d, %Y') %></td>
+                    <td>
+                      <%= rfq_supplier.quoted_at&.strftime('%b %d, %Y') || '-' %>
+                      <% if rfq_supplier.responded_on_time == false %>
+                        <br><small class="text-danger">Late by <%= rfq_supplier.days_overdue %> days</small>
+                      <% end %>
+                    </td>
+                    <td class="text-center">
+                      <%= rfq_supplier.items_quoted_count %> / <%= @rfq.rfq_items.count %>
+                    </td>
+                    <td class="text-end">
+                      <%= number_to_currency(rfq_supplier.total_quoted_amount) if rfq_supplier.total_quoted_amount %>
+                    </td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <% if rfq_supplier.invitation_status == 'INVITED' %>
+                          <%= button_to remind_supplier_rfq_path(@rfq, supplier_id: rfq_supplier.supplier_id), 
+                            method: :post,
+                            class: 'btn btn-success btn-sm',
+                            data: { confirm: "Remind this RFQ to supplier?" } do %>
+                            <i class="bi bi-send me-1"></i>Remind
+                          <% end %>
+                        <% elsif rfq_supplier.invitation_status == 'QUOTED' %>
+                          <span class="badge bg-success"><i class="bi bi-check"></i> Responded</span>
+                        <% end %>
+                        
+                        <!-- Enter Quote Button (NEW!) -->
+                        <%= link_to new_rfq_vendor_quote_path(@rfq, supplier_id: rfq_supplier.supplier_id),
+                            class: 'btn btn-primary btn-sm',
+                            data: { turbo_frame: 'quote_modal' } do %>
+                          <i class="anticon anticon-plus-circle"></i> Enter Quote
+                        <% end %>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- QUOTES TAB -->
+    <div class="tab-pane fade" id="quotes" role="tabpanel">
+      <% if @rfq.vendor_quotes.any? %>
+        <div class="card">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Quote #</th>
+                    <th>Supplier</th>
+                    <th>Item</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Total</th>
+                    <th>Lead Time</th>
+                    <th class="text-center">Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% @rfq.vendor_quotes.includes(:supplier, :rfq_item).order('overall_rank ASC').each do |quote| %>
+                    <tr class="<%= 'table-success' if quote.is_selected %>">
+                      <td><%= quote.quote_number %></td>
+                      <td><%= quote.supplier.display_name %></td>
+                      <td><%= quote.rfq_item.display_name %></td>
+                      <td class="text-end">
+                        <%= number_to_currency(quote.unit_price) %>
+                        <% if quote.is_lowest_price %>
+                          <span class="badge bg-success badge-sm">Lowest</span>
+                        <% end %>
+                      </td>
+                      <td class="text-end"><%= number_to_currency(quote.total_price) %></td>
+                      <td>
+                        <%= quote.lead_time_days %> days
+                        <% if quote.is_fastest_delivery %>
+                          <span class="badge bg-info badge-sm">Fastest</span>
+                        <% end %>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge <%= rating_badge_class(quote.overall_score) %>">
+                          <%= quote.overall_score %>
+                        </span>
+                        <% if quote.is_best_value %>
+                          <br><small class="text-success">Best Value</small>
+                        <% end %>
+                      </td>
+                      <td>
+                        <% if quote.is_selected %>
+                          <span class="badge bg-success">Selected</span>
+                        <% else %>
+                          <span class="badge bg-secondary">Not Selected</span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          No quotes received yet.
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- ACTIVITY TAB -->
+    <div class="tab-pane fade" id="activity" role="tabpanel">
+      <div class="card">
+        <div class="card-body">
+          <div class="timeline">
+            <% if @rfq.created_at %>
+              <div class="timeline-item">
+                <div class="timeline-marker bg-primary"></div>
+                <div class="timeline-content">
+                  <h6>RFQ Created</h6>
+                  <p class="text-muted mb-0">
+                    <%= @rfq.created_at.strftime('%B %d, %Y at %I:%M %p') %>
+                    <% if @rfq.created_by %>
+                      by <%= @rfq.created_by.full_name %>
+                    <% end %>
+                  </p>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @rfq.sent_at %>
+              <div class="timeline-item">
+                <div class="timeline-marker bg-success"></div>
+                <div class="timeline-content">
+                  <h6>Sent to Suppliers</h6>
+                  <p class="text-muted mb-0">
+                    <%= @rfq.sent_at.strftime('%B %d, %Y at %I:%M %p') %>
+                    <br>Sent to <%= @rfq.suppliers_invited_count %> suppliers
+                  </p>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @rfq.award_date %>
+              <div class="timeline-item">
+                <div class="timeline-marker bg-warning"></div>
+                <div class="timeline-content">
+                  <h6>Awarded</h6>
+                  <p class="text-muted mb-0">
+                    <%= @rfq.award_date.strftime('%B %d, %Y') %>
+                    <br>Awarded to <%= @rfq.awarded_supplier&.display_name %>
+                  </p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+</div>
+
+<!-- Award Modal -->
+<div class="modal fade" id="awardModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Award RFQ</h5>
+        <button type="button" class="btn-close" data-dismiss="modal"></button>
+      </div>
+      <%= form_with url: award_rfq_path(@rfq), method: :post do |f| %>
+        <div class="modal-body">
+          <div class="mb-3">
+            <%= f.label :supplier_id, 'Select Supplier', class: 'form-label' %>
+            <%= f.collection_select :supplier_id, 
+                @rfq.suppliers, 
+                :id, :display_name,
+                { prompt: 'Choose supplier...' },
+                { class: 'form-select', required: true } %>
+          </div>
+          <div class="mb-3">
+            <%= f.label :reason, 'Award Reason', class: 'form-label' %>
+            <%= f.text_area :reason, class: 'form-control', rows: 3, 
+                placeholder: 'Why are you awarding to this supplier?' %>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          <%= f.submit 'Award RFQ', class: 'btn btn-success' %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .timeline { position: relative; padding-left: 30px; }
+  .timeline-item { position: relative; padding-bottom: 20px; }
+  .timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 15px;
+    bottom: -20px;
+    width: 2px;
+    background: #dee2e6;
+  }
+  .timeline-item:last-child:before { display: none; }
+  .timeline-marker {
+    position: absolute;
+    left: -30px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid white;
+  }
+</style>
