@@ -69,7 +69,7 @@ gem 'delayed_job_active_record'
 gem "daemons"
 
 gem 'rack-cors'
-gem 'friendly_id', '~> 5.5.0'
+gem 'friendly_id', '~> 5.6.0'
 
 gem 'administrate'
 gem "administrate-field-nested_has_many"
