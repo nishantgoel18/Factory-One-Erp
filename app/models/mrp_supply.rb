@@ -1,0 +1,2 @@
+class MrpSupply < ApplicationRecord
+end

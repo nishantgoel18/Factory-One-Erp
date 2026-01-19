@@ -39,14 +39,20 @@
                     </li>
                 
 
-               
-                    <li class="<%= 'active' if !request.path.include? '' %>">
-                        <a href="<%= 'users_list' %>">Users</a>
-                    </li>
-                
-                    <li class="<%= 'active' if !request.path.include? '' %>">
-                        <a href="<%= 'organizations_list' %>">Settings</a>
-                    </li>               
+                    <% if can?(:manage_users) %>
+                        <li class="<%= 'active' if request.path.include? settings_users_path %>">
+                            <a href="<%= settings_users_path %>">Users</a>
+                        </li>
+                    <% end -%>
+                    <% if can?(:manage_settings) %>
+                        <li class="<%= 'active' if request.path.include? settings_organization_path %>">
+                            <a href="<%= settings_organization_path %>">Organization Settings</a>
+                        </li>
+
+                        <li class="<%= 'active' if request.path.include? settings_mrp_configuration_path %>">
+                            <a href="<%= settings_mrp_configuration_path %>">MRP Settings</a>
+                        </li>
+                    <% end -%>
 
                 </ul>
             </li>

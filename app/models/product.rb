@@ -1,4 +1,5 @@
 class Product < ApplicationRecord
+  include OrganizationScoped
   belongs_to :product_category
   belongs_to :unit_of_measure
   has_many :bill_of_materials

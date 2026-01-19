@@ -1,6 +1,7 @@
 # app/models/work_order.rb
 
 class WorkOrder < ApplicationRecord
+  include OrganizationScoped
   # ========================================
   # ASSOCIATIONS
   # ========================================

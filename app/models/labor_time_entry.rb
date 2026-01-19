@@ -1,6 +1,7 @@
 # app/models/labor_time_entry.rb
 
 class LaborTimeEntry < ApplicationRecord
+  include OrganizationScoped
   # ========================================
   # ASSOCIATIONS
   # ========================================

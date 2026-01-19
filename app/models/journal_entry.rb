@@ -1,4 +1,5 @@
 class JournalEntry < ApplicationRecord
+  include OrganizationScoped
 	REF_TYPE_CHOICES = {
         'PO' => "Purchase Order",
         'GRN' => "Goods Receipt Note",

@@ -1,0 +1,554 @@
+<!-- app/views/settings/mrp_configurations/edit.html.erb -->
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Edit Organization MRP Configuration Details</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">Edit Organization MRP Configuration Details</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="fw-bold mb-1">
+        <i class="bi bi-gear-fill text-primary"></i> Edit MRP Configuration
+      </h2>
+      <p class="text-muted mb-0">Configure your Material Requirements Planning settings</p>
+    </div>
+  </div>
+
+  <%= form_with model: @mrp_config,
+                url: settings_mrp_configuration_path,
+                method: :patch,
+                local: true do |f| %>
+
+    <div id="mrpConfigAccordion">
+
+      <!-- 4.2 Planning Horizon -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapsePlanning">
+            <strong style="color: black;">4.2 Planning Horizon</strong>
+          </a>
+        </div>
+        <div id="collapsePlanning" class="collapse show" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-3">
+                <%= f.label :planning_horizon_days %>
+                <%= f.number_field :planning_horizon_days, class: "form-control" %>
+              </div>
+              <div class="col-md-3">
+                <%= f.label :short_term_horizon_days %>
+                <%= f.number_field :short_term_horizon_days, class: "form-control" %>
+              </div>
+              <div class="col-md-3">
+                <%= f.label :medium_term_horizon_days %>
+                <%= f.number_field :medium_term_horizon_days, class: "form-control" %>
+              </div>
+              <div class="col-md-3">
+                <%= f.label :long_term_horizon_days %>
+                <%= f.number_field :long_term_horizon_days, class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-3">
+                <%= f.label :mrp_replanning_frequency %>
+                <%= f.select :mrp_replanning_frequency,
+                      [['Daily','DAILY'],['Weekly','WEEKLY'],['Monthly','MONTHLY']],
+                      {}, class: "form-control" %>
+              </div>
+              <div class="col-md-3">
+                <%= f.label :planning_time_fence_days %>
+                <%= f.number_field :planning_time_fence_days, class: "form-control" %>
+              </div>
+              <div class="col-md-3">
+                <%= f.label :frozen_zone_days %>
+                <%= f.number_field :frozen_zone_days, class: "form-control" %>
+              </div>
+              <div class="col-md-3">
+                <%= f.label :demand_time_fence_days %>
+                <%= f.number_field :demand_time_fence_days, class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :auto_replan_trigger_enabled, class: "form-check-input" %>
+                  <%= f.label :auto_replan_trigger_enabled, class: "form-check-label" %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :planning_calendar_working_days_only, class: "form-check-input" %>
+                  <%= f.label :planning_calendar_working_days_only, class: "form-check-label" %>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 4.3 Lot Sizing -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseLot">
+            <strong style="color: black;">4.3 Lot Sizing Rules</strong>
+          </a>
+        </div>
+        <div id="collapseLot" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <%= f.label :default_lot_sizing_method %>
+                <%= f.select :default_lot_sizing_method,
+                      MrpConfiguration::LOT_SIZING_METHODS.invert.to_a,
+                      {}, class: "form-control" %>
+              </div>
+              <div class="col-md-6">
+                <%= f.label :lot_sizing_rounding_rule %>
+                <%= f.select :lot_sizing_rounding_rule,
+                      [['Up','UP'],['Down','DOWN'],['Nearest','NEAREST']],
+                      {}, class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-4">
+                <%= f.label :default_min_order_quantity %>
+                <%= f.number_field :default_min_order_quantity, class: "form-control" %>
+              </div>
+              <div class="col-md-4">
+                <%= f.label :default_max_order_quantity %>
+                <%= f.number_field :default_max_order_quantity, class: "form-control" %>
+              </div>
+              <div class="col-md-4">
+                <%= f.label :default_order_multiple %>
+                <%= f.number_field :default_order_multiple, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 4.4 Safety Stock -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseSafety">
+            <strong style="color: black;">4.4 Safety Stock Policies</strong>
+          </a>
+        </div>
+        <div id="collapseSafety" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <%= f.label :safety_stock_calculation_method %>
+                <%= f.select :safety_stock_calculation_method,
+                      MrpConfiguration::SAFETY_STOCK_METHODS.invert.to_a,
+                      {}, class: "form-control" %>
+              </div>
+              <div class="col-md-6">
+                <%= f.label :safety_stock_days %>
+                <%= f.number_field :safety_stock_days, class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :auto_adjust_safety_stock_enabled, class: "form-check-input" %>
+                  <%= f.label :auto_adjust_safety_stock_enabled, class: "form-check-label" %>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 4.5 Reorder Point -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseReorder">
+            <strong style="color: black;">4.5 Reorder Point Settings</strong>
+          </a>
+        </div>
+        <div id="collapseReorder" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <%= f.label :reorder_point_calculation_method %>
+                <%= f.select :reorder_point_calculation_method,
+                      MrpConfiguration::REORDER_POINT_METHODS.invert.to_a,
+                      {}, class: "form-control" %>
+              </div>
+              <div class="col-md-6">
+                <%= f.label :reorder_point_buffer_percent %>
+                <%= f.number_field :reorder_point_buffer_percent, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 4.6 Lead Times -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseLead">
+            <strong style="color: black;">4.6 Lead Time Settings</strong>
+          </a>
+        </div>
+        <div id="collapseLead" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <%= f.label :default_purchase_lead_time %>
+                <%= f.number_field :default_purchase_lead_time, class: "form-control" %>
+              </div>
+              <div class="col-md-6">
+                <%= f.label :default_manufacturing_lead_time %>
+                <%= f.number_field :default_manufacturing_lead_time, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 4.7 Demand Management -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseDemand">
+            <strong style="color: black;">4.7 Demand Management</strong>
+          </a>
+        </div>
+
+        <div id="collapseDemand" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :include_forecasts_in_mrp, class: "form-check-input" %>
+                  <%= f.label :include_forecasts_in_mrp, class: "form-check-label" %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :include_sales_orders_in_mrp, class: "form-check-input" %>
+                  <%= f.label :include_sales_orders_in_mrp, class: "form-check-label" %>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-4">
+                <%= f.label :forecast_consumption_method %>
+                <%= f.select :forecast_consumption_method,
+                      [['Forward','FORWARD'],['Backward','BACKWARD'],['Both','BOTH']],
+                      {}, class: "form-control" %>
+              </div>
+
+              <div class="col-md-4">
+                <%= f.label :demand_priority %>
+                <%= f.select :demand_priority,
+                      [['Sales Order','SALES_ORDER'],['Forecast','FORECAST']],
+                      {}, class: "form-control" %>
+              </div>
+
+              <div class="col-md-4">
+                <%= f.label :demand_aggregation_level %>
+                <%= f.select :demand_aggregation_level,
+                      [['Daily','DAILY'],['Weekly','WEEKLY'],['Monthly','MONTHLY']],
+                      {}, class: "form-control" %>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <%= f.label :forecast_time_fence_days %>
+                <%= f.number_field :forecast_time_fence_days, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseSupply">
+            <strong style="color: black;">4.8 Supply Management</strong>
+          </a>
+        </div>
+
+        <div id="collapseSupply" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :include_existing_pos_in_mrp, class: "form-check-input" %>
+                  <%= f.label :include_existing_pos_in_mrp, class: "form-check-label" %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :include_existing_wos_in_mrp, class: "form-check-input" %>
+                  <%= f.label :include_existing_wos_in_mrp, class: "form-check-label" %>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <%= f.label :inventory_allocation_method %>
+                <%= f.select :inventory_allocation_method,
+                      [['FIFO','FIFO'],['Priority','PRIORITY'],['Manual','MANUAL']],
+                      {}, class: "form-control" %>
+              </div>
+              <div class="col-md-6">
+                <%= f.label :planned_order_firm_time_fence_days %>
+                <%= f.number_field :planned_order_firm_time_fence_days, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseVendor">
+            <strong style="color: black;">4.9 Vendor Selection & Procurement</strong>
+          </a>
+        </div>
+
+        <div id="collapseVendor" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-check">
+                  <%= f.check_box :auto_vendor_selection_enabled, class: "form-check-input" %>
+                  <%= f.label :auto_vendor_selection_enabled, class: "form-check-label" %>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <%= f.label :vendor_selection_criteria %>
+                <%= f.select :vendor_selection_criteria,
+                      MrpConfiguration::VENDOR_SELECTION_CRITERIA.invert.to_a,
+                      {}, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseExceptions">
+            <strong style="color: black;">4.10 Exception & Alert Management</strong>
+          </a>
+        </div>
+
+        <div id="collapseExceptions" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="form-check">
+              <%= f.check_box :exception_alerts_enabled, class: "form-check-input" %>
+              <%= f.label :exception_alerts_enabled, class: "form-check-label" %>
+            </div>
+
+            <div class="mt-3">
+              <%= f.label :exception_threshold_days %>
+              <%= f.number_field :exception_threshold_days, class: "form-control" %>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseCosting">
+            <strong style="color: black;">4.11 Costing & Financial</strong>
+          </a>
+        </div>
+
+        <div id="collapseCosting" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-md-6">
+                <%= f.label :default_costing_method %>
+                <%= f.select :default_costing_method,
+                      MrpConfiguration::COSTING_METHODS.invert.to_a,
+                      {}, class: "form-control" %>
+              </div>
+
+              <div class="col-md-6">
+                <%= f.label :overhead_allocation_method %>
+                <%= f.select :overhead_allocation_method,
+                      [['Direct Labor','DIRECT_LABOR'],['Machine Hours','MACHINE_HOURS']],
+                      {}, class: "form-control" %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseOverrides">
+            <strong style="color: black;">4.12 Item-Level Override Settings</strong>
+          </a>
+        </div>
+
+        <div id="collapseOverrides" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="form-check">
+              <%= f.check_box :allow_item_level_overrides, class: "form-check-input" %>
+              <%= f.label :allow_item_level_overrides, class: "form-check-label" %>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseRun">
+            <strong style="color: black;">4.13 MRP Run Settings</strong>
+          </a>
+        </div>
+
+        <div id="collapseRun" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <%= f.label :mrp_run_mode %>
+            <%= f.select :mrp_run_mode,
+                  MrpConfiguration::MRP_RUN_MODES.invert.to_a,
+                  {}, class: "form-control" %>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseApprovals">
+            <strong style="color: black;">4.14 Approval Workflows</strong>
+          </a>
+        </div>
+
+        <div id="collapseApprovals" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="form-check">
+              <%= f.check_box :planned_po_requires_approval, class: "form-check-input" %>
+              <%= f.label :planned_po_requires_approval, class: "form-check-label" %>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-start align-items-center">
+          <a data-toggle="collapse" href="#collapseNotifications">
+            <strong style="color: black;">4.15 Notification Settings</strong>
+          </a>
+        </div>
+
+        <div id="collapseNotifications" class="collapse" data-parent="#mrpConfigAccordion">
+          <div class="card-body">
+
+            <div class="form-check">
+              <%= f.check_box :email_notifications_enabled, class: "form-check-input" %>
+              <%= f.label :email_notifications_enabled, class: "form-check-label" %>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <!-- 4.7–4.15 -->
+      <!-- Same Bootstrap 4 pattern continues for Demand, Supply, Vendor, Exceptions, Costing, Overrides, MRP Run, Approvals, Notifications -->
+      <!-- (All already compatible — only card + collapse used) -->
+
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-body d-flex justify-content-between">
+        <%= link_to "Cancel", settings_mrp_configuration_path, class: "btn btn-outline-secondary" %>
+        <%= f.submit "Save Configuration", class: "btn btn-primary px-5" %>
+      </div>
+    </div>
+
+  <% end %>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Vendor weight calculator
+  const vendorWeights = document.querySelectorAll('.vendor-weight');
+  const totalWeightSpan = document.getElementById('totalWeight');
+  
+  if (vendorWeights.length > 0) {
+    function calculateTotal() {
+      let total = 0;
+      vendorWeights.forEach(input => {
+        total += parseFloat(input.value) || 0;
+      });
+      totalWeightSpan.textContent = total.toFixed(2);
+      
+      // Change color based on total
+      const alertDiv = document.getElementById('weightTotal');
+      if (Math.abs(total - 100) < 0.01) {
+        alertDiv.className = 'alert alert-success';
+      } else {
+        alertDiv.className = 'alert alert-warning';
+      }
+    }
+    
+    vendorWeights.forEach(input => {
+      input.addEventListener('input', calculateTotal);
+    });
+    
+    calculateTotal(); // Initial calculation
+  }
+  
+  // Show/hide vendor weights section based on selection criteria
+  const vendorCriteriaSelect = document.querySelector('select[name="mrp_configuration[vendor_selection_criteria]"]');
+  const vendorWeightsSection = document.querySelector('.vendor-weights-section');
+  
+  if (vendorCriteriaSelect && vendorWeightsSection) {
+    vendorCriteriaSelect.addEventListener('change', function() {
+      if (this.value === 'BALANCED_SCORE') {
+        vendorWeightsSection.style.display = 'block';
+      } else {
+        vendorWeightsSection.style.display = 'none';
+      }
+    });
+  }
+});
+</script>

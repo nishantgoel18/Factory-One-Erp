@@ -53,17 +53,20 @@ class RfqConversionsController < ApplicationController
     end
     
   rescue ActiveRecord::RecordInvalid => e
-    flash.now[:danger] = "Conversion failed: #{e.message}"
+
+    p e.message
+    @error = "Conversion failed: #{e.message}"
     @items_by_supplier = @rfq.items_by_supplier
     @warehouses = Warehouse.where(is_active: true).order(:name)
     @conversion_preview = calculate_conversion_preview
     render :new
     
   rescue StandardError => e
+
     Rails.logger.error "RFQ Conversion Error: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     
-    flash.now[:danger] = "An unexpected error occurred: #{e.message}"
+    @error = "An unexpected error occurred: #{e.message}"
     @items_by_supplier = @rfq.items_by_supplier
     @warehouses = Warehouse.where(is_active: true).order(:name)
     @conversion_preview = calculate_conversion_preview
@@ -78,9 +81,8 @@ class RfqConversionsController < ApplicationController
   
   def check_conversion_eligibility
     unless @rfq.can_convert_to_po?
-      flash[:warning] = "This RFQ cannot be converted to Purchase Order. " \
+      redirect_to rfq_path(@rfq), notice: "This RFQ cannot be converted to Purchase Order. " \
                        "Ensure it is AWARDED and has selected items."
-      redirect_to rfq_path(@rfq)
     end
   end
   

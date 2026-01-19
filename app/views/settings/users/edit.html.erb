@@ -1,0 +1,140 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Edit Organization User</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">Edit Organization User</span>
+      </nav>
+    </div>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-lg-12">
+      <!-- Back Button -->
+      <div class="mb-3">
+        <%= link_to settings_users_path, class: "text-decoration-none" do %>
+          <i class="bi bi-arrow-left"></i> Back to Users
+        <% end %>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-secondary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-pencil"></i> Edit User
+          </h4>
+        </div>
+
+        <div class="card-body p-4">
+          <%= form_with model: @user, url: settings_user_path(@user), method: :patch, local: true do |f| %>
+            <%= render 'layouts/error_messages', object: @user %>
+
+            <!-- User Information -->
+            <div class="mb-4">
+              <h6 class="fw-bold text-secondary mb-3">User Information</h6>
+
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  <%= f.label :full_name, "First Name *", class: "form-label fw-semibold" %>
+                  <%= f.text_field :full_name, class: "form-control", required: true %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :email, "Email Address *", class: "form-label fw-semibold" %>
+                <%= f.email_field :email, class: "form-control", required: true %>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :phone_number, "Phone Number", class: "form-label fw-semibold" %>
+                <%= f.text_field :phone_number, class: "form-control" %>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Role Assignment -->
+            <div class="mb-4">
+              <h6 class="fw-bold text-secondary mb-3">Role & Permissions</h6>
+
+              <%= f.label :role, "User Role *", class: "form-label fw-semibold" %>
+              <% if @user == current_user && @user.org_owner? %>
+                <%= f.select :role, 
+                    options_for_select([['org_owner'.humanize, :org_owner]], @user.role),
+                    {},
+                    { class: "form-control form-control-lg" }
+                %>
+                <small class="text-muted">You cannot change your own role as the organization owner</small>
+              <% else %>
+                <%= f.select :role, 
+                    options_for_select(User.roles.keys.map { |r| [r.humanize, r] }, @user.role),
+                    {},
+                    { class: "form-control form-control-lg", required: true }
+                %>
+              <% end %>
+            </div>
+
+            <hr>
+
+            <!-- Account Status -->
+            <div class="mb-4">
+              <h6 class="fw-bold text-secondary mb-3">Account Status</h6>
+
+              <div class="alert alert-<%= @user.deleted? ? 'warning' : 'success' %>">
+                <i class="bi bi-<%= @user.deleted? ? 'pause-circle' : 'check-circle' %>"></i>
+                <strong>Status:</strong> <%= @user.deleted? ? 'Inactive' : 'Active' %>
+              </div>
+
+              <% unless @user == current_user %>
+                <% if @user.deleted? %>
+                  <%= link_to toggle_active_settings_user_path(@user), 
+                      method: :patch,
+                      class: "btn btn-success" do %>
+                    <i class="bi bi-check-circle"></i> Activate User
+                  <% end %>
+                <% else %>
+                  <%= link_to toggle_active_settings_user_path(@user), 
+                      method: :patch,
+                      data: { confirm: "Are you sure you want to deactivate this user?" },
+                      class: "btn btn-warning" do %>
+                    <i class="bi bi-pause-circle"></i> Deactivate User
+                  <% end %>
+                <% end %>
+              <% end %>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-grid gap-2">
+              <%= f.submit "Save Changes", class: "btn btn-primary" %>
+              <%= link_to "Cancel", settings_users_path, class: "btn btn-outline-secondary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <% unless @user == current_user %>
+        <div class="card mt-4 border-danger">
+          <div class="card-header d-flex justify-content-start align-items-center bg-danger text-white">
+            <h6 class="mb-0">
+              <i class="bi bi-exclamation-triangle"></i> Danger Zone
+            </h6>
+          </div>
+          <div class="card-body">
+            <p class="mb-3">
+              <strong>Delete this user:</strong> This will permanently remove the user from your organization.
+            </p>
+            <%= link_to settings_user_path(@user),
+                method: :delete,
+                data: { confirm: "Are you sure you want to delete #{@user.full_name}? This action cannot be undone." },
+                class: "btn btn-danger" do %>
+              <i class="bi bi-trash"></i> Delete User
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

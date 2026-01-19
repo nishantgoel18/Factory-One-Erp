@@ -267,6 +267,10 @@ Devise.setup do |config|
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete
+  config.password_length = 6..128
+  config.reset_password_within = 6.hours
+
+  config.mailer_sender = 'noreply@factoryoneerp.com'
 
   # ==> OmniAuth
   # Add a new OmniAuth provider. Check the wiki for more information on setting

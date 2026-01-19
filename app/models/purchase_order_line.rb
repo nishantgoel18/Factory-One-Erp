@@ -1,4 +1,5 @@
 class PurchaseOrderLine < ApplicationRecord
+  include OrganizationScoped
   # ===================================
   # ASSOCIATIONS
   # ===================================

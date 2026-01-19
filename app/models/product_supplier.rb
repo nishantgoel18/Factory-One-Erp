@@ -1,4 +1,5 @@
 class ProductSupplier < ApplicationRecord
+  include OrganizationScoped
   belongs_to :product
   belongs_to :supplier
   belongs_to :created_by, class_name: 'User', optional: true

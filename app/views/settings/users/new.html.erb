@@ -1,0 +1,160 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">New Organization User</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">New Organization User</span>
+      </nav>
+    </div>
+  </div>
+
+  <!-- app/views/settings/users/new.html.erb -->
+
+  <div class="row justify-content-center">
+    <div class="col-lg-12">
+      <!-- Back Button -->
+      <div class="mb-3">
+        <%= link_to settings_users_path, class: "text-decoration-none" do %>
+          <i class="bi bi-arrow-left"></i> Back to Users
+        <% end %>
+      </div>
+
+      <!-- Main Card -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="bi bi-person-plus"></i> Invite New User
+          </h4>
+        </div>
+
+        <div class="card-body p-4">
+          <p class="text-muted mb-4">
+            Send an invitation email to add a new team member to your organization.
+          </p>
+
+          <%= form_with model: @user, url: settings_users_path, local: true do |f| %>
+            <%= render 'layouts/error_messages', object: @user %>
+
+            <!-- User Information -->
+            <div class="mb-4">
+              <h6 class="fw-bold text-secondary mb-3">User Information</h6>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <%= f.label :first_name, "First Name *", class: "form-label fw-semibold" %>
+                  <%= f.text_field :first_name, class: "form-control", required: true, autofocus: true %>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <%= f.label :last_name, "Last Name *", class: "form-label fw-semibold" %>
+                  <%= f.text_field :last_name, class: "form-control", required: true %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :email, "Email Address *", class: "form-label fw-semibold" %>
+                <%= f.email_field :email, class: "form-control", required: true, placeholder: "user@example.com" %>
+                <small class="text-muted">They'll use this to sign in</small>
+              </div>
+
+              <div class="mb-3">
+                <%= f.label :phone_number, "Phone Number", class: "form-label fw-semibold" %>
+                <%= f.text_field :phone_number, class: "form-control", placeholder: "+1 (555) 123-4567" %>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Role Assignment -->
+            <div class="mb-4">
+              <h6 class="fw-bold text-secondary mb-3">Role & Permissions</h6>
+
+              <%= f.label :role, "User Role *", class: "form-label fw-semibold" %>
+              <%= f.select :role, 
+                  options_for_select([
+                    ['Organization Admin - Full administrative access', 'org_admin'],
+                    ['Manager - Department management', 'manager'],
+                    ['Planner - MRP planning and scheduling', 'planner'],
+                    ['Buyer - Procurement and purchasing', 'buyer'],
+                    ['Operator - Shop floor operations', 'operator'],
+                    ['Viewer - Read-only access', 'viewer']
+                  ]),
+                  {},
+                  { class: "form-control form-control-lg", required: true, id: "role_select" }
+              %>
+
+              <!-- Role Descriptions -->
+              <div class="alert alert-info mt-3" id="role_description">
+                <i class="bi bi-info-circle"></i>
+                <strong>Role Description:</strong>
+                <span id="role_text">Select a role to see permissions</span>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Invitation Message -->
+            <div class="mb-4">
+              <h6 class="fw-bold text-secondary mb-3">Personal Message (Optional)</h6>
+
+              <%= text_area_tag 'user[invitation_message]', nil, 
+                  class: "form-control", 
+                  rows: 4,
+                  placeholder: "Add a personal message to the invitation email..." %>
+              <small class="text-muted">This message will be included in the invitation email</small>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-grid gap-2">
+              <%= f.submit "Send Invitation", class: "btn btn-primary btn-lg" %>
+              <%= link_to "Cancel", settings_users_path, class: "btn btn-outline-secondary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card mt-4 border-0 bg-grey">
+        <div class="card-body">
+          <h6 class="fw-bold mb-2">
+            <i class="anticon anticon-check text-primary"></i> What Happens Next?
+          </h6>
+          <ul class="medium mb-0">
+            <li>An invitation email will be sent to the user</li>
+            <li>They'll receive a link to set their password</li>
+            <li>Once they sign up, they'll have access based on their role</li>
+            <li>You can change their role or permissions anytime</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const roleSelect = document.getElementById('role_select');
+  const roleText = document.getElementById('role_text');
+  
+  const roleDescriptions = {
+    'org_admin': 'Full access to all features, settings, and user management. Can modify organization settings and MRP configuration.',
+    'manager': 'Can manage production, approve work orders and purchase orders. Access to reports and analytics.',
+    'planner': 'Can create and manage MRP plans, BOMs, routings, and work orders. Limited access to settings.',
+    'buyer': 'Can create RFQs, purchase orders, and manage supplier relationships. Access to procurement reports.',
+    'operator': 'Shop floor access to view assigned work orders, clock in/out, and record production. Limited to operations.',
+    'viewer': 'Read-only access to view data and reports. Cannot create or modify records.'
+  };
+  
+  roleSelect.addEventListener('change', function() {
+    roleText.textContent = roleDescriptions[this.value] || 'Select a role to see permissions';
+  });
+  
+  // Trigger on page load if role is already selected
+  if (roleSelect.value) {
+    roleText.textContent = roleDescriptions[roleSelect.value];
+  }
+});
+</script>

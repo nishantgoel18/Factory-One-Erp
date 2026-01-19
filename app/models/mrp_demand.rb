@@ -1,0 +1,2 @@
+class MrpDemand < ApplicationRecord
+end

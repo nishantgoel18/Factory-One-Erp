@@ -1,6 +1,7 @@
 # app/models/work_order_material.rb
 
 class WorkOrderMaterial < ApplicationRecord
+  include OrganizationScoped
   # ========================================
   # ASSOCIATIONS
   # ========================================

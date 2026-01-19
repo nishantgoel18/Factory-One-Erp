@@ -1,0 +1,2 @@
+class SalesForecast < ApplicationRecord
+end

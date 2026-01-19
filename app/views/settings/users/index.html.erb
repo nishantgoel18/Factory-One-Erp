@@ -1,0 +1,274 @@
+<!-- app/views/settings/users/index.html.erb -->
+
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Organization Users</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">Organization Users</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-people-fill text-primary"></i> User Management
+          </h2>
+          <p class="text-muted mb-0">Manage team members and their roles</p>
+        </div>
+        <%= link_to new_settings_user_path, class: "btn btn-primary" do %>
+          <i class="bi bi-person-plus"></i> Invite User
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Total Users</h6>
+              <h3 class="fw-bold mb-0"><%= @stats[:total] %></h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 rounded-circle p-2">
+              <i class="anticon anticon-user text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Active Users</h6>
+              <h3 class="fw-bold mb-0 text-success"><%= @stats[:active] %></h3>
+            </div>
+            <div class="bg-success bg-opacity-10 rounded-circle p-2">
+              <i class="anticon anticon-user text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Admins</h6>
+              <h3 class="fw-bold mb-0 text-warning"><%= @stats[:admins] %></h3>
+            </div>
+            <div class="bg-warning bg-opacity-10 rounded-circle p-2">
+              <i class="anticon anticon-user text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Operators</h6>
+              <h3 class="fw-bold mb-0 text-info"><%= @stats[:operators] %></h3>
+            </div>
+            <div class="bg-info bg-opacity-10 rounded-circle p-2">
+              <i class="anticon anticon-user text-white"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <%= form_with url: settings_users_path, method: :get, local: true, class: "row g-3" do |f| %>
+        <div class="col-md-4">
+          <%= text_field_tag :search, params[:search], class: "form-control", placeholder: "Search by name or email..." %>
+        </div>
+        <div class="col-md-3">
+          <%= select_tag :role, 
+              options_for_select([
+                ['All Roles', ''],
+                ['Organization Owner', 'org_owner'],
+                ['Organization Admin', 'org_admin'],
+                ['Manager', 'manager'],
+                ['Planner', 'planner'],
+                ['Buyer', 'buyer'],
+                ['Operator', 'operator'],
+                ['Viewer', 'viewer']
+              ], params[:role]),
+              class: "form-control"
+          %>
+        </div>
+        <div class="col-md-3">
+          <%= submit_tag "Filter", class: "btn btn-primary btn-xs" %>
+          <%= link_to "Reset", settings_users_path, class: "btn btn-outline-secondary btn-xs" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Sign In</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if @users.any? %>
+              <% @users.each do |user| %>
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 m-r-5" 
+                           style="width: 40px; height: 40px; font-size: 16px;">
+                        <%= (user.full_name || 'Not Available').first.upcase %>
+                      </div>
+                      <div>
+                        <div class="fw-semibold"><%= user.full_name %></div>
+                        <% if user == current_user %>
+                          <span class="badge bg-info text-white small">You</span>
+                        <% end %>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-muted"><%= user.email %></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-<%= user.role_badge_class %>">
+                      <%= user.role_name %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if user.deleted? %>
+                      <span class="badge bg-danger">Inactive</span>
+                    <% else %>
+                      <span class="badge bg-success">Active</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="text-muted small">
+                      <%= user.last_sign_in_at ? time_ago_in_words(user.last_sign_in_at) + ' ago' : 'Never' %>
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                      <%= link_to settings_user_path(user), class: "btn btn-outline-primary", title: "View" do %>
+                        <i class="anticon anticon-eye"></i>
+                      <% end %>
+                      
+                      <%= link_to edit_settings_user_path(user), class: "btn btn-outline-secondary", title: "Edit" do %>
+                        <i class="anticon anticon-edit"></i>
+                      <% end %>
+
+
+                      <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
+                          <i class="anticon anticon-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <h6 class="dropdown-header">Change Role</h6>
+                          </li>
+                          <% User.roles.keys.each do |role| %>
+                            <li>
+                              <%= link_to role.humanize, 
+                                  change_role_settings_user_path(user, role: role), 
+                                  method: :patch, 
+                                  remote: true,
+                                  class: "dropdown-item #{'active' if user.role == role}",
+                                  data: { confirm: user == current_user ? "Are you sure you want to change your own role?" : nil }
+                              %>
+                            </li>
+                          <% end %>
+                          <li><hr class="dropdown-divider"></li>
+                          <li>
+                            <% if user.deleted? %>
+                              <%= link_to toggle_active_settings_user_path(user), 
+                                  method: :patch, 
+                                  remote: true,
+                                  class: "dropdown-item text-success" do %>
+                                <i class="bi bi-check-circle me-2"></i> Activate
+                              <% end %>
+                            <% else %>
+                              <%= link_to toggle_active_settings_user_path(user), 
+                                  method: :patch, 
+                                  remote: true,
+                                  class: "dropdown-item text-warning",
+                                  data: { confirm: user == current_user ? "You cannot deactivate your own account" : "Are you sure?" } do %>
+                                <i class="bi bi-pause-circle me-2"></i> Deactivate
+                              <% end %>
+                            <% end %>
+                          </li>
+                          <% unless user == current_user %>
+                            <li>
+                              <%= link_to settings_user_path(user), 
+                                  method: :delete, 
+                                  data: { confirm: "Are you sure you want to delete this user? This action cannot be undone." },
+                                  class: "dropdown-item text-danger" do %>
+                                <i class="bi bi-trash me-2"></i> Delete
+                              <% end %>
+                            </li>
+                          <% end %>
+                        </ul>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="6" class="text-center py-5">
+                  <i class="bi bi-people display-1 text-muted"></i>
+                  <p class="text-muted mt-3">No users found</p>
+                  <%= link_to "Invite Your First User", new_settings_user_path, class: "btn btn-primary" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <% if @users.any? %>
+      <div class="card-footer bg-white border-top">
+        <%= paginate @users %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+.avatar {
+  font-weight: 600;
+}
+</style>

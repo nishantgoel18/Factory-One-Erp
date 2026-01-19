@@ -1,0 +1,112 @@
+<!-- app/views/setup_wizard/_step_mrp.html.erb -->
+
+<h4 class="fw-bold mb-4">
+  <i class="bi bi-gear text-primary"></i> MRP Planning Configuration
+</h4>
+<p class="text-muted mb-4">Set up your Material Requirements Planning defaults. You can fine-tune these later.</p>
+
+<%= form_with model: @mrp_config, url: update_mrp_setup_wizard_path, method: :patch, local: true do |f| %>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :planning_horizon_days, "Planning Horizon (Days) *", class: "form-label fw-semibold" %>
+      <%= f.number_field :planning_horizon_days, class: "form-control form-control-lg", 
+          min: 30, max: 365, required: true %>
+      <small class="text-muted">How far ahead to plan (typically 90 days)</small>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :safety_stock_days, "Safety Stock (Days) *", class: "form-label fw-semibold" %>
+      <%= f.number_field :safety_stock_days, class: "form-control form-control-lg", 
+          min: 0, max: 90, required: true %>
+      <small class="text-muted">Buffer inventory days (typically 7 days)</small>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :default_purchase_lead_time, "Purchase Lead Time (Days) *", class: "form-label fw-semibold" %>
+      <%= f.number_field :default_purchase_lead_time, class: "form-control form-control-lg", 
+          min: 1, max: 365, required: true %>
+      <small class="text-muted">Default supplier delivery time</small>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :default_manufacturing_lead_time, "Manufacturing Lead Time (Days) *", class: "form-label fw-semibold" %>
+      <%= f.number_field :default_manufacturing_lead_time, class: "form-control form-control-lg", 
+          min: 1, max: 365, required: true %>
+      <small class="text-muted">Default production time</small>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :default_lot_sizing_method, "Lot Sizing Method *", class: "form-label fw-semibold" %>
+      <%= f.select :default_lot_sizing_method,
+          options_for_select([
+            ['Lot-for-Lot (Exact Requirement)', 'LOT_FOR_LOT'],
+            ['Fixed Order Quantity', 'FIXED_ORDER_QTY'],
+            ['Economic Order Quantity (EOQ)', 'EOQ'],
+            ['Period Order Quantity', 'POQ'],
+            ['Min/Max', 'MIN_MAX']
+          ], @mrp_config.default_lot_sizing_method),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :default_costing_method, "Costing Method *", class: "form-label fw-semibold" %>
+      <%= f.select :default_costing_method,
+          options_for_select([
+            ['Standard Cost', 'STANDARD_COST'],
+            ['Average Cost', 'AVERAGE_COST'],
+            ['FIFO', 'FIFO'],
+            ['LIFO', 'LIFO']
+          ], @mrp_config.default_costing_method),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :safety_stock_calculation_method, "Safety Stock Method", class: "form-label fw-semibold" %>
+      <%= f.select :safety_stock_calculation_method,
+          options_for_select([
+            ['Days of Supply', 'DAYS_OF_SUPPLY'],
+            ['Fixed Quantity', 'FIXED_QUANTITY'],
+            ['Percentage of Demand', 'PERCENTAGE'],
+            ['Statistical', 'STATISTICAL']
+          ], @mrp_config.safety_stock_calculation_method),
+          {},
+          { class: "form-control form-control-lg" }
+      %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :reorder_point_calculation_method, "Reorder Point Method", class: "form-label fw-semibold" %>
+      <%= f.select :reorder_point_calculation_method,
+          options_for_select([
+            ['Lead Time × Demand + Safety Stock', 'LEAD_TIME_DEMAND'],
+            ['Statistical', 'STATISTICAL'],
+            ['Manual Override', 'MANUAL']
+          ], @mrp_config.reorder_point_calculation_method),
+          {},
+          { class: "form-control form-control-lg" }
+      %>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <i class="bi bi-info-circle"></i>
+    <strong>Don't worry!</strong> These are just defaults. You can adjust these settings anytime from Settings → MRP Configuration, and you can override them for individual items.
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between">
+    <%= link_to "← Previous", setup_wizard_path(step: 2), class: "btn btn-outline-secondary" %>
+    <%= f.submit "Save & Continue →", class: "btn btn-primary btn-lg px-5" %>
+  </div>
+<% end %>

@@ -1,4 +1,5 @@
 class Account < ApplicationRecord
+  include OrganizationScoped
     attr_accessor :current_balance
     ACCOUNT_TYPE_CHOICES = {
         "INCOME"   => "Income",

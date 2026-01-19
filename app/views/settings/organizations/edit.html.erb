@@ -1,0 +1,219 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Edit Organization Details</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">Edit Organization Details</span>
+      </nav>
+    </div>
+  </div>
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="fw-bold mb-1">
+        <i class="bi bi-pencil text-primary"></i> Edit Organization Settings
+      </h2>
+      <p class="text-muted mb-0">Update your company information and preferences</p>
+    </div>
+  </div>
+
+  <%= form_with model: @setting, url: settings_organization_path, method: :patch, local: true, html: { multipart: true, class: "needs-validation", novalidate: true } do |f| %>
+    <div class="row">
+      <!-- Main Form -->
+      <div class="col-lg-8 mb-4">
+        <!-- Company Information -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+            <h5 class="mb-0 fw-bold">
+              <i class="bi bi-building"></i> Company Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <%= f.label :company_name, "Company Name *", class: "form-label fw-semibold" %>
+                <%= f.text_field :company_name, class: "form-control", required: true %>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <%= f.label :legal_name, "Legal Name", class: "form-label fw-semibold" %>
+                <%= f.text_field :legal_name, class: "form-control" %>
+                <small class="text-muted">Official legal entity name (if different)</small>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <%= f.label :tax_id, "Tax ID / EIN", class: "form-label fw-semibold" %>
+                <%= f.text_field :tax_id, class: "form-control", placeholder: "XX-XXXXXXX" %>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <%= f.label :country, "Country *", class: "form-label fw-semibold" %>
+                <%= f.select :country, 
+                    options_for_select([['🇺🇸 United States', 'US'], ['🇨🇦 Canada', 'CA']], @setting.country),
+                    {},
+                    { class: "form-control", required: true }
+                %>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :primary_address, "Primary Address", class: "form-label fw-semibold" %>
+              <%= f.text_area :primary_address, class: "form-control", rows: 3, placeholder: "Street Address\nCity, State ZIP" %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Regional Settings -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header d-flex justify-content-start align-items-center bg-info text-white">
+            <h5 class="mb-0 fw-bold">
+              <i class="bi bi-globe"></i> Regional Settings
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <%= f.label :currency, "Currency *", class: "form-label fw-semibold" %>
+                <%= f.select :currency, 
+                    options_for_select([['US Dollar (USD)', 'USD'], ['Canadian Dollar (CAD)', 'CAD']], @setting.currency),
+                    {},
+                    { class: "form-control", required: true }
+                %>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <%= f.label :time_zone, "Time Zone *", class: "form-label fw-semibold" %>
+                <%= f.time_zone_select :time_zone, 
+                    ActiveSupport::TimeZone.us_zones + ActiveSupport::TimeZone.all.select { |tz| tz.name.include?('Canada') },
+                    { default: @setting.time_zone },
+                    { class: "form-control", required: true }
+                %>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <%= f.label :date_format, "Date Format *", class: "form-label fw-semibold" %>
+                <%= f.select :date_format,
+                    options_for_select([
+                      ['MM/DD/YYYY (US)', 'MM/DD/YYYY'],
+                      ['DD/MM/YYYY (International)', 'DD/MM/YYYY'],
+                      ['YYYY-MM-DD (ISO)', 'YYYY-MM-DD']
+                    ], @setting.date_format),
+                    {},
+                    { class: "form-control", required: true }
+                %>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <%= f.label :number_format, "Number Format *", class: "form-label fw-semibold" %>
+                <%= f.select :number_format,
+                    options_for_select([
+                      ['1,234.56 (US)', '1,234.56'],
+                      ['1.234,56 (European)', '1.234,56'],
+                      ['1 234,56 (French)', '1 234,56']
+                    ], @setting.number_format),
+                    {},
+                    { class: "form-control", required: true }
+                %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fiscal & Working Schedule -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+            <h5 class="mb-0 fw-bold">
+              <i class="bi bi-calendar-check"></i> Fiscal & Working Schedule
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <%= f.label :fiscal_year_start_month, "Fiscal Year Start Month *", class: "form-label fw-semibold" %>
+                <%= f.select :fiscal_year_start_month,
+                    options_for_select((1..12).map { |m| [Date::MONTHNAMES[m], m] }, @setting.fiscal_year_start_month),
+                    {},
+                    { class: "form-control", required: true }
+                %>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <%= f.label :working_hours_per_day, "Working Hours Per Day *", class: "form-label fw-semibold" %>
+                <%= f.number_field :working_hours_per_day, class: "form-control", 
+                    step: 0.5, min: 1, max: 24, required: true %>
+              </div>
+            </div>
+
+            <div class="mb-3 w-100">
+              <%= f.label :working_days, "Working Days *", class: "form-label fw-semibold" %>
+              <div class="btn-group-vertical w-100" role="group">
+                <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].each do |day| %>
+                  <div class="form-check form-switch p-3 w-100 border-bottom">
+                    <%= check_box_tag 'organization_setting[working_days][]', day, 
+                        @setting.working_days.include?(day),
+                        id: "working_day_#{day.downcase}",
+                        class: "form-check-input" %>
+                    <%= label_tag "working_day_#{day.downcase}", day, class: "form-check-label fw-semibold" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4 mb-4">
+        <!-- Logo Upload -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header d-flex justify-content-start align-items-center bg-white border-bottom">
+            <h5 class="mb-0 fw-bold">Company Logo</h5>
+          </div>
+          <div class="card-body text-center">
+            <% if @setting.company_logo.attached? %>
+              <%= image_tag @setting.company_logo, class: "img-fluid rounded mb-3", style: "max-height: 200px;" %>
+            <% else %>
+              <div class="bg-light rounded p-4 mb-3">
+                <i class="bi bi-building display-3 text-muted"></i>
+              </div>
+            <% end %>
+
+            <%= f.file_field :company_logo, class: "form-control", accept: "image/*" %>
+            <small class="text-muted d-block mt-2">PNG, JPG or GIF. Max 2MB.</small>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <%= f.submit "Save Changes", class: "btn btn-primary btn-lg" %>
+              <%= link_to "Cancel", settings_organization_path, class: "btn btn-outline-secondary" %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card shadow-sm border-0 bg-light mt-4">
+          <div class="card-body">
+            <h6 class="fw-bold mb-2">
+              <i class="bi bi-info-circle text-primary"></i> Need Help?
+            </h6>
+            <p class="small text-muted mb-3">
+              These settings affect how data is displayed throughout your ERP system.
+            </p>
+            <a href="#" class="btn btn-sm btn-outline-primary w-100">
+              <i class="bi bi-book"></i> View Documentation
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

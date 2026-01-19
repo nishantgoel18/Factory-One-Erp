@@ -9,6 +9,7 @@
 # MODEL: RfqItem
 # ============================================================================
 class RfqItem < ApplicationRecord
+  include OrganizationScoped
   belongs_to :rfq
   belongs_to :product
   belongs_to :selected_supplier, class_name: 'Supplier', optional: true

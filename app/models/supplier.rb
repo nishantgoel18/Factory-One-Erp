@@ -5,6 +5,7 @@
 # Core supplier/vendor management with performance tracking and rating system
 # ============================================================================
 class Supplier < ApplicationRecord
+  include OrganizationScoped
   # ============================================================================
   # ASSOCIATIONS
   # ============================================================================

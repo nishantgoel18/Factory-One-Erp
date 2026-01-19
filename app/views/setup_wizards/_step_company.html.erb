@@ -1,0 +1,75 @@
+<!-- app/views/setup_wizard/_step_company.html.erb -->
+
+<h4 class="fw-bold mb-4">
+  <i class="bi bi-building text-primary"></i> Company Information
+</h4>
+<p class="text-muted mb-4">Tell us about your organization to personalize your ERP experience.</p>
+
+<%= form_with model: @setting, url: update_company_setup_wizard_path, method: :patch, local: true do |f| %>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :company_name, "Company Name *", class: "form-label fw-semibold" %>
+      <%= f.text_field :company_name, class: "form-control form-control-lg", required: true %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :legal_name, "Legal Name", class: "form-label fw-semibold" %>
+      <%= f.text_field :legal_name, class: "form-control form-control-lg" %>
+      <small class="text-muted">Official legal entity name (if different)</small>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :tax_id, "Tax ID / EIN", class: "form-label fw-semibold" %>
+      <%= f.text_field :tax_id, class: "form-control form-control-lg", placeholder: "XX-XXXXXXX" %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :country, "Country *", class: "form-label fw-semibold" %>
+      <%= f.select :country, 
+          options_for_select([['United States', 'US'], ['Canada', 'CA']], @setting.country),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :primary_address, "Primary Address", class: "form-label fw-semibold" %>
+    <%= f.text_area :primary_address, class: "form-control", rows: 3, placeholder: "Street Address\nCity, State ZIP" %>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :currency, "Currency *", class: "form-label fw-semibold" %>
+      <%= f.select :currency, 
+          options_for_select([['US Dollar (USD)', 'USD'], ['Canadian Dollar (CAD)', 'CAD']], @setting.currency),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :time_zone, "Time Zone *", class: "form-label fw-semibold" %>
+      <%= f.time_zone_select :time_zone, 
+          ActiveSupport::TimeZone.us_zones + ActiveSupport::TimeZone.all.select { |tz| tz.name.include?('Canada') },
+          { default: @setting.time_zone },
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :company_logo, "Company Logo", class: "form-label fw-semibold" %>
+    <%= f.file_field :company_logo, class: "form-control", accept: "image/*" %>
+    <small class="text-muted">Upload your company logo (optional)</small>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between">
+    <%= link_to "← Back", root_path, class: "btn btn-outline-secondary btn-lg" %>
+    <%= f.submit "Save & Continue →", class: "btn btn-primary btn-lg px-5" %>
+  </div>
+<% end %>

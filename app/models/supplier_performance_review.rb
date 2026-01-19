@@ -1,4 +1,5 @@
 class SupplierPerformanceReview < ApplicationRecord
+  include OrganizationScoped
   belongs_to :supplier
   belongs_to :reviewed_by, class_name: 'User', optional: true
   belongs_to :approved_by, class_name: 'User', optional: true

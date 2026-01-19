@@ -1,4 +1,5 @@
 class VendorQuote < ApplicationRecord
+  include OrganizationScoped
   belongs_to :rfq
   belongs_to :rfq_item
   belongs_to :supplier

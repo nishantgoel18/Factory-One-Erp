@@ -1,0 +1,2 @@
+class MrpRun < ApplicationRecord
+end

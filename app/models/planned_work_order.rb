@@ -1,0 +1,2 @@
+class PlannedWorkOrder < ApplicationRecord
+end

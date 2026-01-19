@@ -1,0 +1,80 @@
+<!-- app/views/setup_wizard/_step_fiscal.html.erb -->
+
+<h4 class="fw-bold mb-4">
+  <i class="bi bi-calendar-check text-primary"></i> Fiscal & Regional Settings
+</h4>
+<p class="text-muted mb-4">Configure your fiscal year, date formats, and working schedule.</p>
+
+<%= form_with model: @setting, url: update_fiscal_setup_wizard_path, method: :patch, local: true do |f| %>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :fiscal_year_start_month, "Fiscal Year Start Month *", class: "form-label fw-semibold" %>
+      <%= f.select :fiscal_year_start_month,
+          options_for_select((1..12).map { |m| [Date::MONTHNAMES[m], m] }, @setting.fiscal_year_start_month),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+      <small class="text-muted">When does your fiscal year begin?</small>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :working_hours_per_day, "Working Hours Per Day *", class: "form-label fw-semibold" %>
+      <%= f.number_field :working_hours_per_day, class: "form-control form-control-lg", 
+          step: 0.5, min: 1, max: 24, required: true %>
+      <small class="text-muted">Standard daily working hours</small>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <%= f.label :date_format, "Date Format *", class: "form-label fw-semibold" %>
+      <%= f.select :date_format,
+          options_for_select([
+            ['MM/DD/YYYY (US)', 'MM/DD/YYYY'],
+            ['DD/MM/YYYY (International)', 'DD/MM/YYYY'],
+            ['YYYY-MM-DD (ISO)', 'YYYY-MM-DD']
+          ], @setting.date_format),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+
+    <div class="col-md-6 mb-3">
+      <%= f.label :number_format, "Number Format *", class: "form-label fw-semibold" %>
+      <%= f.select :number_format,
+          options_for_select([
+            ['1,234.56 (US)', '1,234.56'],
+            ['1.234,56 (European)', '1.234,56'],
+            ['1 234,56 (French)', '1 234,56']
+          ], @setting.number_format),
+          {},
+          { class: "form-control form-control-lg", required: true }
+      %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :working_days, "Working Days *", class: "form-label fw-semibold" %>
+    <div class="row g-2">
+      <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].each do |day| %>
+        <div class="col-auto">
+          <div class="form-check form-check-inline">
+            <%= check_box_tag 'organization_setting[working_days][]', day, 
+                @setting.working_days.include?(day),
+                id: "working_day_#{day.downcase}",
+                class: "form-check-input" %>
+            <%= label_tag "working_day_#{day.downcase}", day.first(3), class: "form-check-label" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <small class="text-muted d-block mt-2">Select your standard operating days</small>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between">
+    <%= link_to "← Previous", setup_wizard_path(step: 1), class: "btn btn-outline-secondary" %>
+    <%= f.submit "Save & Continue →", class: "btn btn-primary btn-lg px-5" %>
+  </div>
+<% end %>

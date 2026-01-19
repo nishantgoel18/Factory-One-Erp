@@ -40,11 +40,15 @@
               <div class="m-l-0">
                 <p class="m-b-0 text-dark font-weight-semibold"><%= current_user.full_name || 'N/A' %></p>
                 <p class="m-b-0 opacity-07"><%= current_user.email %></p>
+
+                <small style="font-size: 0.7rem; opacity: 0.8;">
+                  <%= current_user.role_name %>
+                </small>
               </div>
             </div>
           </div>
           <% if user_signed_in? %>
-            <a href = "<%#= url 'user_profile' current_user.pk %>" class="dropdown-item d-block p-h-15 p-v-10">
+            <a href = "<%= edit_user_registration_path %>" class="dropdown-item d-block p-h-15 p-v-10">
               <div>
                 <i class="anticon opacity-04 font-size-16 anticon-user"></i>
                 <span class="m-l-10">Profile</span>
@@ -62,7 +66,7 @@
                 <span class="m-l-10">Shop Floor</span>
               </div>
             </a>
-            <a href="<%#=  url 'user_logout' %>" class="dropdown-item d-block p-h-15 p-v-10">
+            <%= link_to destroy_user_session_path, method: :delete, class: "dropdown-item text-danger" do %>
               <div class="d-flex align-items-center justify-content-between">
                 <div>
                   <i class="anticon opacity-04 font-size-16 anticon-logout"></i>
@@ -70,7 +74,7 @@
                 </div>
                 <i class="anticon font-size-10 anticon-right"></i>
               </div>
-            </a>
+            <% end %>
           </div>
         <% end %>
       </li>

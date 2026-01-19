@@ -1,4 +1,5 @@
 class BomItem < ApplicationRecord
+    include OrganizationScoped
     belongs_to :bom
     belongs_to :component, class_name: "Product"
     belongs_to :uom, class_name: "UnitOfMeasure"

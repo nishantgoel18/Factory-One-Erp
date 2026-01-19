@@ -3,401 +3,307 @@
   <%= render 'layouts/alerts' %>
 
   <div class="container-fluid">
-    <div class="page-header">
-      <h2 class="header-title">Executive Summary</h2>
+    <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="fw-bold mb-1">
+        👋 Welcome back, <%= current_user.full_name %>!
+      </h2>
+      <p class="text-muted mb-0">
+        <%= current_organization.name %> Dashboard
+        <% if current_org_setting %>
+          · <%= current_org_setting.format_date(Date.current) %>
+        <% end %>
+      </p>
     </div>
-    <div class="row">
-      <!-- LEFT SIDE -->
-      <div class="col-lg-6 ">
-        <!-- Top 4 KPI Cards -->
-        <div class="row">
-          <!-- Production Output -->
-          <div class="col-md-6 col-lg-6 ">
-            <div class="card">
-              <div class="card-body">
-                <div class="media align-items-center">
-                  <div class="avatar avatar-icon avatar-lg avatar-blue">
-                    <i class="anticon anticon-dashboard"></i>
-                  </div>
-                  <div class="m-l-15">
-                    <h2 class="m-b-0">12,450</h2>
-                    <p class="m-b-0 text-muted">Total Mint Month</p>
-                  </div>
-                </div>
-              </div>
+  </div>
+
+  <!-- Setup Progress Alert (if not complete) -->
+  <% unless current_organization.setup_complete? %>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+        <div class="flex-grow-1">
+          <h5 class="alert-heading mb-1">Complete Your Setup</h5>
+          <p class="mb-2">
+            Your organization setup is <%= current_organization.setup_progress_percentage %>% complete.
+            Finish setup to unlock the full potential of your ERP system.
+          </p>
+          <div class="progress mb-2" style="height: 20px;">
+            <div class="progress-bar bg-success" role="progressbar" 
+                 style="width: <%= current_organization.setup_progress_percentage %>%">
+              <%= current_organization.setup_progress_percentage %>%
             </div>
           </div>
-
-          <!-- OEE -->
-          <div class="col-md-6 col-lg-6">
-            <div class="card">
-              <div class="card-body">
-                <div class="media align-items-center">
-                  <div class="avatar avatar-icon avatar-lg avatar-green">
-                    <i class="anticon anticon-line-chart"></i>
-                  </div>
-                  <div class="m-l-15">
-                    <h2 class="m-b-0">85%</h2>
-                    <p class="m-b-0 text-muted">OEE <span class="text-success">+8%</span></p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sales vs Target -->
-          <div class="col-md-6 col-lg-6">
-            <div class="card">
-              <div class="card-body">
-                <div class="media align-items-center">
-                  <div class="avatar avatar-icon avatar-lg avatar-purple">
-                    <i class="anticon anticon-dollar"></i>
-                  </div>
-                  <div class="m-l-15">
-                    <h2 class="m-b-0">$2.3M</h2>
-                    <p class="m-b-0 text-muted">Sales vs Target (110%)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        
-
-          <div class="col-md-6 col-lg-6">
-            <div class="card">
-              <div class="card-body">
-                <div class="media align-items-center">
-                  <div class="avatar avatar-icon avatar-lg avatar-cyan">
-                    <i class="anticon anticon-pie-chart"></i>
-                  </div>
-                  <div class="m-l-15">
-                    <h2 class="m-b-0">18.5%</h2>
-                    <p class="m-b-0 text-muted">Profit Margin</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Monthly Trend Chart -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="m-b-20">Monthly Trend</h5>
-            <canvas id="line-chart" height="120"></canvas>
-          </div>
+          <%= link_to "Continue Setup →", setup_wizard_path, class: "btn btn-sm btn-warning" %>
         </div>
       </div>
-
-      <!-- RIGHT SIDE -->
-      <div class="col-lg-6">
-        <div class="row">
-          <div class="col-md-6 col-lg-12">
-            <div class="card">
-              <div class="card-body">
-                <div class="media align-items-center">
-                  <div class="avatar avatar-icon avatar-lg avatar-gold">
-                    <i class="anticon anticon-database"></i>
-                  </div>
-                  <div class="m-l-15">
-                    <h2 class="m-b-0">$950k</h2>
-                    <p class="m-b-0 text-muted">Inventory Value</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div> 
-
-            <!-- Key Alerts -->
-          <div class="col-md-6 col-lg-12">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="m-b-10">Key Alerts</h5>
-                <ul class="list-unstyled m-b-0 text-muted">
-                  <li>2 Delays</li>
-                  <li>1 Stockout</li>
-                  <li>4 Quality Issues</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Department Contribution Chart -->
-        <div class="card">
-          <div class="card-body">
-            <h5 class="m-b-20">Department Contribution</h5>
-            <canvas id="bar-chart" height="120"></canvas>
-          </div>
-        </div>
-      </div>
-
     </div>
-    <div class="row">
-      <div class="col-12">
-        <h5 class="mb-3">
-          <i class="fas fa-route me-2"></i> Production Routing Metrics
-        </h5>
-      </div>
-      
-      <!-- Total Routings -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                  Total Routings
-                </div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                  <%= @routing_metrics[:total] %>
-                </div>
-                <div class="text-xs text-muted mt-1">
-                  <span class="text-success"><%= @routing_metrics[:active] %> Active</span> | 
-                  <span class="text-warning"><%= @routing_metrics[:draft] %> Draft</span>
-                </div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-route fa-2x text-gray-300"></i>
-              </div>
-            </div>
-          </div>
-          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
-            <%= link_to "View All Routings", routings_path, class: " text-decoration-none", style: 'color: white' %>
-          </div>
-        </div>
-      </div>
+  <% end %>
 
-      <!-- Work Centers -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                  Work Centers
-                </div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                  <%= @work_center_metrics[:total] %>
-                </div>
-                <div class="text-xs text-muted mt-1">
-                  <span class="text-success"><%= @work_center_metrics[:utilized] %></span> Utilized
-                </div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-industry fa-2x text-gray-300"></i>
-              </div>
+  <!-- Quick Stats -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Total Products</h6>
+              <h3 class="fw-bold mb-0"><%= current_organization.total_products %></h3>
+            </div>
+            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-box-seam fs-3 text-primary"></i>
             </div>
           </div>
-          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
-            <%= link_to "View Work Centers", work_centers_path, class: "text-decoration-none", style: 'color: white' %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Operations -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                  Total Operations
-                </div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                  <%= @routing_metrics[:total_operations] %>
-                </div>
-                <div class="text-xs text-muted mt-1">
-                  Avg <%= @routing_metrics[:avg_operations_per_routing].round(1) %> per routing
-                </div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-cogs fa-2x text-gray-300"></i>
-              </div>
-            </div>
-          </div>
-          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
-            <%= link_to "View Reports", 'reports/routing', class: "text-decoration-none", style: 'color: white' %>
-          </div>
-        </div>
-      </div>
-
-      <!-- Avg Work Center Cost -->
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100">
-          <div class="card-body">
-            <div class="row no-gutters align-items-center">
-              <div class="col mr-2">
-                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                  Avg WC Cost/Hour
-                </div>
-                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                  $<%= number_with_precision(@work_center_metrics[:avg_cost_per_hour], precision: 2) %>
-                </div>
-                <div class="text-xs text-muted mt-1">
-                  Active work centers
-                </div>
-              </div>
-              <div class="col-auto">
-                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-              </div>
-            </div>
-          </div>
-          <div class="card-footer bg-primary d-flex justify-content-between align-items-center">
-            <%= link_to "Cost Analysis", routing_cost_analysis_routing_path, class: "text-decoration-none", style: 'color: white' %>
-          </div>
+          <%= link_to "View Products →", products_path, class: "btn btn-sm btn-outline-primary mt-3 w-100" %>
         </div>
       </div>
     </div>
 
-    <!-- Production Readiness Card -->
-    <div class="row">
-      <div class="col-12">
-        <div class="card shadow">
-          <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white">
-            <h5 class="mb-0">
-              <i class="fas fa-industry me-2"></i> Production Readiness Status
-            </h5>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <!-- Summary Stats -->
-              <div class="col-md-8">
-                <div class="row">
-                  <div class="col-md-3 text-center mb-3">
-                    <div class="border rounded p-3">
-                      <div class="text-muted small">Total Products</div>
-                      <div class="h3 mb-0 text-primary">
-                        <%= @production_readiness[:total_products] %>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-3 text-center mb-3">
-                    <div class="border rounded p-3">
-                      <div class="text-muted small">With BOM</div>
-                      <div class="h3 mb-0 text-info">
-                        <%= @production_readiness[:with_bom] %>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-3 text-center mb-3">
-                    <div class="border rounded p-3">
-                      <div class="text-muted small">With Routing</div>
-                      <div class="h3 mb-0 text-warning">
-                        <%= @production_readiness[:with_routing] %>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-md-3 text-center mb-3">
-                    <div class="border rounded p-3 bg-success text-white">
-                      <div class="small">Ready</div>
-                      <div class="h3 mb-0">
-                        <%= @production_readiness[:ready_for_production] %>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Progress Bar -->
-                <div class="mt-3">
-                  <label class="text-muted small">Overall Production Readiness</label>
-                  <div class="progress" style="height: 30px;">
-                    <div class="progress-bar bg-success" 
-                         style="width: <%= @production_readiness[:readiness_percentage] %>%">
-                      <strong><%= @production_readiness[:readiness_percentage] %>%</strong>
-                    </div>
-                  </div>
-                  <small class="text-muted">
-                    <%= @production_readiness[:ready_for_production] %> out of <%= @production_readiness[:total_products] %> products ready
-                  </small>
-                </div>
-              </div>
-              
-              <!-- Action Buttons -->
-              <div class="col-md-4">
-                <div class="border rounded p-3 h-100">
-                  <h6 class="mb-3">Quick Actions</h6>
-                  <%= link_to work_centers_path, class: "btn btn-outline-primary btn-sm w-100 mb-2" do %>
-                    <i class="fas fa-industry me-2"></i> Manage Work Centers
-                  <% end %>
-                  <%= link_to routings_path, class: "btn btn-outline-info btn-sm w-100 mb-2" do %>
-                    <i class="fas fa-route me-2"></i> Manage Routings
-                  <% end %>
-                  <%= link_to production_calculator_path, class: "btn btn-outline-success btn-sm w-100 mb-2" do %>
-                    <i class="fas fa-calculator me-2"></i> Production Calculator
-                  <% end %>
-                  <%= link_to 'reports/routing', class: "btn btn-outline-warning btn-sm w-100" do %>
-                    <i class="fas fa-chart-line me-2"></i> View Reports
-                  <% end %>
-                </div>
-              </div>
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Active Work Orders</h6>
+              <h3 class="fw-bold mb-0"><%= current_organization.work_orders.where(status: ['RELEASED', 'IN_PROGRESS']).count %></h3>
+            </div>
+            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-gear-fill fs-3 text-success"></i>
             </div>
           </div>
+          <%= link_to "View Work Orders →", work_orders_path, class: "btn btn-sm btn-outline-success mt-3 w-100" %>
         </div>
       </div>
     </div>
 
-    <!-- Recent Routings Table -->
-    <div class="row">
-      <div class="col-12">
-        <div class="card shadow">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-              <i class="fas fa-route me-2"></i> Recent Routings
-            </h5>
-            <%= link_to "View All", routings_path, class: "btn btn-sm btn-primary" %>
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Total Customers</h6>
+              <h3 class="fw-bold mb-0"><%= current_organization.total_customers %></h3>
+            </div>
+            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-people-fill fs-3 text-info"></i>
+            </div>
           </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-sm table-hover mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Code</th>
-                    <th>Product</th>
-                    <th>Operations</th>
-                    <th>Status</th>
-                    <th>Cost/Unit</th>
-                    <th>Time/Unit</th>
-                    <th>Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% Routing.where(deleted: false).order(created_at: :desc).limit(5).each do |routing| %>
-                    <tr>
-                      <td>
-                        <%= link_to routing.code, routing_path(routing), class: "text-decoration-none" %>
-                      </td>
-                      <td>
-                        <%= routing.product.name %>
-                        <br><small class="text-muted"><%= routing.product.sku %></small>
-                      </td>
-                      <td>
-                        <span class="text-white badge bg-primary"><%= routing.routing_operations.count %> ops</span>
-                      </td>
-                      <td>
-                        <% case routing.status %>
-                        <% when "ACTIVE" %>
-                          <span class="text-white badge bg-success">Active</span>
-                        <% when "DRAFT" %>
-                          <span class="text-white badge bg-warning">Draft</span>
-                        <% else %>
-                          <span class="text-white badge bg-secondary"><%= routing.status %></span>
-                        <% end %>
-                      </td>
-                      <td>$<%= number_with_precision(routing.total_cost_per_unit, precision: 2) %></td>
-                      <td><%= number_with_precision(routing.total_run_time_per_unit_minutes, precision: 1) %>m</td>
-                      <td><%= time_ago_in_words(routing.created_at) %> ago</td>
-                    </tr>
-                  <% end %>
-                </tbody>
-              </table>
+          <%= link_to "View Customers →", customers_path, class: "btn btn-sm btn-outline-info mt-3 w-100" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-muted mb-1">Total Suppliers</h6>
+              <h3 class="fw-bold mb-0"><%= current_organization.total_suppliers %></h3>
+            </div>
+            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+              <i class="bi bi-truck fs-3 text-warning"></i>
+            </div>
+          </div>
+          <%= link_to "View Suppliers →", suppliers_path, class: "btn btn-sm btn-outline-warning mt-3 w-100" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white border-bottom">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-lightning-fill text-warning"></i> Quick Actions
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-2">
+              <%= link_to new_work_order_path, class: "btn btn-outline-primary w-100" do %>
+                <i class="bi bi-plus-circle"></i> New Work Order
+              <% end %>
+            </div>
+            <div class="col-md-2">
+              <%= link_to new_product_path, class: "btn btn-outline-success w-100" do %>
+                <i class="bi bi-plus-circle"></i> New Product
+              <% end %>
+            </div>
+            <div class="col-md-2">
+              <%= link_to new_rfq_path, class: "btn btn-outline-info w-100" do %>
+                <i class="bi bi-plus-circle"></i> New RFQ
+              <% end %>
+            </div>
+            <div class="col-md-2">
+              <%= link_to new_inventory_purchase_order_path, class: "btn btn-outline-warning w-100" do %>
+                <i class="bi bi-plus-circle"></i> New PO
+              <% end %>
+            </div>
+            <div class="col-md-2">
+              <%= link_to new_customer_path, class: "btn btn-outline-secondary w-100" do %>
+                <i class="bi bi-plus-circle"></i> New Customer
+              <% end %>
+            </div>
+            <div class="col-md-2">
+              <%= link_to new_supplier_path, class: "btn btn-outline-dark w-100" do %>
+                <i class="bi bi-plus-circle"></i> New Supplier
+              <% end %>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Recent Activity & Resources -->
+  <div class="row">
+    <!-- Recent Work Orders -->
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white border-bottom">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-clock-history text-primary"></i> Recent Work Orders
+          </h5>
+          <%= link_to "View All →", work_orders_path, class: "btn btn-sm btn-primary"%>
+        </div>
+        <div class="card-body">
+          <% recent_work_orders = current_organization.work_orders.order(created_at: :desc).limit(5) %>
+          <% if recent_work_orders.any? %>
+            <div class="list-group list-group-flush">
+              <% recent_work_orders.each do |wo| %>
+                <div class="list-group-item px-0">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">
+                      <%= link_to "WO ##{wo.work_order_number}", work_order_path(wo) %>
+                    </h6>
+                    <small class="text-muted"><%= time_ago_in_words(wo.created_at) %> ago</small>
+                  </div>
+                  <p class="mb-1 small">
+                    <%= wo.product.name %> - Qty: <%= wo.quantity_to_produce %>
+                  </p>
+                  <span class="badge bg-<%= wo.status == 'COMPLETED' ? 'success' : 'warning' %>">
+                    <%= wo.status %>
+                  </span>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-4">
+              <i class="bi bi-inbox display-4 text-muted"></i>
+              <p class="text-muted mt-3">No work orders yet</p>
+              <%= link_to "Create Your First Work Order", new_work_order_path, class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Getting Started / Resources -->
+    <div class="col-lg-6 mb-4">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center bg-gradient-primary text-white border-bottom">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-lightbulb text-warning"></i> Getting Started
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="list-group list-group-flush">
+            <div class="list-group-item px-0 border-0">
+              <div class="d-flex align-items-start">
+                <div class="me-3">
+                  <i class="bi bi-1-circle-fill text-primary fs-4"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Set Up Master Data</h6>
+                  <p class="text-muted small mb-2">Add products, work centers, and warehouses</p>
+                  <%= link_to "Add Products →", products_path, class: "btn btn-sm btn-outline-primary" %>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-group-item px-0 border-0">
+              <div class="d-flex align-items-start">
+                <div class="me-3">
+                  <i class="bi bi-2-circle-fill text-success fs-4"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Create Bill of Materials</h6>
+                  <p class="text-muted small mb-2">Define product recipes and components</p>
+                  <%= link_to "Manage BOMs →", products_path, class: "btn btn-sm btn-outline-success" %>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-group-item px-0 border-0">
+              <div class="d-flex align-items-start">
+                <div class="me-3">
+                  <i class="bi bi-3-circle-fill text-info fs-4"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Add Your Team</h6>
+                  <p class="text-muted small mb-2">Invite users and assign roles</p>
+                  <% if can?(:manage_users) %>
+                    <%= link_to "Manage Users →", settings_users_path, class: "btn btn-sm btn-outline-info" %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
+            <div class="list-group-item px-0 border-0">
+              <div class="d-flex align-items-start">
+                <div class="me-3">
+                  <i class="bi bi-4-circle-fill text-warning fs-4"></i>
+                </div>
+                <div>
+                  <h6 class="mb-1">Configure MRP Settings</h6>
+                  <p class="text-muted small mb-2">Set planning horizons and policies</p>
+                  <% if can?(:manage_settings) %>
+                    <%= link_to "MRP Config →", settings_mrp_configuration_path, class: "btn btn-sm btn-outline-warning" %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization Info Footer -->
+  <div class="row mt-1">
+    <div class="col-12">
+      <div class="card bg-white">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h6 class="mb-1">
+                <i class="anticon anticon-building"></i> <%= current_organization.name %>
+              </h6>
+              <p class="text-muted mb-0">
+                <% if current_org_setting %>
+                  <%= current_org_setting.primary_address || 'No address set' %> · 
+                  <%= current_organization.users.count %> users · 
+                  Member since <%= current_organization.created_at.strftime('%B %Y') %>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+              <% if can?(:manage_settings) %>
+                <%= link_to settings_organization_path, class: "btn btn-sm btn-outline-primary" do %>
+                  <i class="bi bi-gear"></i> Organization Settings
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+    
 </div>
 
 <!-- Chart.js -->

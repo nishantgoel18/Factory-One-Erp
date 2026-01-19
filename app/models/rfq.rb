@@ -5,6 +5,7 @@
 # Complete RFQ management with vendor selection algorithm
 # ============================================================================
 class Rfq < ApplicationRecord
+  include OrganizationScoped
   # ============================================================================
   # ASSOCIATIONS
   # ============================================================================
@@ -360,7 +361,7 @@ class Rfq < ApplicationRecord
       
       # ✅ Mark quotes from other suppliers as NOT selected
       vendor_quotes.where.not(supplier: supplier).update_all(is_selected: false)
-      
+
       # ✅ UPDATE INDIVIDUAL RFQ ITEMS WITH SELECTED SUPPLIER
       # Find all winning quotes for this supplier
       winning_quotes = vendor_quotes.where(supplier: supplier, is_selected: true)
@@ -719,10 +720,10 @@ class Rfq < ApplicationRecord
         product_id: rfq_item.product_id,
         ordered_qty: rfq_item.quantity_requested,
         unit_price: rfq_item.selected_unit_price || winning_quote&.unit_price || 0,
-        uom_id: rfq_item.product.uom_id,
+        uom_id: rfq_item.product.unit_of_measure_id,
         expected_delivery_date: rfq_item.required_delivery_date || expected_date,
         line_note: build_line_note(rfq_item, winning_quote),
-        line_status: 'PENDING'
+        line_status: 'OPEN'
       )
     end
     

@@ -1,4 +1,5 @@
 class CustomerActivity < ApplicationRecord
+  include OrganizationScoped
   # ========================================
   # ASSOCIATIONS
   # ========================================

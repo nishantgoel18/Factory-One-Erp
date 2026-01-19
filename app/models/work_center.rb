@@ -1,6 +1,7 @@
 # app/models/work_center.rb
 
 class WorkCenter < ApplicationRecord
+  include OrganizationScoped
   # ========================================
   # ASSOCIATIONS
   # ========================================

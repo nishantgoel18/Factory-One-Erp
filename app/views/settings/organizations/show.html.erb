@@ -1,0 +1,306 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Organization Details</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">View Organization Details</span>
+      </nav>
+    </div>
+  </div>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-building text-primary"></i> Organization Settings
+          </h2>
+          <p class="text-muted mb-0">Manage your company information and preferences</p>
+        </div>
+        <%= link_to edit_settings_organization_path, class: "btn btn-primary" do %>
+          <i class="bi bi-pencil"></i> Edit Settings
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Company Information Card -->
+    <div class="col-lg-8 mb-4">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-start bg-primary border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">
+            <i class="bi bi-info-circle text-primary"></i> Company Information
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Company Name</label>
+              <p class="mb-0 fs-5"><%= @setting.company_name %></p>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Legal Name</label>
+              <p class="mb-0"><%= @setting.legal_name.presence || '-' %></p>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Tax ID / EIN</label>
+              <p class="mb-0"><%= @setting.tax_id.presence || '-' %></p>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Industry</label>
+              <p class="mb-0">
+                <span class="badge bg-info"><%= @organization.industry || 'Not Set' %></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label class="text-muted small fw-semibold">Primary Address</label>
+              <p class="mb-0"><%= simple_format(@setting.primary_address) || '-' %></p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Subdomain</label>
+              <p class="mb-0">
+                <code><%= @organization.subdomain %>.factoryoneerp.com</code>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Status</label>
+              <p class="mb-0">
+                <% if @organization.active? %>
+                  <span class="badge bg-success">Active</span>
+                <% else %>
+                  <span class="badge bg-danger">Suspended</span>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logo & Quick Stats -->
+    <div class="col-lg-4 mb-4">
+      <div class="card mb-3">
+        <div class="card-header d-flex align-items-center justify-content-start bg-primary border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">Company Logo</h5>
+        </div>
+        <div class="card-body text-center">
+          <% if @setting.company_logo.attached? %>
+            <%= image_tag @setting.company_logo, class: "img-fluid rounded", style: "max-height: 200px;" %>
+          <% else %>
+            <div class="bg-light rounded p-5">
+              <i class="bi bi-building display-1 text-muted"></i>
+              <p class="text-muted mt-3 mb-0">No logo uploaded</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-start bg-primary border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">Quick Stats</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Total Users</span>
+            <span class="badge bg-primary fs-6"><%= @organization.total_users %></span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Total Products</span>
+            <span class="badge bg-success fs-6"><%= @organization.total_products %></span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Total Customers</span>
+            <span class="badge bg-info fs-6"><%= @organization.total_customers %></span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-muted">Total Suppliers</span>
+            <span class="badge bg-warning fs-6"><%= @organization.total_suppliers %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Regional & Fiscal Settings -->
+  <div class="row">
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-start bg-primary border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">
+            <i class="bi bi-globe text-primary"></i> Regional Settings
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Country</label>
+              <p class="mb-0">
+                <% if @setting.country == 'US' %>
+                  🇺🇸 United States
+                <% elsif @setting.country == 'CA' %>
+                  🇨🇦 Canada
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Currency</label>
+              <p class="mb-0"><%= @setting.currency %> (<%= @setting.currency_symbol %>)</p>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Time Zone</label>
+              <p class="mb-0"><%= @setting.time_zone %></p>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Date Format</label>
+              <p class="mb-0">
+                <code><%= @setting.date_format %></code>
+                <span class="text-muted small">(e.g., <%= @setting.format_date(Date.current) %>)</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Number Format</label>
+              <p class="mb-0">
+                <code><%= @setting.number_format %></code>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-start bg-primary border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">
+            <i class="bi bi-calendar-check text-primary"></i> Fiscal & Working Schedule
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Fiscal Year Starts</label>
+              <p class="mb-0"><%= Date::MONTHNAMES[@setting.fiscal_year_start_month] %> 1st</p>
+            </div>
+            <div class="col-md-6">
+              <label class="text-muted small fw-semibold">Working Hours/Day</label>
+              <p class="mb-0"><%= @setting.working_hours_per_day %> hours</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <label class="text-muted small fw-semibold">Working Days</label>
+              <p class="mb-0">
+                <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].each do |day| %>
+                  <% if @setting.working_days.include?(day) %>
+                    <span class="badge bg-success me-1"><%= day.first(3) %></span>
+                  <% else %>
+                    <span class="badge bg-light text-dark me-1"><%= day.first(3) %></span>
+                  <% end %>
+                <% end %>
+              </p>
+            </div>
+          </div>
+
+          <hr class="my-3">
+
+          <div class="row">
+            <div class="col-md-12">
+              <label class="text-muted small fw-semibold">Current Fiscal Year</label>
+              <p class="mb-0">
+                <strong>FY <%= @setting.fiscal_year_for(Date.current) %></strong>
+                <span class="text-muted small">
+                  (<%= @setting.fiscal_year_start(@setting.fiscal_year_for(Date.current)).strftime('%b %d, %Y') %> 
+                  - 
+                  <%= @setting.fiscal_year_end(@setting.fiscal_year_for(Date.current)).strftime('%b %d, %Y') %>)
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup Progress -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-start bg-primary border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">
+            <i class="bi bi-check-circle text-success"></i> Setup Progress
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="fw-semibold">Overall Setup Completion</span>
+              <span class="text-muted"><%= @organization.setup_progress_percentage %>%</span>
+            </div>
+            <div class="progress" style="height: 25px;">
+              <div class="progress-bar bg-success" role="progressbar" 
+                   style="width: <%= @organization.setup_progress_percentage %>%"
+                   aria-valuenow="<%= @organization.setup_progress_percentage %>" 
+                   aria-valuemin="0" aria-valuemax="100">
+                <%= @organization.setup_progress_percentage %>%
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-md-3 text-center">
+              <div class="<%= @setting.company_name.present? ? 'text-success' : 'text-muted' %>">
+                <i class="bi <%= @setting.company_name.present? ? 'bi-check-circle-fill' : 'bi-circle' %> fs-2"></i>
+                <p class="mb-0 mt-2 small">Company Info</p>
+              </div>
+            </div>
+            <div class="col-md-3 text-center">
+              <div class="<%= @organization.mrp_configuration.present? ? 'text-success' : 'text-muted' %>">
+                <i class="bi <%= @organization.mrp_configuration.present? ? 'bi-check-circle-fill' : 'bi-circle' %> fs-2"></i>
+                <p class="mb-0 mt-2 small">MRP Config</p>
+              </div>
+            </div>
+            <div class="col-md-3 text-center">
+              <div class="<%= @organization.warehouses.exists? ? 'text-success' : 'text-muted' %>">
+                <i class="bi <%= @organization.warehouses.exists? ? 'bi-check-circle-fill' : 'bi-circle' %> fs-2"></i>
+                <p class="mb-0 mt-2 small">Warehouses</p>
+              </div>
+            </div>
+            <div class="col-md-3 text-center">
+              <div class="<%= @organization.products.exists? ? 'text-success' : 'text-muted' %>">
+                <i class="bi <%= @organization.products.exists? ? 'bi-check-circle-fill' : 'bi-circle' %> fs-2"></i>
+                <p class="mb-0 mt-2 small">Products</p>
+              </div>
+            </div>
+          </div>
+
+          <% unless @organization.setup_complete? %>
+            <div class="alert alert-info mt-4 mb-0">
+              <i class="bi bi-info-circle"></i>
+              <strong>Setup Incomplete:</strong> Complete all setup steps to unlock the full potential of your ERP system.
+              <%= link_to "Continue Setup →", setup_wizard_path, class: "alert-link fw-bold" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

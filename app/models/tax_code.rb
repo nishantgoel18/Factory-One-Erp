@@ -1,4 +1,5 @@
 class TaxCode < ApplicationRecord
+  include OrganizationScoped
   # -------------------------------
   # ENUM-LIKE CONSTANTS
   # -------------------------------

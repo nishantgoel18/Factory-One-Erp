@@ -1,29 +1,162 @@
-<h2>Sign up</h2>
+<!-- app/views/users/registrations/new.html.erb -->
+<div class="app">
+  <div class="container-fluid py-5">
+    <div class="d-flex full-height p-v-15 flex-column justify-content-center">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h4 class="card-title">Create Your FactoryOneERP Account</h4>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+              </div>
+              <div class="card-body">
+                <!-- Header -->
+                <!-- <div class="text-center mb-4">
+                  <p class="text-muted">Start managing your manufacturing operations in minutes</p>
+                </div> -->
 
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
+                <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+                  <%= render "devise/shared/error_messages", resource: resource %>
+
+                  <!-- Organization Information -->
+                  <div class="mb-4">
+                    <h5 class="fw-bold text-secondary mb-3">
+                      <i class="bi bi-building"></i> Organization Information
+                    </h5>
+                    
+                    <%= fields_for :organization, @organization do |org| %>
+                      <div class="mb-3">
+                        <%= org.label :name, "Company Name", class: "form-label fw-semibold" %>
+                        <%= org.text_field :name, class: "form-control form-control-lg", placeholder: "ABC Manufacturing Inc.", required: true, autofocus: true %>
+                        <small class="form-text text-muted">Your company's legal or trading name</small>
+                      </div>
+
+                      <div class="mb-3">
+                        <%= org.label :subdomain, "Subdomain", class: "form-label fw-semibold" %>
+                        <div class="input-group input-group-lg">
+                          <%= org.text_field :subdomain, class: "form-control", placeholder: "abc-manufacturing", required: true, pattern: "[a-z0-9-]+", style: "text-transform: lowercase;" %>
+                          <span class="input-group-text">.factoryoneerp.com</span>
+                        </div>
+                        <small class="form-text text-muted">Use lowercase letters, numbers, and hyphens only (e.g., abc-mfg)</small>
+                      </div>
+
+                      <div class="mb-3">
+                        <%= org.label :industry, "Industry", class: "form-label fw-semibold" %>
+                        <%= org.select :industry, 
+                            options_for_select([
+                              ['Automotive', 'Automotive'],
+                              ['Electronics', 'Electronics'],
+                              ['Food & Beverage', 'Food'],
+                              ['Pharmaceutical', 'Pharmaceutical'],
+                              ['Aerospace', 'Aerospace'],
+                              ['Machinery', 'Machinery'],
+                              ['Furniture', 'Furniture'],
+                              ['Plastics', 'Plastics'],
+                              ['Textiles', 'Textiles'],
+                              ['Chemicals', 'Chemicals'],
+                              ['Other', 'Other']
+                            ]),
+                            { prompt: "Select your industry..." },
+                            { class: "form-control form-select-lg" }
+                        %>
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <hr class="my-4">
+
+                  <!-- User Information -->
+                  <div class="mb-4">
+                    <h5 class="fw-bold text-secondary mb-3">
+                      <i class="bi bi-person-circle"></i> Your Account Information
+                    </h5>
+
+                    <div class="row">
+                      <div class="col-md-12 mb-3">
+                        <%= f.label :full_name, "First Name", class: "form-label fw-semibold" %>
+                        <%= f.text_field :full_name, class: "form-control", placeholder: "John", required: true %>
+                      </div>
+
+                    </div>
+
+                    <div class="mb-3">
+                      <%= f.label :email, "Email Address", class: "form-label fw-semibold" %>
+                      <%= f.email_field :email, class: "form-control form-control-lg", placeholder: "john@abcmfg.com", required: true %>
+                      <small class="form-text text-muted">You'll use this to sign in</small>
+                    </div>
+
+                    <div class="mb-3">
+                      <%= f.label :password, "Password", class: "form-label fw-semibold" %>
+                      <%= f.password_field :password, class: "form-control form-control-lg", placeholder: "Min. 6 characters", required: true, minlength: 6 %>
+                      <% if @minimum_password_length %>
+                        <small class="form-text text-muted">Minimum <%= @minimum_password_length %> characters</small>
+                      <% end %>
+                    </div>
+
+                    <div class="mb-3">
+                      <%= f.label :password_confirmation, "Confirm Password", class: "form-label fw-semibold" %>
+                      <%= f.password_field :password_confirmation, class: "form-control form-control-lg", placeholder: "Re-enter password", required: true %>
+                    </div>
+                  </div>
+
+                  <!-- Terms & Conditions -->
+                  <div class="mb-4">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                      I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                    </label>
+                  </div>
+
+                  <!-- Submit Button -->
+                  <div class="d-grid mb-3">
+                    <%= f.submit "Create Account & Start Free Trial", class: "btn btn-primary btn-lg fw-bold" %>
+                  </div>
+
+                  <!-- Login Link -->
+                  <div class="text-center">
+                    <p class="mb-0 text-muted">
+                      Already have an account? 
+                      <%= link_to "Sign in here", new_user_session_path, class: "text-primary fw-semibold" %>
+                    </p>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <div class=" col-md-6 d-none d-md-block">
+            <img class="img-fluid" src="/theme_assets/images/others/login-2.png" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+    
   </div>
-
-  <div class="field">
-    <%= f.label :password %>
-    <% if @minimum_password_length %>
-    <em>(<%= @minimum_password_length %> characters minimum)</em>
-    <% end %><br />
-    <%= f.password_field :password, autocomplete: "new-password" %>
-  </div>
-
-  <div class="field">
-    <%= f.label :password_confirmation %><br />
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </div>
-
-  <div class="actions">
-    <%= f.submit "Sign up" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>
+<script>
+// Auto-generate subdomain from company name
+document.addEventListener('DOMContentLoaded', function() {
+  const companyNameInput = document.querySelector('input[name="organization[name]"]');
+  const subdomainInput = document.querySelector('input[name="organization[subdomain]"]');
+  
+  if (companyNameInput && subdomainInput) {
+    companyNameInput.addEventListener('input', function() {
+      if (!subdomainInput.value || subdomainInput.dataset.autoGenerated === 'true') {
+        const subdomain = this.value
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .substring(0, 30);
+        
+        subdomainInput.value = subdomain;
+        subdomainInput.dataset.autoGenerated = 'true';
+      }
+    });
+    
+    subdomainInput.addEventListener('input', function() {
+      this.dataset.autoGenerated = 'false';
+    });
+  }
+});
+</script>

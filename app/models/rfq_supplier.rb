@@ -2,6 +2,7 @@
 # MODEL: RfqSupplier (Join table with invitation tracking)
 # ============================================================================
 class RfqSupplier < ApplicationRecord
+  include OrganizationScoped
   belongs_to :rfq
   belongs_to :supplier
   belongs_to :supplier_contact, optional: true

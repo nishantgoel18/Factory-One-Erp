@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_11_204154) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,8 +22,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_active", default: false
     t.boolean "is_cash_flow_account", default: false
     t.string "name"
+    t.bigint "organization_id"
     t.string "sub_type"
     t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_accounts_on_organization_id"
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -64,11 +66,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_default", default: false
     t.string "name"
     t.text "notes"
+    t.bigint "organization_id"
     t.bigint "product_id"
     t.string "revision"
     t.string "status", default: "DRAFT"
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_bill_of_materials_on_code", unique: true
+    t.index ["organization_id"], name: "index_bill_of_materials_on_organization_id"
     t.index ["product_id"], name: "index_bill_of_materials_on_product_id"
   end
 
@@ -78,12 +82,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
     t.text "line_note"
+    t.bigint "organization_id"
     t.decimal "quantity", precision: 14, scale: 4, default: "0.0"
     t.decimal "scrap_percent", precision: 5, scale: 2, default: "0.0"
     t.bigint "uom_id"
     t.datetime "updated_at", null: false
     t.index ["bill_of_material_id"], name: "index_bom_items_on_bill_of_material_id"
     t.index ["component_id"], name: "index_bom_items_on_component_id"
+    t.index ["organization_id"], name: "index_bom_items_on_organization_id"
     t.index ["uom_id"], name: "index_bom_items_on_uom_id"
   end
 
@@ -105,6 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "followup_date"
     t.boolean "followup_required", default: false
     t.string "next_action", limit: 255
+    t.bigint "organization_id"
     t.string "outcome", limit: 50
     t.string "priority", limit: 20, default: "NORMAL"
     t.bigint "related_entity_id"
@@ -125,6 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["customer_sentiment"], name: "index_customer_activities_on_customer_sentiment"
     t.index ["followup_date", "followup_required"], name: "index_customer_activities_on_followup"
     t.index ["followup_date"], name: "index_customer_activities_on_followup_date"
+    t.index ["organization_id"], name: "index_customer_activities_on_organization_id"
     t.index ["priority"], name: "index_customer_activities_on_priority"
     t.index ["related_entity_type", "related_entity_id"], name: "index_customer_activities_on_related_entity"
     t.index ["related_user_id"], name: "index_customer_activities_on_related_user_id"
@@ -151,6 +159,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_default", default: false
     t.decimal "latitude", precision: 10, scale: 6
     t.decimal "longitude", precision: 10, scale: 6
+    t.bigint "organization_id"
     t.string "postal_code", limit: 20, null: false
     t.boolean "requires_appointment", default: false
     t.boolean "residential_address", default: false
@@ -165,6 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["customer_id", "is_default"], name: "index_customer_addresses_on_customer_id_and_is_default"
     t.index ["customer_id"], name: "index_customer_addresses_on_customer_id"
     t.index ["is_active"], name: "index_customer_addresses_on_is_active"
+    t.index ["organization_id"], name: "index_customer_addresses_on_organization_id"
     t.index ["postal_code"], name: "index_customer_addresses_on_postal_code"
   end
 
@@ -191,6 +201,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.string "last_name", limit: 100, null: false
     t.string "linkedin_url"
     t.string "mobile", limit: 20
+    t.bigint "organization_id"
     t.text "personal_notes"
     t.string "phone", limit: 20
     t.string "preferred_contact_method", limit: 20, default: "EMAIL"
@@ -209,6 +220,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["email"], name: "index_customer_contacts_on_email"
     t.index ["is_active"], name: "index_customer_contacts_on_is_active"
     t.index ["last_name", "first_name"], name: "index_customer_contacts_on_last_name_and_first_name"
+    t.index ["organization_id"], name: "index_customer_contacts_on_organization_id"
   end
 
   create_table "customer_documents", force: :cascade do |t|
@@ -230,6 +242,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_confidential", default: false
     t.boolean "is_latest_version", default: true
     t.text "notes"
+    t.bigint "organization_id"
     t.integer "renewal_reminder_days", default: 30
     t.boolean "requires_renewal", default: false
     t.bigint "superseded_by_id"
@@ -242,6 +255,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["expiry_date", "requires_renewal"], name: "index_customer_docs_on_expiry_and_renewal"
     t.index ["expiry_date"], name: "index_customer_documents_on_expiry_date"
     t.index ["is_active"], name: "index_customer_documents_on_is_active"
+    t.index ["organization_id"], name: "index_customer_documents_on_organization_id"
     t.index ["superseded_by_id"], name: "index_customer_documents_on_superseded_by_id"
     t.index ["uploaded_by_id"], name: "index_customer_documents_on_uploaded_by_id"
   end
@@ -313,6 +327,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.string "mobile", limit: 20
     t.decimal "on_time_payment_rate", precision: 5, scale: 2, default: "100.0"
     t.decimal "orders_per_month", precision: 5, scale: 2, default: "0.0"
+    t.bigint "organization_id"
     t.string "payment_terms", limit: 20
     t.string "phone_number"
     t.string "preferred_communication_method", limit: 20
@@ -356,6 +371,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["last_modified_by_id"], name: "index_customers_on_last_modified_by_id"
     t.index ["last_order_date"], name: "index_customers_on_last_order_date"
     t.index ["on_time_payment_rate"], name: "index_customers_on_on_time_payment_rate"
+    t.index ["organization_id"], name: "index_customers_on_organization_id"
     t.index ["sales_territory"], name: "index_customers_on_sales_territory"
     t.index ["total_revenue_all_time"], name: "index_customers_on_total_revenue_all_time"
   end
@@ -392,6 +408,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted", default: false, null: false
     t.integer "lines_with_variance_count", default: 0
     t.text "notes"
+    t.bigint "organization_id"
     t.datetime "posted_at"
     t.integer "posted_by"
     t.bigint "posted_by_id"
@@ -403,6 +420,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.bigint "warehouse_id", null: false
     t.index ["counted_by_id"], name: "index_cycle_counts_on_counted_by_id"
+    t.index ["organization_id"], name: "index_cycle_counts_on_organization_id"
     t.index ["posted_by"], name: "index_cycle_counts_on_posted_by"
     t.index ["posted_by_id"], name: "index_cycle_counts_on_posted_by_id"
     t.index ["reference_no"], name: "index_cycle_counts_on_reference_no", unique: true
@@ -420,6 +438,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.bigint "goods_receipt_id", null: false
     t.text "line_note"
     t.bigint "location_id", null: false
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "qty", precision: 14, scale: 4, default: "0.0", null: false
     t.decimal "unit_cost", precision: 15, scale: 4
@@ -429,6 +448,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["goods_receipt_id", "product_id"], name: "index_goods_receipt_lines_on_goods_receipt_id_and_product_id"
     t.index ["goods_receipt_id"], name: "index_goods_receipt_lines_on_goods_receipt_id"
     t.index ["location_id"], name: "index_goods_receipt_lines_on_location_id"
+    t.index ["organization_id"], name: "index_goods_receipt_lines_on_organization_id"
     t.index ["product_id"], name: "index_goods_receipt_lines_on_product_id"
     t.index ["uom_id"], name: "index_goods_receipt_lines_on_uom_id"
   end
@@ -438,6 +458,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.bigint "created_by_id"
     t.boolean "deleted", default: false, null: false
     t.text "notes"
+    t.bigint "organization_id"
     t.datetime "posted_at"
     t.bigint "posted_by_id"
     t.bigint "purchase_order_id"
@@ -448,6 +469,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.bigint "warehouse_id", null: false
     t.index ["created_by_id"], name: "index_goods_receipts_on_created_by_id"
+    t.index ["organization_id"], name: "index_goods_receipts_on_organization_id"
     t.index ["posted_by_id"], name: "index_goods_receipts_on_posted_by_id"
     t.index ["purchase_order_id"], name: "index_goods_receipts_on_purchase_order_id"
     t.index ["reference_no"], name: "index_goods_receipts_on_reference_no", unique: true
@@ -455,6 +477,57 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["supplier_id"], name: "index_goods_receipts_on_supplier_id"
     t.index ["warehouse_id", "status"], name: "index_goods_receipts_on_warehouse_id_and_status"
     t.index ["warehouse_id"], name: "index_goods_receipts_on_warehouse_id"
+  end
+
+  create_table "item_planning_parameters", force: :cascade do |t|
+    t.string "abc_classification", limit: 1
+    t.decimal "annual_demand", precision: 14, scale: 4
+    t.decimal "carrying_cost_percent", precision: 5, scale: 2
+    t.boolean "consider_work_calendar", default: false
+    t.boolean "create_planned_pos", default: true
+    t.boolean "create_planned_wos", default: true
+    t.datetime "created_at", null: false
+    t.boolean "deleted", default: false, null: false
+    t.decimal "fixed_order_quantity", precision: 14, scale: 4
+    t.boolean "include_in_mrp", default: true
+    t.boolean "is_active", default: true
+    t.boolean "is_critical_item", default: false
+    t.boolean "is_phantom_item", default: false
+    t.string "lot_sizing_rule", limit: 30, default: "LOT_FOR_LOT"
+    t.string "make_or_buy", limit: 20, default: "BUY"
+    t.integer "manufacturing_lead_time_days", default: 0
+    t.decimal "maximum_order_quantity", precision: 14, scale: 4
+    t.decimal "maximum_stock_level", precision: 14, scale: 4, default: "0.0"
+    t.decimal "minimum_order_quantity", precision: 14, scale: 4, default: "1.0"
+    t.decimal "minimum_stock_level", precision: 14, scale: 4, default: "0.0"
+    t.bigint "mrp_planner_id"
+    t.text "notes"
+    t.decimal "order_multiple", precision: 14, scale: 4, default: "1.0"
+    t.decimal "ordering_cost_per_order", precision: 10, scale: 2
+    t.bigint "organization_id", null: false
+    t.integer "periods_of_supply", default: 1
+    t.integer "planning_horizon_days", default: 90
+    t.string "planning_method", limit: 30, default: "MRP", null: false
+    t.integer "planning_time_fence_days", default: 7
+    t.bigint "product_id", null: false
+    t.integer "purchasing_lead_time_days", default: 0
+    t.decimal "reorder_point", precision: 14, scale: 4, default: "0.0"
+    t.integer "safety_lead_time_days", default: 0
+    t.decimal "safety_stock_quantity", precision: 14, scale: 4, default: "0.0"
+    t.decimal "shrinkage_percent", precision: 5, scale: 2, default: "0.0"
+    t.string "time_bucket", limit: 20, default: "DAILY"
+    t.datetime "updated_at", null: false
+    t.string "xyz_classification", limit: 1
+    t.decimal "yield_percent", precision: 5, scale: 2, default: "100.0"
+    t.index ["abc_classification"], name: "index_item_planning_parameters_on_abc_classification"
+    t.index ["deleted"], name: "index_item_planning_parameters_on_deleted"
+    t.index ["include_in_mrp"], name: "index_item_planning_parameters_on_include_in_mrp"
+    t.index ["is_critical_item"], name: "index_item_planning_parameters_on_is_critical_item"
+    t.index ["mrp_planner_id"], name: "index_item_planning_parameters_on_mrp_planner_id"
+    t.index ["organization_id", "product_id"], name: "idx_item_planning_params_org_product_unique", unique: true, where: "(deleted = false)"
+    t.index ["organization_id"], name: "index_item_planning_parameters_on_organization_id"
+    t.index ["planning_method"], name: "index_item_planning_parameters_on_planning_method"
+    t.index ["product_id"], name: "index_item_planning_parameters_on_product_id"
   end
 
   create_table "journal_entries", force: :cascade do |t|
@@ -465,6 +538,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.date "entry_date"
     t.string "entry_number"
     t.boolean "is_reversal", default: false
+    t.bigint "organization_id"
     t.datetime "posted_at"
     t.integer "posted_by"
     t.string "reference_id"
@@ -475,6 +549,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.decimal "total_credit"
     t.decimal "total_debit"
     t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_journal_entries_on_organization_id"
     t.index ["posted_by"], name: "index_journal_entries_on_posted_by"
   end
 
@@ -500,6 +575,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.decimal "hours_worked", precision: 10, scale: 4, default: "0.0"
     t.text "notes"
     t.bigint "operator_id", null: false
+    t.bigint "organization_id"
     t.datetime "updated_at", null: false
     t.bigint "work_order_operation_id", null: false
     t.index ["clock_in_at"], name: "index_labor_time_entries_on_clock_in_at"
@@ -507,6 +583,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["deleted"], name: "index_labor_time_entries_on_deleted"
     t.index ["operator_id", "clock_in_at"], name: "index_labor_time_entries_on_operator_id_and_clock_in_at"
     t.index ["operator_id"], name: "index_labor_time_entries_on_operator_id"
+    t.index ["organization_id"], name: "index_labor_time_entries_on_organization_id"
     t.index ["work_order_operation_id", "operator_id"], name: "index_labor_entries_on_operation_and_operator"
     t.index ["work_order_operation_id"], name: "index_labor_time_entries_on_work_order_operation_id"
   end
@@ -519,18 +596,728 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_receivable"
     t.string "location_type", default: "GENERAL"
     t.string "name"
+    t.bigint "organization_id"
     t.datetime "updated_at", null: false
     t.bigint "warehouse_id", null: false
     t.index ["location_type"], name: "index_locations_on_location_type"
+    t.index ["organization_id"], name: "index_locations_on_organization_id"
     t.index ["warehouse_id"], name: "index_locations_on_warehouse_id"
+  end
+
+  create_table "mrp_action_messages", force: :cascade do |t|
+    t.datetime "acknowledged_at"
+    t.string "action_category", limit: 30
+    t.string "action_message_number", limit: 50, null: false
+    t.date "action_required_by"
+    t.string "action_type", limit: 30, null: false
+    t.date "actual_new_date"
+    t.decimal "actual_new_quantity", precision: 14, scale: 4
+    t.jsonb "alternative_actions", default: []
+    t.datetime "approved_at"
+    t.bigint "assigned_to_id"
+    t.boolean "auto_executed", default: false
+    t.datetime "auto_executed_at"
+    t.boolean "auto_expired", default: false
+    t.text "business_impact"
+    t.jsonb "calculation_details", default: {}
+    t.boolean "can_auto_execute", default: false
+    t.datetime "cancelled_at"
+    t.string "constraints", default: [], array: true
+    t.string "cost_impact_type", limit: 30
+    t.datetime "created_at", null: false
+    t.string "currency", limit: 3, default: "USD"
+    t.date "current_date"
+    t.decimal "current_quantity", precision: 14, scale: 4
+    t.string "current_status", limit: 30
+    t.bigint "customer_id"
+    t.boolean "customer_notified", default: false
+    t.datetime "customer_notified_at"
+    t.integer "days_to_expedite"
+    t.integer "days_until_deadline"
+    t.boolean "deleted", default: false, null: false
+    t.text "detailed_explanation"
+    t.decimal "estimated_cost_impact", precision: 15, scale: 2
+    t.datetime "executed_at"
+    t.bigint "executed_by_id"
+    t.text "execution_notes"
+    t.text "feasibility_notes"
+    t.boolean "has_child_actions", default: false
+    t.text "internal_notes"
+    t.boolean "is_feasible", default: true
+    t.boolean "is_recurring", default: false
+    t.jsonb "metadata", default: {}
+    t.bigint "mrp_run_id", null: false
+    t.text "notes"
+    t.string "notification_recipients", default: [], array: true
+    t.boolean "notification_sent", default: false
+    t.datetime "notification_sent_at"
+    t.integer "occurrence_count", default: 1
+    t.string "order_number", limit: 50
+    t.string "order_type", limit: 30
+    t.bigint "organization_id", null: false
+    t.bigint "parent_action_id"
+    t.bigint "planned_purchase_order_id"
+    t.bigint "planned_work_order_id"
+    t.string "priority", limit: 20, default: "NORMAL", null: false
+    t.integer "priority_score", default: 50
+    t.bigint "product_id"
+    t.bigint "purchase_order_id"
+    t.decimal "quantity_change", precision: 14, scale: 4
+    t.text "reason", null: false
+    t.datetime "rejected_at"
+    t.text "rejection_reason"
+    t.boolean "requires_customer_notification", default: false
+    t.boolean "requires_immediate_action", default: false
+    t.boolean "requires_supplier_approval", default: false
+    t.datetime "reviewed_at"
+    t.string "status", limit: 30, default: "OPEN", null: false
+    t.date "suggested_date"
+    t.decimal "suggested_quantity", precision: 14, scale: 4
+    t.bigint "supplier_id"
+    t.boolean "supplier_notified", default: false
+    t.datetime "supplier_notified_at"
+    t.string "tags", default: [], array: true
+    t.datetime "updated_at", null: false
+    t.date "valid_until"
+    t.bigint "work_order_id"
+    t.index ["action_message_number"], name: "index_mrp_action_messages_on_action_message_number", unique: true
+    t.index ["action_type"], name: "index_mrp_action_messages_on_action_type"
+    t.index ["assigned_to_id", "status"], name: "index_mrp_action_messages_on_assigned_to_id_and_status"
+    t.index ["assigned_to_id"], name: "index_mrp_action_messages_on_assigned_to_id"
+    t.index ["can_auto_execute"], name: "index_mrp_action_messages_on_can_auto_execute"
+    t.index ["customer_id"], name: "index_mrp_action_messages_on_customer_id"
+    t.index ["deleted"], name: "index_mrp_action_messages_on_deleted"
+    t.index ["executed_by_id"], name: "index_mrp_action_messages_on_executed_by_id"
+    t.index ["mrp_run_id", "action_type"], name: "index_mrp_action_messages_on_mrp_run_id_and_action_type"
+    t.index ["mrp_run_id"], name: "index_mrp_action_messages_on_mrp_run_id"
+    t.index ["order_type", "order_number"], name: "index_mrp_action_messages_on_order_type_and_order_number"
+    t.index ["organization_id", "priority"], name: "index_mrp_action_messages_on_organization_id_and_priority"
+    t.index ["organization_id", "status"], name: "index_mrp_action_messages_on_organization_id_and_status"
+    t.index ["organization_id"], name: "index_mrp_action_messages_on_organization_id"
+    t.index ["parent_action_id"], name: "index_mrp_action_messages_on_parent_action_id"
+    t.index ["planned_purchase_order_id"], name: "index_mrp_action_messages_on_planned_purchase_order_id"
+    t.index ["planned_work_order_id"], name: "index_mrp_action_messages_on_planned_work_order_id"
+    t.index ["priority"], name: "index_mrp_action_messages_on_priority"
+    t.index ["product_id", "status"], name: "index_mrp_action_messages_on_product_id_and_status"
+    t.index ["product_id"], name: "index_mrp_action_messages_on_product_id"
+    t.index ["purchase_order_id"], name: "index_mrp_action_messages_on_purchase_order_id"
+    t.index ["requires_immediate_action"], name: "index_mrp_action_messages_on_requires_immediate_action"
+    t.index ["status"], name: "index_mrp_action_messages_on_status"
+    t.index ["supplier_id"], name: "index_mrp_action_messages_on_supplier_id"
+    t.index ["work_order_id"], name: "index_mrp_action_messages_on_work_order_id"
+  end
+
+  create_table "mrp_configurations", force: :cascade do |t|
+    t.boolean "action_message_generation_enabled", default: true
+    t.string "action_message_types_enabled", default: ["EXPEDITE", "DELAY", "INCREASE_QUANTITY", "DECREASE_QUANTITY", "CANCEL"], array: true
+    t.string "alert_frequency", default: "DAILY_DIGEST"
+    t.text "alert_recipients_emails"
+    t.boolean "allow_item_level_overrides", default: true
+    t.integer "approval_hierarchy_levels", default: 2
+    t.integer "approval_timeout_days", default: 3
+    t.boolean "auto_adjust_reorder_points_enabled", default: false
+    t.boolean "auto_adjust_safety_stock_enabled", default: false
+    t.boolean "auto_approve_below_threshold", default: true
+    t.boolean "auto_create_rfq_for_planned_pos", default: false
+    t.boolean "auto_replan_trigger_enabled", default: false
+    t.boolean "auto_vendor_selection_enabled", default: false
+    t.string "cost_rolling_frequency", default: "MONTHLY"
+    t.decimal "cost_variance_tolerance_percent", precision: 5, scale: 2, default: "5.0"
+    t.datetime "created_at", null: false
+    t.boolean "critical_exception_immediate_alert", default: true
+    t.boolean "daily_mrp_summary_email", default: false
+    t.string "default_costing_method", default: "STANDARD_COST"
+    t.string "default_lot_sizing_method", default: "LOT_FOR_LOT"
+    t.integer "default_manufacturing_lead_time", default: 7
+    t.decimal "default_max_order_quantity", precision: 15, scale: 3
+    t.decimal "default_min_order_quantity", precision: 15, scale: 3
+    t.decimal "default_order_multiple", precision: 15, scale: 3, default: "1.0"
+    t.integer "default_purchase_lead_time", default: 14
+    t.string "demand_aggregation_level", default: "DAILY"
+    t.string "demand_priority", default: "SALES_ORDER"
+    t.integer "demand_time_fence_days", default: 14
+    t.decimal "demand_variability_factor", precision: 5, scale: 2, default: "1.5"
+    t.boolean "email_notifications_enabled", default: true
+    t.boolean "email_notifications_for_approvals", default: true
+    t.decimal "eoq_holding_cost_percent", precision: 5, scale: 2, default: "10.0"
+    t.decimal "eoq_ordering_cost", precision: 15, scale: 2, default: "50.0"
+    t.boolean "exception_alerts_enabled", default: true
+    t.integer "exception_threshold_days", default: 3
+    t.string "exception_types_to_monitor", default: ["MATERIAL_SHORTAGE", "LATE_POS", "LATE_WOS", "EXCESS_INVENTORY"], array: true
+    t.string "forecast_consumption_method", default: "FORWARD"
+    t.integer "forecast_time_fence_days", default: 30
+    t.integer "frozen_zone_days", default: 7
+    t.boolean "include_existing_pos_in_mrp", default: true
+    t.boolean "include_existing_wos_in_mrp", default: true
+    t.boolean "include_forecasts_in_mrp", default: true
+    t.boolean "include_in_transit_inventory", default: true
+    t.boolean "include_make_to_order_items", default: true
+    t.boolean "include_make_to_stock_items", default: true
+    t.boolean "include_reserved_inventory", default: false
+    t.boolean "include_sales_orders_in_mrp", default: true
+    t.string "inventory_allocation_method", default: "FIFO"
+    t.string "item_override_settings", default: ["LOT_SIZING_RULE", "SAFETY_STOCK", "REORDER_POINT", "LEAD_TIMES"], array: true
+    t.decimal "labor_overhead_rate_percent", precision: 5, scale: 2, default: "15.0"
+    t.integer "lead_time_safety_buffer_days", default: 2
+    t.decimal "lead_time_variability_factor", precision: 5, scale: 2, default: "1.2"
+    t.integer "long_term_horizon_days", default: 90
+    t.string "lot_sizing_rounding_rule", default: "UP"
+    t.decimal "material_overhead_rate_percent", precision: 5, scale: 2, default: "10.0"
+    t.integer "medium_term_horizon_days", default: 60
+    t.integer "minimum_vendors_to_compare", default: 3
+    t.string "mrp_processing_priority", default: "CRITICAL_ITEMS_FIRST"
+    t.string "mrp_replanning_frequency", default: "WEEKLY"
+    t.string "mrp_run_mode", default: "NET_CHANGE"
+    t.boolean "notify_on_exceptions", default: true
+    t.boolean "notify_on_planned_po_creation", default: true
+    t.boolean "notify_on_planned_wo_creation", default: true
+    t.boolean "notify_on_po_approval", default: true
+    t.boolean "notify_on_vendor_quote_received", default: true
+    t.bigint "organization_id", null: false
+    t.string "overhead_allocation_method", default: "DIRECT_LABOR"
+    t.integer "pegging_depth_level", default: 5
+    t.integer "planned_order_firm_time_fence_days", default: 7
+    t.decimal "planned_po_approval_threshold", precision: 15, scale: 2, default: "10000.0"
+    t.boolean "planned_po_requires_approval", default: true
+    t.boolean "planned_wo_requires_approval", default: false
+    t.boolean "planning_calendar_working_days_only", default: true
+    t.integer "planning_horizon_days", default: 90
+    t.integer "planning_time_fence_days", default: 30
+    t.decimal "price_tolerance_percent", precision: 5, scale: 2, default: "5.0"
+    t.integer "reorder_point_alert_threshold_days", default: 3
+    t.decimal "reorder_point_buffer_percent", precision: 5, scale: 2, default: "10.0"
+    t.string "reorder_point_calculation_method", default: "LEAD_TIME_DEMAND"
+    t.string "reorder_point_review_frequency", default: "MONTHLY"
+    t.boolean "rfq_auto_send_to_vendors", default: false
+    t.string "safety_stock_calculation_method", default: "DAYS_OF_SUPPLY"
+    t.integer "safety_stock_days", default: 7
+    t.string "safety_stock_review_frequency", default: "MONTHLY"
+    t.decimal "service_level_target_percent", precision: 5, scale: 2, default: "95.0"
+    t.integer "short_term_horizon_days", default: 30
+    t.datetime "updated_at", null: false
+    t.decimal "vendor_delivery_weight_percent", precision: 5, scale: 2, default: "30.0"
+    t.decimal "vendor_price_weight_percent", precision: 5, scale: 2, default: "40.0"
+    t.decimal "vendor_quality_weight_percent", precision: 5, scale: 2, default: "30.0"
+    t.string "vendor_selection_criteria", default: "LOWEST_COST"
+    t.boolean "weekly_planning_report", default: true
+    t.index ["organization_id"], name: "index_mrp_configurations_on_organization_id", unique: true
+  end
+
+  create_table "mrp_demands", force: :cascade do |t|
+    t.decimal "consumed_quantity", precision: 14, scale: 4, default: "0.0"
+    t.datetime "created_at", null: false
+    t.bigint "customer_id"
+    t.string "customer_po_number", limit: 100
+    t.boolean "deleted", default: false
+    t.boolean "is_active", default: true
+    t.boolean "is_firm", default: false
+    t.jsonb "metadata", default: {}
+    t.bigint "mrp_run_id", null: false
+    t.bigint "organization_id", null: false
+    t.string "priority", limit: 20, default: "NORMAL"
+    t.integer "priority_score", default: 50
+    t.bigint "product_id", null: false
+    t.decimal "quantity", precision: 14, scale: 4, null: false
+    t.decimal "remaining_quantity", precision: 14, scale: 4
+    t.date "required_date", null: false
+    t.bigint "source_id"
+    t.string "source_reference", limit: 100
+    t.string "source_type", limit: 50, null: false
+    t.datetime "updated_at", null: false
+    t.index ["customer_id"], name: "index_mrp_demands_on_customer_id"
+    t.index ["deleted"], name: "index_mrp_demands_on_deleted"
+    t.index ["is_firm"], name: "index_mrp_demands_on_is_firm"
+    t.index ["mrp_run_id", "product_id"], name: "index_mrp_demands_on_mrp_run_id_and_product_id"
+    t.index ["mrp_run_id"], name: "index_mrp_demands_on_mrp_run_id"
+    t.index ["organization_id", "product_id", "required_date"], name: "idx_on_organization_id_product_id_required_date_bba80bafde"
+    t.index ["organization_id"], name: "index_mrp_demands_on_organization_id"
+    t.index ["product_id"], name: "index_mrp_demands_on_product_id"
+    t.index ["required_date"], name: "index_mrp_demands_on_required_date"
+    t.index ["source_type", "source_id"], name: "index_mrp_demands_on_source_type_and_source_id"
+  end
+
+  create_table "mrp_exceptions", force: :cascade do |t|
+    t.datetime "acknowledged_at"
+    t.string "action_required", limit: 50
+    t.date "action_required_by"
+    t.datetime "assigned_at"
+    t.bigint "assigned_to_id"
+    t.decimal "available_quantity", precision: 14, scale: 4
+    t.datetime "closed_at"
+    t.text "comments"
+    t.boolean "create_alert", default: false
+    t.datetime "created_at", null: false
+    t.string "currency", limit: 3, default: "USD"
+    t.date "current_date"
+    t.bigint "customer_id"
+    t.string "customer_impact", limit: 50
+    t.integer "days_early"
+    t.integer "days_late"
+    t.boolean "deleted", default: false, null: false
+    t.text "detailed_description"
+    t.datetime "detected_at", null: false
+    t.decimal "estimated_cost_impact", precision: 15, scale: 2
+    t.decimal "estimated_revenue_risk", precision: 15, scale: 2
+    t.string "exception_category", limit: 30
+    t.jsonb "exception_data", default: {}
+    t.date "exception_date"
+    t.text "exception_message", null: false
+    t.string "exception_number", limit: 50, null: false
+    t.string "exception_type", limit: 50, null: false
+    t.decimal "excess_quantity", precision: 14, scale: 4
+    t.date "first_occurrence_date"
+    t.text "impact_analysis"
+    t.boolean "is_recurring", default: false
+    t.date "last_occurrence_date"
+    t.jsonb "metadata", default: {}
+    t.bigint "mrp_run_id", null: false
+    t.string "notification_recipients", default: [], array: true
+    t.boolean "notification_sent", default: false
+    t.datetime "notification_sent_at"
+    t.integer "occurrence_count", default: 1
+    t.bigint "organization_id", null: false
+    t.string "priority", limit: 20, default: "NORMAL"
+    t.bigint "product_id"
+    t.text "recommended_action"
+    t.bigint "related_exception_id"
+    t.bigint "related_planned_po_id"
+    t.bigint "related_planned_wo_id"
+    t.bigint "related_purchase_order_id"
+    t.bigint "related_work_order_id"
+    t.date "required_date"
+    t.decimal "required_quantity", precision: 14, scale: 4
+    t.boolean "requires_immediate_action", default: false
+    t.text "resolution_action_taken"
+    t.text "resolution_notes"
+    t.string "resolution_type", limit: 50
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
+    t.boolean "send_email", default: false
+    t.boolean "send_sms", default: false
+    t.string "severity", limit: 20, default: "MEDIUM", null: false
+    t.integer "severity_score", default: 50
+    t.decimal "shortage_quantity", precision: 14, scale: 4
+    t.string "status", limit: 30, default: "OPEN", null: false
+    t.string "tags", default: [], array: true
+    t.datetime "updated_at", null: false
+    t.index ["assigned_to_id", "status"], name: "index_mrp_exceptions_on_assigned_to_id_and_status"
+    t.index ["assigned_to_id"], name: "index_mrp_exceptions_on_assigned_to_id"
+    t.index ["customer_id"], name: "index_mrp_exceptions_on_customer_id"
+    t.index ["deleted"], name: "index_mrp_exceptions_on_deleted"
+    t.index ["exception_category", "status"], name: "index_mrp_exceptions_on_exception_category_and_status"
+    t.index ["exception_date"], name: "index_mrp_exceptions_on_exception_date"
+    t.index ["exception_number"], name: "index_mrp_exceptions_on_exception_number", unique: true
+    t.index ["exception_type"], name: "index_mrp_exceptions_on_exception_type"
+    t.index ["is_recurring"], name: "index_mrp_exceptions_on_is_recurring"
+    t.index ["mrp_run_id", "exception_type"], name: "index_mrp_exceptions_on_mrp_run_id_and_exception_type"
+    t.index ["mrp_run_id"], name: "index_mrp_exceptions_on_mrp_run_id"
+    t.index ["organization_id", "severity"], name: "index_mrp_exceptions_on_organization_id_and_severity"
+    t.index ["organization_id", "status"], name: "index_mrp_exceptions_on_organization_id_and_status"
+    t.index ["organization_id"], name: "index_mrp_exceptions_on_organization_id"
+    t.index ["product_id", "status"], name: "index_mrp_exceptions_on_product_id_and_status"
+    t.index ["product_id"], name: "index_mrp_exceptions_on_product_id"
+    t.index ["related_exception_id"], name: "index_mrp_exceptions_on_related_exception_id"
+    t.index ["related_planned_po_id"], name: "index_mrp_exceptions_on_related_planned_po_id"
+    t.index ["related_planned_wo_id"], name: "index_mrp_exceptions_on_related_planned_wo_id"
+    t.index ["related_purchase_order_id"], name: "index_mrp_exceptions_on_related_purchase_order_id"
+    t.index ["related_work_order_id"], name: "index_mrp_exceptions_on_related_work_order_id"
+    t.index ["requires_immediate_action"], name: "index_mrp_exceptions_on_requires_immediate_action"
+    t.index ["resolved_by_id"], name: "index_mrp_exceptions_on_resolved_by_id"
+    t.index ["severity"], name: "index_mrp_exceptions_on_severity"
+    t.index ["status"], name: "index_mrp_exceptions_on_status"
+  end
+
+  create_table "mrp_runs", force: :cascade do |t|
+    t.string "abc_classes", default: [], array: true
+    t.integer "action_messages_generated", default: 0
+    t.text "approval_notes"
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.integer "bom_levels_processed", default: 0
+    t.integer "boms_exploded", default: 0
+    t.integer "cancelled_planned_orders_vs_previous"
+    t.datetime "completed_at"
+    t.integer "component_requirements_created", default: 0
+    t.jsonb "configuration_snapshot", default: {}
+    t.boolean "consider_existing_pos", default: true
+    t.boolean "consider_existing_wos", default: true
+    t.boolean "consider_in_transit", default: true
+    t.boolean "consider_on_hand_inventory", default: true
+    t.datetime "created_at", null: false
+    t.boolean "critical_items_only", default: false
+    t.boolean "deleted", default: false, null: false
+    t.integer "duration_seconds"
+    t.text "error_details"
+    t.text "error_message"
+    t.integer "exceptions_generated", default: 0
+    t.jsonb "execution_log", default: []
+    t.boolean "include_forecasts", default: true
+    t.boolean "include_reorder_points", default: true
+    t.boolean "include_safety_stock", default: true
+    t.text "item_filter_criteria"
+    t.integer "items_failed", default: 0
+    t.integer "items_processed", default: 0
+    t.integer "items_skipped", default: 0
+    t.integer "items_to_process", default: 0
+    t.integer "items_with_requirements", default: 0
+    t.integer "modified_planned_orders_vs_previous"
+    t.integer "new_planned_orders_vs_previous"
+    t.text "notes"
+    t.bigint "organization_id", null: false
+    t.integer "planned_pos_generated", default: 0
+    t.integer "planned_wos_generated", default: 0
+    t.integer "planning_horizon_days", null: false
+    t.date "planning_horizon_end", null: false
+    t.date "planning_horizon_start", null: false
+    t.bigint "previous_run_id"
+    t.jsonb "processing_errors", default: []
+    t.boolean "requires_approval", default: false
+    t.bigint "run_by_id", null: false
+    t.text "run_description"
+    t.string "run_name", limit: 200
+    t.string "run_number", limit: 50, null: false
+    t.string "run_type", limit: 30, default: "REGENERATIVE", null: false
+    t.datetime "started_at"
+    t.string "status", limit: 30, default: "PENDING", null: false
+    t.string "tags", default: [], array: true
+    t.decimal "total_demand_quantity", precision: 14, scale: 4, default: "0.0"
+    t.integer "total_forecasts_considered", default: 0
+    t.decimal "total_in_production_qty", precision: 14, scale: 4, default: "0.0"
+    t.decimal "total_on_hand_inventory", precision: 14, scale: 4, default: "0.0"
+    t.decimal "total_on_order_qty", precision: 14, scale: 4, default: "0.0"
+    t.decimal "total_planned_po_value", precision: 15, scale: 2, default: "0.0"
+    t.decimal "total_planned_wo_value", precision: 15, scale: 2, default: "0.0"
+    t.integer "total_sales_orders_considered", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_mrp_runs_on_approved_by_id"
+    t.index ["deleted"], name: "index_mrp_runs_on_deleted"
+    t.index ["organization_id", "created_at"], name: "index_mrp_runs_on_organization_id_and_created_at", order: { created_at: :desc }
+    t.index ["organization_id"], name: "index_mrp_runs_on_organization_id"
+    t.index ["previous_run_id"], name: "index_mrp_runs_on_previous_run_id"
+    t.index ["run_by_id"], name: "index_mrp_runs_on_run_by_id"
+    t.index ["run_number"], name: "index_mrp_runs_on_run_number", unique: true
+    t.index ["run_type"], name: "index_mrp_runs_on_run_type"
+    t.index ["started_at", "completed_at"], name: "index_mrp_runs_on_started_at_and_completed_at"
+    t.index ["status"], name: "index_mrp_runs_on_status"
+  end
+
+  create_table "mrp_supplies", force: :cascade do |t|
+    t.decimal "allocated_quantity", precision: 14, scale: 4, default: "0.0"
+    t.date "available_date", null: false
+    t.datetime "created_at", null: false
+    t.boolean "deleted", default: false
+    t.boolean "is_allocated", default: false
+    t.boolean "is_available", default: true
+    t.bigint "location_id"
+    t.jsonb "metadata", default: {}
+    t.bigint "mrp_run_id", null: false
+    t.bigint "organization_id", null: false
+    t.bigint "product_id", null: false
+    t.string "quality_status", limit: 30, default: "APPROVED"
+    t.decimal "quantity", precision: 14, scale: 4, null: false
+    t.decimal "remaining_quantity", precision: 14, scale: 4
+    t.bigint "source_id"
+    t.string "source_reference", limit: 100
+    t.string "source_type", limit: 50, null: false
+    t.bigint "supplier_id"
+    t.datetime "updated_at", null: false
+    t.bigint "warehouse_id"
+    t.index ["available_date"], name: "index_mrp_supplies_on_available_date"
+    t.index ["deleted"], name: "index_mrp_supplies_on_deleted"
+    t.index ["is_available"], name: "index_mrp_supplies_on_is_available"
+    t.index ["location_id"], name: "index_mrp_supplies_on_location_id"
+    t.index ["mrp_run_id", "product_id"], name: "index_mrp_supplies_on_mrp_run_id_and_product_id"
+    t.index ["mrp_run_id"], name: "index_mrp_supplies_on_mrp_run_id"
+    t.index ["organization_id", "product_id", "available_date"], name: "idx_on_organization_id_product_id_available_date_4079816c11"
+    t.index ["organization_id"], name: "index_mrp_supplies_on_organization_id"
+    t.index ["product_id"], name: "index_mrp_supplies_on_product_id"
+    t.index ["source_type", "source_id"], name: "index_mrp_supplies_on_source_type_and_source_id"
+    t.index ["supplier_id"], name: "index_mrp_supplies_on_supplier_id"
+    t.index ["warehouse_id"], name: "index_mrp_supplies_on_warehouse_id"
+  end
+
+  create_table "organization_settings", force: :cascade do |t|
+    t.string "company_name"
+    t.string "country", default: "US"
+    t.datetime "created_at", null: false
+    t.string "currency", default: "USD"
+    t.string "date_format", default: "MM/DD/YYYY"
+    t.integer "fiscal_year_start_month", default: 1
+    t.jsonb "holiday_list", default: []
+    t.string "legal_name"
+    t.string "number_format", default: "1,234.56"
+    t.bigint "organization_id", null: false
+    t.text "primary_address"
+    t.string "tax_id"
+    t.string "time_zone", default: "America/New_York"
+    t.datetime "updated_at", null: false
+    t.string "working_days", default: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], array: true
+    t.decimal "working_hours_per_day", precision: 4, scale: 2, default: "8.0"
+    t.index ["organization_id"], name: "index_organization_settings_on_organization_id", unique: true
+  end
+
+  create_table "organizations", force: :cascade do |t|
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.string "industry"
+    t.string "name", null: false
+    t.string "subdomain", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_organizations_on_active"
+    t.index ["name"], name: "index_organizations_on_name"
+    t.index ["subdomain"], name: "index_organizations_on_subdomain", unique: true
+  end
+
+  create_table "planned_purchase_orders", force: :cascade do |t|
+    t.date "action_new_date"
+    t.decimal "action_new_quantity", precision: 14, scale: 4
+    t.string "action_type", limit: 30
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.datetime "assigned_at"
+    t.boolean "auto_expired", default: false
+    t.bigint "buyer_assigned_id"
+    t.jsonb "calculation_details", default: {}
+    t.text "cancellation_reason"
+    t.datetime "cancelled_at"
+    t.datetime "confirmed_at"
+    t.boolean "confirmed_by_planner", default: false
+    t.string "conversion_status", limit: 30
+    t.datetime "converted_at"
+    t.decimal "converted_quantity", precision: 14, scale: 4, default: "0.0"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "currency", limit: 3, default: "USD"
+    t.boolean "deleted", default: false, null: false
+    t.bigint "demand_source_id"
+    t.string "demand_source_reference"
+    t.string "demand_source_type", limit: 50
+    t.decimal "estimated_total_cost", precision: 15, scale: 2
+    t.decimal "estimated_unit_cost", precision: 12, scale: 2
+    t.text "exception_message"
+    t.string "exception_type", limit: 50
+    t.date "expected_receipt_date"
+    t.datetime "expired_at"
+    t.decimal "gross_requirement", precision: 14, scale: 4
+    t.boolean "has_action_message", default: false
+    t.boolean "has_exceptions", default: false
+    t.text "internal_notes"
+    t.boolean "is_blanket_order", default: false
+    t.boolean "is_firmed", default: false
+    t.boolean "is_rush_order", default: false
+    t.boolean "is_system_generated", default: true
+    t.integer "lead_time_days"
+    t.string "lot_sizing_rule_applied", limit: 30
+    t.integer "low_level_code", default: 0
+    t.jsonb "metadata", default: {}
+    t.decimal "minimum_order_quantity", precision: 14, scale: 4
+    t.bigint "mrp_run_id", null: false
+    t.decimal "net_requirement", precision: 14, scale: 4
+    t.text "notes"
+    t.decimal "order_multiple", precision: 14, scale: 4
+    t.bigint "organization_id", null: false
+    t.string "planned_po_number", limit: 50, null: false
+    t.string "priority", limit: 20, default: "NORMAL"
+    t.integer "priority_score"
+    t.bigint "product_id", null: false
+    t.bigint "purchase_order_id"
+    t.datetime "quotes_received_at"
+    t.string "reference_number", limit: 100
+    t.decimal "remaining_quantity", precision: 14, scale: 4
+    t.date "required_date", null: false
+    t.decimal "required_quantity", precision: 14, scale: 4, null: false
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.bigint "rfq_id"
+    t.datetime "rfq_sent_at"
+    t.bigint "sales_forecast_id"
+    t.bigint "sales_order_id"
+    t.string "status", limit: 30, default: "SUGGESTED", null: false
+    t.string "substatus", limit: 50
+    t.date "suggested_order_date", null: false
+    t.decimal "suggested_order_quantity", precision: 14, scale: 4, null: false
+    t.bigint "supplier_id"
+    t.text "supplier_notes"
+    t.string "supplier_selection_method", limit: 50
+    t.text "supplier_selection_notes"
+    t.bigint "uom_id"
+    t.datetime "updated_at", null: false
+    t.date "valid_until"
+    t.bigint "work_order_id"
+    t.index ["approved_by_id"], name: "index_planned_purchase_orders_on_approved_by_id"
+    t.index ["buyer_assigned_id", "status"], name: "index_planned_purchase_orders_on_buyer_assigned_id_and_status"
+    t.index ["buyer_assigned_id"], name: "index_planned_purchase_orders_on_buyer_assigned_id"
+    t.index ["created_by_id"], name: "index_planned_purchase_orders_on_created_by_id"
+    t.index ["deleted"], name: "index_planned_purchase_orders_on_deleted"
+    t.index ["demand_source_type", "demand_source_id"], name: "idx_on_demand_source_type_demand_source_id_3d8f455403"
+    t.index ["has_action_message"], name: "index_planned_purchase_orders_on_has_action_message"
+    t.index ["has_exceptions"], name: "index_planned_purchase_orders_on_has_exceptions"
+    t.index ["is_firmed"], name: "index_planned_purchase_orders_on_is_firmed"
+    t.index ["mrp_run_id", "status"], name: "index_planned_purchase_orders_on_mrp_run_id_and_status"
+    t.index ["mrp_run_id"], name: "index_planned_purchase_orders_on_mrp_run_id"
+    t.index ["organization_id", "required_date"], name: "idx_on_organization_id_required_date_66e92f8223"
+    t.index ["organization_id", "status"], name: "index_planned_purchase_orders_on_organization_id_and_status"
+    t.index ["organization_id", "suggested_order_date"], name: "idx_on_organization_id_suggested_order_date_dc3cce7195"
+    t.index ["organization_id"], name: "index_planned_purchase_orders_on_organization_id"
+    t.index ["planned_po_number"], name: "index_planned_purchase_orders_on_planned_po_number", unique: true
+    t.index ["priority"], name: "index_planned_purchase_orders_on_priority"
+    t.index ["product_id", "status"], name: "index_planned_purchase_orders_on_product_id_and_status"
+    t.index ["product_id"], name: "index_planned_purchase_orders_on_product_id"
+    t.index ["purchase_order_id"], name: "index_planned_purchase_orders_on_purchase_order_id"
+    t.index ["reviewed_by_id"], name: "index_planned_purchase_orders_on_reviewed_by_id"
+    t.index ["rfq_id"], name: "index_planned_purchase_orders_on_rfq_id"
+    t.index ["sales_forecast_id"], name: "index_planned_purchase_orders_on_sales_forecast_id"
+    t.index ["sales_order_id"], name: "index_planned_purchase_orders_on_sales_order_id"
+    t.index ["supplier_id", "status"], name: "index_planned_purchase_orders_on_supplier_id_and_status"
+    t.index ["supplier_id"], name: "index_planned_purchase_orders_on_supplier_id"
+    t.index ["uom_id"], name: "index_planned_purchase_orders_on_uom_id"
+    t.index ["work_order_id"], name: "index_planned_purchase_orders_on_work_order_id"
+  end
+
+  create_table "planned_work_orders", force: :cascade do |t|
+    t.date "action_new_completion_date"
+    t.decimal "action_new_quantity", precision: 14, scale: 4
+    t.date "action_new_start_date"
+    t.string "action_type", limit: 30
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.boolean "auto_expired", default: false
+    t.string "bom_code", limit: 50
+    t.jsonb "bom_explosion_details", default: {}
+    t.bigint "bom_id"
+    t.integer "bom_level", default: 0
+    t.string "bom_revision", limit: 20
+    t.jsonb "calculation_details", default: {}
+    t.text "cancellation_reason"
+    t.datetime "cancelled_at"
+    t.boolean "capacity_available", default: true
+    t.text "capacity_constraints"
+    t.integer "components_count", default: 0
+    t.datetime "confirmed_at"
+    t.boolean "confirmed_by_planner", default: false
+    t.string "conversion_status", limit: 30
+    t.datetime "converted_at"
+    t.decimal "converted_quantity", precision: 14, scale: 4, default: "0.0"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "currency", limit: 3, default: "USD"
+    t.bigint "customer_id"
+    t.string "customer_po_number", limit: 100
+    t.boolean "deleted", default: false, null: false
+    t.bigint "demand_source_id"
+    t.string "demand_source_reference"
+    t.string "demand_source_type", limit: 50
+    t.integer "estimated_duration_minutes"
+    t.decimal "estimated_labor_cost", precision: 15, scale: 2
+    t.decimal "estimated_material_cost", precision: 15, scale: 2
+    t.decimal "estimated_overhead_cost", precision: 15, scale: 2
+    t.integer "estimated_run_minutes"
+    t.integer "estimated_setup_minutes"
+    t.decimal "estimated_total_cost", precision: 15, scale: 2
+    t.text "exception_message"
+    t.string "exception_type", limit: 50
+    t.datetime "expired_at"
+    t.decimal "gross_requirement", precision: 14, scale: 4
+    t.boolean "has_action_message", default: false
+    t.boolean "has_exceptions", default: false
+    t.text "internal_notes"
+    t.boolean "is_firmed", default: false
+    t.boolean "is_rush_order", default: false
+    t.boolean "is_system_generated", default: true
+    t.integer "lead_time_days"
+    t.string "lot_sizing_rule_applied", limit: 30
+    t.integer "low_level_code", default: 0
+    t.string "make_or_buy_decision", limit: 20, default: "MAKE"
+    t.text "material_shortages"
+    t.boolean "materials_available", default: true
+    t.jsonb "metadata", default: {}
+    t.decimal "minimum_production_quantity", precision: 14, scale: 4
+    t.integer "missing_materials_count", default: 0
+    t.bigint "mrp_run_id", null: false
+    t.decimal "net_requirement", precision: 14, scale: 4
+    t.text "notes"
+    t.bigint "organization_id", null: false
+    t.bigint "parent_planned_wo_id"
+    t.bigint "parent_work_order_id"
+    t.string "planned_wo_number", limit: 50, null: false
+    t.bigint "primary_work_center_id"
+    t.string "priority", limit: 20, default: "NORMAL"
+    t.integer "priority_score"
+    t.bigint "product_id", null: false
+    t.text "production_notes"
+    t.bigint "production_planner_id"
+    t.decimal "quantity_with_scrap", precision: 14, scale: 4
+    t.string "reference_number", limit: 100
+    t.decimal "remaining_quantity", precision: 14, scale: 4
+    t.date "required_completion_date", null: false
+    t.decimal "required_quantity", precision: 14, scale: 4, null: false
+    t.boolean "requires_special_tooling", default: false
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.string "routing_code", limit: 50
+    t.jsonb "routing_details", default: {}
+    t.bigint "routing_id"
+    t.integer "routing_lead_time_days"
+    t.string "routing_revision", limit: 20
+    t.bigint "sales_forecast_id"
+    t.bigint "sales_order_id"
+    t.decimal "scrap_allowance_percent", precision: 5, scale: 2, default: "0.0"
+    t.string "status", limit: 30, default: "SUGGESTED", null: false
+    t.string "substatus", limit: 50
+    t.decimal "suggested_production_quantity", precision: 14, scale: 4, null: false
+    t.date "suggested_release_date"
+    t.date "suggested_start_date", null: false
+    t.decimal "total_capacity_hours_required", precision: 10, scale: 2
+    t.decimal "total_component_cost", precision: 15, scale: 2
+    t.bigint "uom_id"
+    t.datetime "updated_at", null: false
+    t.date "valid_until"
+    t.boolean "work_center_pre_assigned", default: false
+    t.bigint "work_order_id"
+    t.index ["approved_by_id"], name: "index_planned_work_orders_on_approved_by_id"
+    t.index ["bom_id"], name: "index_planned_work_orders_on_bom_id"
+    t.index ["bom_level"], name: "index_planned_work_orders_on_bom_level"
+    t.index ["capacity_available"], name: "index_planned_work_orders_on_capacity_available"
+    t.index ["created_by_id"], name: "index_planned_work_orders_on_created_by_id"
+    t.index ["customer_id"], name: "index_planned_work_orders_on_customer_id"
+    t.index ["deleted"], name: "index_planned_work_orders_on_deleted"
+    t.index ["demand_source_type", "demand_source_id"], name: "idx_on_demand_source_type_demand_source_id_27c60cf9c6"
+    t.index ["has_action_message"], name: "index_planned_work_orders_on_has_action_message"
+    t.index ["has_exceptions"], name: "index_planned_work_orders_on_has_exceptions"
+    t.index ["is_firmed"], name: "index_planned_work_orders_on_is_firmed"
+    t.index ["materials_available"], name: "index_planned_work_orders_on_materials_available"
+    t.index ["mrp_run_id", "status"], name: "index_planned_work_orders_on_mrp_run_id_and_status"
+    t.index ["mrp_run_id"], name: "index_planned_work_orders_on_mrp_run_id"
+    t.index ["organization_id", "required_completion_date"], name: "idx_on_organization_id_required_completion_date_b6daec27d7"
+    t.index ["organization_id", "status"], name: "index_planned_work_orders_on_organization_id_and_status"
+    t.index ["organization_id", "suggested_start_date"], name: "idx_on_organization_id_suggested_start_date_ee35c15b44"
+    t.index ["organization_id"], name: "index_planned_work_orders_on_organization_id"
+    t.index ["parent_planned_wo_id"], name: "index_planned_work_orders_on_parent_planned_wo_id"
+    t.index ["parent_work_order_id"], name: "index_planned_work_orders_on_parent_work_order_id"
+    t.index ["planned_wo_number"], name: "index_planned_work_orders_on_planned_wo_number", unique: true
+    t.index ["primary_work_center_id", "status"], name: "index_planned_work_orders_on_primary_work_center_id_and_status"
+    t.index ["primary_work_center_id"], name: "index_planned_work_orders_on_primary_work_center_id"
+    t.index ["priority"], name: "index_planned_work_orders_on_priority"
+    t.index ["product_id", "status"], name: "index_planned_work_orders_on_product_id_and_status"
+    t.index ["product_id"], name: "index_planned_work_orders_on_product_id"
+    t.index ["production_planner_id", "status"], name: "index_planned_work_orders_on_production_planner_id_and_status"
+    t.index ["production_planner_id"], name: "index_planned_work_orders_on_production_planner_id"
+    t.index ["reviewed_by_id"], name: "index_planned_work_orders_on_reviewed_by_id"
+    t.index ["routing_id"], name: "index_planned_work_orders_on_routing_id"
+    t.index ["sales_forecast_id"], name: "index_planned_work_orders_on_sales_forecast_id"
+    t.index ["sales_order_id"], name: "index_planned_work_orders_on_sales_order_id"
+    t.index ["uom_id"], name: "index_planned_work_orders_on_uom_id"
+    t.index ["work_order_id"], name: "index_planned_work_orders_on_work_order_id"
   end
 
   create_table "product_categories", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.boolean "deleted", default: false
     t.string "name"
+    t.bigint "organization_id"
     t.integer "parent_id"
     t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_product_categories_on_organization_id"
     t.index ["parent_id"], name: "index_product_categories_on_parent_id"
   end
 
@@ -565,6 +1352,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.integer "maximum_order_quantity"
     t.integer "minimum_order_quantity", default: 1
     t.integer "order_multiple"
+    t.bigint "organization_id"
     t.string "packaging_type"
     t.decimal "previous_unit_price", precision: 15, scale: 4
     t.decimal "price_break_1_price", precision: 15, scale: 4
@@ -606,6 +1394,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["is_approved_supplier"], name: "index_product_suppliers_on_is_approved_supplier"
     t.index ["is_preferred_supplier"], name: "index_product_suppliers_on_is_preferred_supplier"
     t.index ["lead_time_days"], name: "index_product_suppliers_on_lead_time_days"
+    t.index ["organization_id"], name: "index_product_suppliers_on_organization_id"
     t.index ["product_id", "supplier_id"], name: "index_product_suppliers_on_product_id_and_supplier_id", unique: true
     t.index ["product_id"], name: "index_product_suppliers_on_product_id"
     t.index ["quality_rating"], name: "index_product_suppliers_on_quality_rating"
@@ -624,6 +1413,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_serial_tracked"
     t.boolean "is_stocked"
     t.string "name"
+    t.bigint "organization_id"
     t.integer "product_category_id"
     t.string "product_type"
     t.decimal "reorder_point"
@@ -631,6 +1421,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.decimal "standard_cost"
     t.integer "unit_of_measure_id"
     t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_products_on_organization_id"
     t.index ["product_category_id"], name: "index_products_on_product_category_id"
     t.index ["unit_of_measure_id"], name: "index_products_on_unit_of_measure_id"
   end
@@ -643,6 +1434,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.string "line_status", limit: 30, default: "OPEN"
     t.decimal "line_total", precision: 15, scale: 2, default: "0.0"
     t.decimal "ordered_qty", precision: 14, scale: 4, default: "0.0", null: false
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.bigint "purchase_order_id", null: false
     t.decimal "received_qty", precision: 14, scale: 4, default: "0.0"
@@ -655,6 +1447,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.bigint "vendor_quote_id"
     t.index ["line_status"], name: "index_purchase_order_lines_on_line_status"
+    t.index ["organization_id"], name: "index_purchase_order_lines_on_organization_id"
     t.index ["product_id"], name: "index_purchase_order_lines_on_product_id"
     t.index ["purchase_order_id"], name: "index_purchase_order_lines_on_purchase_order_id"
     t.index ["rfq_item_id"], name: "index_purchase_order_lines_on_rfq_item_id"
@@ -676,6 +1469,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.text "internal_notes"
     t.text "notes"
     t.date "order_date", default: -> { "CURRENT_DATE" }, null: false
+    t.bigint "organization_id"
     t.string "payment_terms", limit: 50
     t.string "po_number", limit: 50, null: false
     t.bigint "rfq_id"
@@ -694,6 +1488,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["created_by_id"], name: "index_purchase_orders_on_created_by_id"
     t.index ["expected_date"], name: "index_purchase_orders_on_expected_date"
     t.index ["order_date"], name: "index_purchase_orders_on_order_date"
+    t.index ["organization_id"], name: "index_purchase_orders_on_organization_id"
     t.index ["po_number"], name: "index_purchase_orders_on_po_number", unique: true
     t.index ["rfq_id"], name: "index_purchase_orders_on_rfq_id"
     t.index ["status"], name: "index_purchase_orders_on_status"
@@ -729,6 +1524,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.integer "line_number", null: false
     t.decimal "lowest_quoted_price", precision: 15, scale: 4
     t.string "material_grade"
+    t.bigint "organization_id"
     t.text "packaging_requirements"
     t.boolean "partial_delivery_acceptable", default: false
     t.decimal "price_variance_percentage", precision: 5, scale: 2
@@ -761,6 +1557,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["created_by_id"], name: "index_rfq_items_on_created_by_id"
     t.index ["is_critical_item"], name: "index_rfq_items_on_is_critical_item"
     t.index ["last_purchased_from_id"], name: "index_rfq_items_on_last_purchased_from_id"
+    t.index ["organization_id"], name: "index_rfq_items_on_organization_id"
     t.index ["product_id"], name: "index_rfq_items_on_product_id"
     t.index ["required_delivery_date"], name: "index_rfq_items_on_required_delivery_date"
     t.index ["rfq_id", "line_number"], name: "index_rfq_items_on_rfq_id_and_line_number", unique: true
@@ -785,6 +1582,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.integer "items_not_quoted_count", default: 0
     t.integer "items_quoted_count", default: 0
     t.datetime "last_email_sent_at"
+    t.bigint "organization_id"
     t.boolean "quoted_all_items", default: false
     t.datetime "quoted_at"
     t.boolean "responded_on_time", default: true
@@ -801,6 +1599,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["invited_at"], name: "index_rfq_suppliers_on_invited_at"
     t.index ["invited_by_id"], name: "index_rfq_suppliers_on_invited_by_id"
     t.index ["is_selected"], name: "index_rfq_suppliers_on_is_selected"
+    t.index ["organization_id"], name: "index_rfq_suppliers_on_organization_id"
     t.index ["rfq_id", "supplier_id"], name: "index_rfq_suppliers_on_rfq_id_and_supplier_id", unique: true
     t.index ["rfq_id"], name: "index_rfq_suppliers_on_rfq_id"
     t.index ["supplier_contact_id"], name: "index_rfq_suppliers_on_supplier_contact_id"
@@ -851,6 +1650,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "last_compared_at"
     t.datetime "last_reminder_sent_at"
     t.decimal "lowest_quote_amount", precision: 15, scale: 2
+    t.bigint "organization_id"
     t.text "payment_terms"
     t.date "po_created_date"
     t.string "po_numbers", comment: "Comma-separated list of generated PO numbers"
@@ -895,6 +1695,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["due_date"], name: "index_rfqs_on_due_date"
     t.index ["is_deleted"], name: "index_rfqs_on_is_deleted"
     t.index ["is_urgent"], name: "index_rfqs_on_is_urgent"
+    t.index ["organization_id"], name: "index_rfqs_on_organization_id"
     t.index ["recommended_supplier_id"], name: "index_rfqs_on_recommended_supplier_id"
     t.index ["requester_id"], name: "index_rfqs_on_requester_id"
     t.index ["response_deadline"], name: "index_rfqs_on_response_deadline"
@@ -916,6 +1717,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.text "notes"
     t.string "operation_name", limit: 100, null: false
     t.integer "operation_sequence", null: false
+    t.bigint "organization_id"
     t.decimal "overhead_cost_per_unit", precision: 12, scale: 2, default: "0.0"
     t.text "quality_check_instructions"
     t.bigint "routing_id", null: false
@@ -924,6 +1726,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.decimal "wait_time_minutes", precision: 10, scale: 2, default: "0.0"
     t.bigint "work_center_id", null: false
+    t.index ["organization_id"], name: "index_routing_operations_on_organization_id"
     t.index ["routing_id", "deleted"], name: "index_routing_operations_on_routing_id_and_deleted"
     t.index ["routing_id", "operation_sequence"], name: "index_routing_ops_on_routing_and_seq"
     t.index ["routing_id"], name: "index_routing_operations_on_routing_id"
@@ -941,6 +1744,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_default", default: false
     t.string "name", limit: 100, null: false
     t.text "notes"
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.string "revision", limit: 16, default: "1"
     t.string "status", limit: 20, default: "DRAFT", null: false
@@ -952,10 +1756,81 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["code"], name: "index_routings_on_code", unique: true
     t.index ["created_by_id"], name: "index_routings_on_created_by_id"
     t.index ["effective_from", "effective_to"], name: "index_routings_on_effective_from_and_effective_to"
+    t.index ["organization_id"], name: "index_routings_on_organization_id"
     t.index ["product_id", "is_default"], name: "index_routings_on_product_id_and_is_default"
     t.index ["product_id", "status"], name: "index_routings_on_product_id_and_status"
     t.index ["product_id"], name: "index_routings_on_product_id"
     t.index ["status"], name: "index_routings_on_status"
+  end
+
+  create_table "sales_forecasts", force: :cascade do |t|
+    t.decimal "actual_quantity", precision: 14, scale: 4, default: "0.0"
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.text "assumptions"
+    t.string "confidence_category", limit: 20
+    t.decimal "confidence_level", precision: 5, scale: 2, default: "100.0"
+    t.decimal "consumed_quantity", precision: 14, scale: 4, default: "0.0"
+    t.integer "consumption_days_backward", default: 7
+    t.integer "consumption_days_forward", default: 30
+    t.string "consumption_method", limit: 30, default: "FORWARD"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.bigint "customer_id"
+    t.boolean "deleted", default: false, null: false
+    t.string "demand_driver", limit: 100
+    t.datetime "expired_at"
+    t.decimal "forecast_bias", precision: 14, scale: 4
+    t.decimal "forecast_error", precision: 14, scale: 4
+    t.string "forecast_method", limit: 50
+    t.string "forecast_name", limit: 200
+    t.string "forecast_number", limit: 50, null: false
+    t.string "forecast_type", limit: 30, default: "MANUAL"
+    t.decimal "forecasted_quantity", precision: 14, scale: 4, null: false
+    t.boolean "include_in_mrp", default: true
+    t.string "market_segment", limit: 100
+    t.decimal "mean_absolute_deviation", precision: 14, scale: 4
+    t.jsonb "metadata", default: {}
+    t.integer "month"
+    t.text "notes"
+    t.bigint "organization_id", null: false
+    t.date "period_end_date", null: false
+    t.date "period_start_date", null: false
+    t.string "period_type", limit: 20, default: "MONTHLY", null: false
+    t.bigint "product_id", null: false
+    t.integer "quarter"
+    t.decimal "remaining_quantity", precision: 14, scale: 4
+    t.integer "revision_number", default: 1
+    t.string "sales_channel", limit: 100
+    t.decimal "standard_deviation", precision: 14, scale: 4
+    t.string "status", limit: 30, default: "DRAFT"
+    t.datetime "submitted_at"
+    t.bigint "superseded_by_id"
+    t.datetime "updated_at", null: false
+    t.string "version", limit: 20, default: "V1"
+    t.integer "week"
+    t.integer "year", null: false
+    t.index ["approved_by_id"], name: "index_sales_forecasts_on_approved_by_id"
+    t.index ["created_by_id"], name: "index_sales_forecasts_on_created_by_id"
+    t.index ["customer_id"], name: "index_sales_forecasts_on_customer_id"
+    t.index ["deleted"], name: "index_sales_forecasts_on_deleted"
+    t.index ["forecast_number"], name: "index_sales_forecasts_on_forecast_number", unique: true
+    t.index ["include_in_mrp"], name: "index_sales_forecasts_on_include_in_mrp"
+    t.index ["organization_id", "product_id", "period_start_date"], name: "idx_on_organization_id_product_id_period_start_date_d42659ea7b"
+    t.index ["organization_id"], name: "index_sales_forecasts_on_organization_id"
+    t.index ["period_start_date", "period_end_date"], name: "index_sales_forecasts_on_period_start_date_and_period_end_date"
+    t.index ["product_id"], name: "index_sales_forecasts_on_product_id"
+    t.index ["status"], name: "index_sales_forecasts_on_status"
+    t.index ["superseded_by_id"], name: "index_sales_forecasts_on_superseded_by_id"
+    t.index ["year", "month"], name: "index_sales_forecasts_on_year_and_month", where: "(month IS NOT NULL)"
+    t.index ["year", "quarter"], name: "index_sales_forecasts_on_year_and_quarter", where: "(quarter IS NOT NULL)"
+  end
+
+  create_table "sales_orders", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "organization_id"
+    t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_sales_orders_on_organization_id"
   end
 
   create_table "stock_adjustment_lines", force: :cascade do |t|
@@ -965,6 +1840,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.text "line_note"
     t.text "line_reason"
     t.bigint "location_id", null: false
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "qty_delta", precision: 14, scale: 4, default: "0.0", null: false
     t.bigint "stock_adjustment_id", null: false
@@ -973,6 +1849,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.index ["batch_id"], name: "index_stock_adjustment_lines_on_batch_id"
     t.index ["location_id"], name: "index_stock_adjustment_lines_on_location_id"
+    t.index ["organization_id"], name: "index_stock_adjustment_lines_on_organization_id"
     t.index ["product_id"], name: "index_stock_adjustment_lines_on_product_id"
     t.index ["stock_adjustment_id", "product_id"], name: "idx_on_stock_adjustment_id_product_id_b56b61a95f"
     t.index ["stock_adjustment_id"], name: "index_stock_adjustment_lines_on_stock_adjustment_id"
@@ -986,6 +1863,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.bigint "created_by_id"
     t.boolean "deleted", default: false, null: false
     t.text "notes"
+    t.bigint "organization_id"
     t.datetime "posted_at"
     t.integer "posted_by"
     t.bigint "posted_by_id"
@@ -997,6 +1875,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["adjustment_date"], name: "index_stock_adjustments_on_adjustment_date"
     t.index ["approved_by_id"], name: "index_stock_adjustments_on_approved_by_id"
     t.index ["created_by_id"], name: "index_stock_adjustments_on_created_by_id"
+    t.index ["organization_id"], name: "index_stock_adjustments_on_organization_id"
     t.index ["posted_by"], name: "index_stock_adjustments_on_posted_by"
     t.index ["posted_by_id"], name: "index_stock_adjustments_on_posted_by_id"
     t.index ["reference_no"], name: "index_stock_adjustments_on_reference_no", unique: true
@@ -1016,12 +1895,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.date "manufacture_date"
     t.text "note"
     t.text "notes"
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.string "quality_status"
     t.string "supplier_batch_ref"
     t.string "supplier_lot_number"
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_stock_batches_on_created_by_id"
+    t.index ["organization_id"], name: "index_stock_batches_on_organization_id"
     t.index ["product_id"], name: "index_stock_batches_on_product_id"
   end
 
@@ -1029,12 +1910,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "created_at", null: false
     t.boolean "deleted"
     t.integer "from_location_id", null: false
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "quantity"
     t.bigint "stock_batch_id"
     t.bigint "stock_issue_id", null: false
     t.datetime "updated_at", null: false
     t.index ["from_location_id"], name: "index_stock_issue_lines_on_from_location_id"
+    t.index ["organization_id"], name: "index_stock_issue_lines_on_organization_id"
     t.index ["product_id"], name: "index_stock_issue_lines_on_product_id"
     t.index ["stock_batch_id"], name: "index_stock_issue_lines_on_stock_batch_id"
     t.index ["stock_issue_id"], name: "index_stock_issue_lines_on_stock_issue_id"
@@ -1045,6 +1928,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.integer "created_by"
     t.integer "created_by_id"
     t.boolean "deleted"
+    t.bigint "organization_id"
     t.datetime "posted_at"
     t.integer "posted_by"
     t.string "reference_no"
@@ -1052,6 +1936,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.bigint "warehouse_id", null: false
     t.index ["created_by_id"], name: "index_stock_issues_on_created_by_id"
+    t.index ["organization_id"], name: "index_stock_issues_on_organization_id"
     t.index ["posted_by"], name: "index_stock_issues_on_posted_by"
     t.index ["warehouse_id"], name: "index_stock_issues_on_warehouse_id"
   end
@@ -1062,11 +1947,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted", default: false, null: false
     t.bigint "location_id", null: false
     t.decimal "on_hand_qty", precision: 20, scale: 6, default: "0.0", null: false
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "reserved_qty", precision: 20, scale: 6, default: "0.0", null: false
     t.datetime "updated_at", null: false
     t.index ["batch_id"], name: "index_stock_levels_on_batch_id"
     t.index ["location_id"], name: "index_stock_levels_on_location_id"
+    t.index ["organization_id"], name: "index_stock_levels_on_organization_id"
     t.index ["product_id", "location_id", "batch_id"], name: "index_stock_levels_on_product_location_batch", unique: true
     t.index ["product_id"], name: "index_stock_levels_on_product_id"
   end
@@ -1078,6 +1965,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted", default: false, null: false
     t.bigint "from_location_id"
     t.text "note"
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "quantity", precision: 14, scale: 4, null: false
     t.string "reference_id", limit: 50
@@ -1089,6 +1977,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["batch_id"], name: "index_stock_transactions_on_batch_id"
     t.index ["created_by_id"], name: "index_stock_transactions_on_created_by_id"
     t.index ["from_location_id"], name: "index_stock_transactions_on_from_location_id"
+    t.index ["organization_id"], name: "index_stock_transactions_on_organization_id"
     t.index ["product_id", "txn_type"], name: "index_stock_transactions_on_product_id_and_txn_type"
     t.index ["product_id"], name: "index_stock_transactions_on_product_id"
     t.index ["to_location_id"], name: "index_stock_transactions_on_to_location_id"
@@ -1101,6 +1990,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted", default: false, null: false
     t.bigint "from_location_id", null: false
     t.text "line_note"
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "qty", precision: 14, scale: 4, default: "0.0", null: false
     t.bigint "stock_transfer_id", null: false
@@ -1109,6 +1999,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.index ["batch_id"], name: "index_stock_transfer_lines_on_batch_id"
     t.index ["from_location_id"], name: "index_stock_transfer_lines_on_from_location_id"
+    t.index ["organization_id"], name: "index_stock_transfer_lines_on_organization_id"
     t.index ["product_id"], name: "index_stock_transfer_lines_on_product_id"
     t.index ["stock_transfer_id"], name: "index_stock_transfer_lines_on_stock_transfer_id"
     t.index ["to_location_id"], name: "index_stock_transfer_lines_on_to_location_id"
@@ -1122,6 +2013,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted", default: false, null: false
     t.bigint "from_warehouse_id", null: false
     t.text "note"
+    t.bigint "organization_id"
     t.datetime "posted_at"
     t.integer "posted_by"
     t.bigint "requested_by_id"
@@ -1132,6 +2024,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["approved_by_id"], name: "index_stock_transfers_on_approved_by_id"
     t.index ["created_by_id"], name: "index_stock_transfers_on_created_by_id"
     t.index ["from_warehouse_id"], name: "index_stock_transfers_on_from_warehouse_id"
+    t.index ["organization_id"], name: "index_stock_transfers_on_organization_id"
     t.index ["posted_by"], name: "index_stock_transfers_on_posted_by"
     t.index ["requested_by_id"], name: "index_stock_transfers_on_requested_by_id"
     t.index ["to_warehouse_id"], name: "index_stock_transfers_on_to_warehouse_id"
@@ -1155,6 +2048,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "followup_required", default: false
     t.boolean "is_overdue", default: false
     t.text "next_steps"
+    t.bigint "organization_id"
     t.text "outcome"
     t.string "priority", default: "NORMAL"
     t.bigint "related_record_id"
@@ -1172,6 +2066,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["created_by_id"], name: "index_supplier_activities_on_created_by_id"
     t.index ["followup_date"], name: "index_supplier_activities_on_followup_date"
     t.index ["is_overdue"], name: "index_supplier_activities_on_is_overdue"
+    t.index ["organization_id"], name: "index_supplier_activities_on_organization_id"
     t.index ["related_record_type", "related_record_id"], name: "index_supplier_activities_on_related_record"
     t.index ["related_user_id"], name: "index_supplier_activities_on_related_user_id"
     t.index ["supplier_contact_id"], name: "index_supplier_activities_on_supplier_contact_id"
@@ -1202,6 +2097,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.decimal "latitude", precision: 10, scale: 6
     t.decimal "longitude", precision: 10, scale: 6
     t.string "operating_hours"
+    t.bigint "organization_id"
     t.string "postal_code", null: false
     t.string "receiving_hours"
     t.boolean "requires_appointment", default: false
@@ -1217,6 +2113,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["country"], name: "index_supplier_addresses_on_country"
     t.index ["created_by_id"], name: "index_supplier_addresses_on_created_by_id"
     t.index ["is_active"], name: "index_supplier_addresses_on_is_active"
+    t.index ["organization_id"], name: "index_supplier_addresses_on_organization_id"
     t.index ["supplier_id", "address_type"], name: "index_supplier_addresses_on_supplier_id_and_address_type"
     t.index ["supplier_id", "is_default"], name: "index_supplier_addresses_on_supplier_id_and_is_default"
     t.index ["supplier_id"], name: "index_supplier_addresses_on_supplier_id"
@@ -1249,6 +2146,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.string "last_name", null: false
     t.string "linkedin_url"
     t.string "mobile"
+    t.bigint "organization_id"
     t.date "out_of_office_from"
     t.text "out_of_office_notes"
     t.date "out_of_office_to"
@@ -1277,6 +2175,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["is_active"], name: "index_supplier_contacts_on_is_active"
     t.index ["is_decision_maker"], name: "index_supplier_contacts_on_is_decision_maker"
     t.index ["last_contacted_by_id"], name: "index_supplier_contacts_on_last_contacted_by_id"
+    t.index ["organization_id"], name: "index_supplier_contacts_on_organization_id"
     t.index ["supplier_id", "contact_role"], name: "index_supplier_contacts_on_supplier_id_and_contact_role"
     t.index ["supplier_id", "is_primary_contact"], name: "index_supplier_contacts_on_supplier_id_and_is_primary_contact"
     t.index ["supplier_id"], name: "index_supplier_contacts_on_supplier_id"
@@ -1301,6 +2200,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_confidential", default: false
     t.text "issuing_authority"
     t.text "notes"
+    t.bigint "organization_id"
     t.date "renewal_date"
     t.integer "renewal_reminder_days", default: 30
     t.boolean "requires_renewal", default: false
@@ -1314,6 +2214,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["document_type"], name: "index_supplier_documents_on_document_type"
     t.index ["expiry_date"], name: "index_supplier_documents_on_expiry_date"
     t.index ["is_active"], name: "index_supplier_documents_on_is_active"
+    t.index ["organization_id"], name: "index_supplier_documents_on_organization_id"
     t.index ["superseded_by_id"], name: "index_supplier_documents_on_superseded_by_id"
     t.index ["supplier_id", "document_type"], name: "index_supplier_documents_on_supplier_id_and_document_type"
     t.index ["supplier_id"], name: "index_supplier_documents_on_supplier_id"
@@ -1341,6 +2242,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.integer "on_time_deliveries_count"
     t.decimal "on_time_delivery_rate", precision: 5, scale: 2
     t.decimal "order_fill_rate", precision: 5, scale: 2
+    t.bigint "organization_id"
     t.decimal "overall_score", precision: 5, scale: 2
     t.string "performance_rating"
     t.date "period_end_date", null: false
@@ -1381,6 +2283,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.datetime "updated_at", null: false
     t.index ["approved_by_id"], name: "index_supplier_performance_reviews_on_approved_by_id"
     t.index ["created_by_id"], name: "index_supplier_performance_reviews_on_created_by_id"
+    t.index ["organization_id"], name: "index_supplier_performance_reviews_on_organization_id"
     t.index ["overall_score"], name: "index_supplier_performance_reviews_on_overall_score"
     t.index ["period_start_date", "period_end_date"], name: "idx_on_period_start_date_period_end_date_3cca3f1623"
     t.index ["review_date"], name: "index_supplier_performance_reviews_on_review_date"
@@ -1417,6 +2320,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.string "issue_type"
     t.string "lot_batch_number"
     t.integer "occurrence_count", default: 1
+    t.bigint "organization_id"
     t.text "preventive_action_taken"
     t.bigint "product_id"
     t.text "purchasing_team_notes"
@@ -1451,6 +2355,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["is_repeat_issue"], name: "index_supplier_quality_issues_on_is_repeat_issue"
     t.index ["issue_date"], name: "index_supplier_quality_issues_on_issue_date"
     t.index ["issue_number"], name: "index_supplier_quality_issues_on_issue_number", unique: true
+    t.index ["organization_id"], name: "index_supplier_quality_issues_on_organization_id"
     t.index ["product_id", "status"], name: "index_supplier_quality_issues_on_product_id_and_status"
     t.index ["product_id"], name: "index_supplier_quality_issues_on_product_id"
     t.index ["related_issue_id"], name: "index_supplier_quality_issues_on_related_issue_id"
@@ -1533,6 +2438,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.decimal "on_time_delivery_rate", precision: 5, scale: 2, default: "100.0"
     t.decimal "order_frequency_days", precision: 8, scale: 2
     t.integer "order_multiple"
+    t.bigint "organization_id"
     t.decimal "overall_rating", precision: 5, scale: 2, default: "0.0"
     t.string "payment_method"
     t.string "phone"
@@ -1582,6 +2488,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["deleted_by_id"], name: "index_suppliers_on_deleted_by_id"
     t.index ["is_preferred_supplier"], name: "index_suppliers_on_is_preferred_supplier"
     t.index ["legal_name"], name: "index_suppliers_on_legal_name"
+    t.index ["organization_id"], name: "index_suppliers_on_organization_id"
     t.index ["overall_rating"], name: "index_suppliers_on_overall_rating"
     t.index ["supplier_category"], name: "index_suppliers_on_supplier_category"
     t.index ["supplier_status"], name: "index_suppliers_on_supplier_status"
@@ -1604,12 +2511,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "is_compound", default: false
     t.string "jurisdiction"
     t.string "name"
+    t.bigint "organization_id"
     t.decimal "rate", precision: 6, scale: 4, default: "0.0"
     t.string "state_province"
     t.string "tax_authority_id"
     t.string "tax_type"
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_tax_codes_on_code", unique: true
+    t.index ["organization_id"], name: "index_tax_codes_on_organization_id"
   end
 
   create_table "unit_of_measures", force: :cascade do |t|
@@ -1617,22 +2526,34 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted"
     t.boolean "is_decimal"
     t.string "name"
+    t.bigint "organization_id"
     t.string "symbol"
     t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_unit_of_measures_on_organization_id"
   end
 
   create_table "users", force: :cascade do |t|
     t.string "avatar"
     t.datetime "created_at", null: false
+    t.datetime "current_sign_in_at"
+    t.string "current_sign_in_ip"
+    t.boolean "deleted", default: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "full_name"
+    t.datetime "last_sign_in_at"
+    t.string "last_sign_in_ip"
+    t.bigint "organization_id"
     t.string "phone"
+    t.string "phone_number"
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.integer "role", default: 0
+    t.integer "sign_in_count"
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["organization_id", "email"], name: "index_users_on_organization_id_and_email", unique: true
+    t.index ["organization_id"], name: "index_users_on_organization_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
@@ -1664,6 +2585,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "meets_specifications", default: true
     t.integer "minimum_order_quantity"
     t.integer "order_multiple"
+    t.bigint "organization_id"
     t.decimal "other_charges", precision: 15, scale: 2, default: "0.0"
     t.text "other_charges_description"
     t.integer "overall_rank"
@@ -1730,6 +2652,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["is_latest_revision"], name: "index_vendor_quotes_on_is_latest_revision"
     t.index ["is_lowest_price"], name: "index_vendor_quotes_on_is_lowest_price"
     t.index ["is_selected"], name: "index_vendor_quotes_on_is_selected"
+    t.index ["organization_id"], name: "index_vendor_quotes_on_organization_id"
     t.index ["overall_rank"], name: "index_vendor_quotes_on_overall_rank"
     t.index ["quote_date"], name: "index_vendor_quotes_on_quote_date"
     t.index ["quote_status"], name: "index_vendor_quotes_on_quote_status"
@@ -1752,7 +2675,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.boolean "deleted", default: false
     t.boolean "is_active"
     t.string "name"
+    t.bigint "organization_id"
     t.datetime "updated_at", null: false
+    t.index ["organization_id"], name: "index_warehouses_on_organization_id"
   end
 
   create_table "work_centers", force: :cascade do |t|
@@ -1768,6 +2693,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.bigint "location_id"
     t.string "name", limit: 100, null: false
     t.text "notes"
+    t.bigint "organization_id"
     t.decimal "overhead_cost_per_hour", precision: 10, scale: 2, default: "0.0"
     t.integer "queue_time_minutes", default: 0
     t.integer "setup_time_minutes", default: 0
@@ -1778,6 +2704,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["created_by_id"], name: "index_work_centers_on_created_by_id"
     t.index ["is_active"], name: "index_work_centers_on_is_active"
     t.index ["location_id"], name: "index_work_centers_on_location_id"
+    t.index ["organization_id"], name: "index_work_centers_on_organization_id"
     t.index ["warehouse_id", "is_active"], name: "index_work_centers_on_warehouse_id_and_is_active"
     t.index ["warehouse_id"], name: "index_work_centers_on_warehouse_id"
     t.index ["work_center_type"], name: "index_work_centers_on_work_center_type"
@@ -1793,6 +2720,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.bigint "issued_by_id"
     t.bigint "location_id"
     t.text "notes"
+    t.bigint "organization_id"
     t.bigint "product_id", null: false
     t.decimal "quantity_allocated", precision: 14, scale: 4, default: "0.0"
     t.decimal "quantity_consumed", precision: 14, scale: 4, default: "0.0"
@@ -1809,6 +2737,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["issued_by_id"], name: "index_work_order_materials_on_issued_by_id"
     t.index ["location_id", "product_id"], name: "index_work_order_materials_on_location_id_and_product_id"
     t.index ["location_id"], name: "index_work_order_materials_on_location_id"
+    t.index ["organization_id"], name: "index_work_order_materials_on_organization_id"
     t.index ["product_id"], name: "index_work_order_materials_on_product_id"
     t.index ["status"], name: "index_work_order_materials_on_status"
     t.index ["uom_id"], name: "index_work_order_materials_on_uom_id"
@@ -1831,6 +2760,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.text "operation_description"
     t.string "operation_name", limit: 100, null: false
     t.bigint "operator_id"
+    t.bigint "organization_id"
     t.decimal "planned_cost", precision: 12, scale: 2, default: "0.0"
     t.decimal "planned_run_minutes_per_unit", precision: 10, scale: 2, default: "0.0"
     t.integer "planned_setup_minutes", default: 0
@@ -1849,6 +2779,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["assigned_operator_id"], name: "index_work_order_operations_on_assigned_operator_id"
     t.index ["deleted"], name: "index_work_order_operations_on_deleted"
     t.index ["operator_id"], name: "index_work_order_operations_on_operator_id"
+    t.index ["organization_id"], name: "index_work_order_operations_on_organization_id"
     t.index ["routing_operation_id"], name: "index_work_order_operations_on_routing_operation_id"
     t.index ["status"], name: "index_work_order_operations_on_status"
     t.index ["work_center_id", "status"], name: "index_work_order_operations_on_work_center_id_and_status"
@@ -1871,6 +2802,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.bigint "customer_id"
     t.boolean "deleted", default: false
     t.text "notes"
+    t.bigint "organization_id"
     t.decimal "planned_labor_cost", precision: 12, scale: 2, default: "0.0"
     t.decimal "planned_material_cost", precision: 12, scale: 2, default: "0.0"
     t.decimal "planned_overhead_cost", precision: 12, scale: 2, default: "0.0"
@@ -1894,6 +2826,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["created_by_id"], name: "index_work_orders_on_created_by_id"
     t.index ["customer_id"], name: "index_work_orders_on_customer_id"
     t.index ["deleted"], name: "index_work_orders_on_deleted"
+    t.index ["organization_id"], name: "index_work_orders_on_organization_id"
     t.index ["priority"], name: "index_work_orders_on_priority"
     t.index ["product_id", "status"], name: "index_work_orders_on_product_id_and_status"
     t.index ["product_id"], name: "index_work_orders_on_product_id"
@@ -1908,23 +2841,31 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
     t.index ["wo_number"], name: "index_work_orders_on_wo_number", unique: true
   end
 
+  add_foreign_key "accounts", "organizations"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "bill_of_materials", "organizations"
   add_foreign_key "bill_of_materials", "products"
   add_foreign_key "bom_items", "bill_of_materials"
+  add_foreign_key "bom_items", "organizations"
   add_foreign_key "bom_items", "products", column: "component_id"
   add_foreign_key "bom_items", "unit_of_measures", column: "uom_id"
   add_foreign_key "customer_activities", "customer_contacts"
   add_foreign_key "customer_activities", "customers"
+  add_foreign_key "customer_activities", "organizations"
   add_foreign_key "customer_activities", "users", column: "created_by_id"
   add_foreign_key "customer_activities", "users", column: "related_user_id"
   add_foreign_key "customer_addresses", "customers"
+  add_foreign_key "customer_addresses", "organizations"
   add_foreign_key "customer_addresses", "users", column: "created_by_id"
   add_foreign_key "customer_contacts", "customers"
+  add_foreign_key "customer_contacts", "organizations"
   add_foreign_key "customer_contacts", "users", column: "created_by_id"
   add_foreign_key "customer_documents", "customer_documents", column: "superseded_by_id"
   add_foreign_key "customer_documents", "customers"
+  add_foreign_key "customer_documents", "organizations"
   add_foreign_key "customer_documents", "users", column: "uploaded_by_id"
+  add_foreign_key "customers", "organizations"
   add_foreign_key "customers", "users", column: "approved_by_id", on_delete: :nullify
   add_foreign_key "customers", "users", column: "last_modified_by_id", on_delete: :nullify
   add_foreign_key "cycle_count_lines", "cycle_counts"
@@ -1932,49 +2873,135 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
   add_foreign_key "cycle_count_lines", "products"
   add_foreign_key "cycle_count_lines", "stock_batches", column: "batch_id"
   add_foreign_key "cycle_count_lines", "unit_of_measures", column: "uom_id"
+  add_foreign_key "cycle_counts", "organizations"
   add_foreign_key "cycle_counts", "users", column: "counted_by_id"
   add_foreign_key "cycle_counts", "users", column: "posted_by_id"
   add_foreign_key "cycle_counts", "users", column: "scheduled_by_id"
   add_foreign_key "cycle_counts", "warehouses"
   add_foreign_key "goods_receipt_lines", "goods_receipts"
   add_foreign_key "goods_receipt_lines", "locations"
+  add_foreign_key "goods_receipt_lines", "organizations"
   add_foreign_key "goods_receipt_lines", "products"
   add_foreign_key "goods_receipt_lines", "stock_batches", column: "batch_id"
   add_foreign_key "goods_receipt_lines", "unit_of_measures", column: "uom_id"
+  add_foreign_key "goods_receipts", "organizations"
   add_foreign_key "goods_receipts", "purchase_orders"
   add_foreign_key "goods_receipts", "suppliers"
   add_foreign_key "goods_receipts", "users", column: "created_by_id"
   add_foreign_key "goods_receipts", "users", column: "posted_by_id"
   add_foreign_key "goods_receipts", "warehouses"
+  add_foreign_key "item_planning_parameters", "organizations"
+  add_foreign_key "item_planning_parameters", "products"
+  add_foreign_key "item_planning_parameters", "users", column: "mrp_planner_id"
+  add_foreign_key "journal_entries", "organizations"
+  add_foreign_key "labor_time_entries", "organizations"
   add_foreign_key "labor_time_entries", "users", column: "operator_id"
   add_foreign_key "labor_time_entries", "work_order_operations"
+  add_foreign_key "locations", "organizations"
   add_foreign_key "locations", "warehouses"
+  add_foreign_key "mrp_action_messages", "customers"
+  add_foreign_key "mrp_action_messages", "mrp_action_messages", column: "parent_action_id"
+  add_foreign_key "mrp_action_messages", "mrp_runs"
+  add_foreign_key "mrp_action_messages", "organizations"
+  add_foreign_key "mrp_action_messages", "planned_purchase_orders"
+  add_foreign_key "mrp_action_messages", "planned_work_orders"
+  add_foreign_key "mrp_action_messages", "products"
+  add_foreign_key "mrp_action_messages", "purchase_orders"
+  add_foreign_key "mrp_action_messages", "suppliers"
+  add_foreign_key "mrp_action_messages", "users", column: "assigned_to_id"
+  add_foreign_key "mrp_action_messages", "users", column: "executed_by_id"
+  add_foreign_key "mrp_action_messages", "work_orders"
+  add_foreign_key "mrp_configurations", "organizations"
+  add_foreign_key "mrp_demands", "customers"
+  add_foreign_key "mrp_demands", "mrp_runs"
+  add_foreign_key "mrp_demands", "organizations"
+  add_foreign_key "mrp_demands", "products"
+  add_foreign_key "mrp_exceptions", "customers"
+  add_foreign_key "mrp_exceptions", "mrp_exceptions", column: "related_exception_id"
+  add_foreign_key "mrp_exceptions", "mrp_runs"
+  add_foreign_key "mrp_exceptions", "organizations"
+  add_foreign_key "mrp_exceptions", "planned_purchase_orders", column: "related_planned_po_id"
+  add_foreign_key "mrp_exceptions", "planned_work_orders", column: "related_planned_wo_id"
+  add_foreign_key "mrp_exceptions", "products"
+  add_foreign_key "mrp_exceptions", "purchase_orders", column: "related_purchase_order_id"
+  add_foreign_key "mrp_exceptions", "users", column: "assigned_to_id"
+  add_foreign_key "mrp_exceptions", "users", column: "resolved_by_id"
+  add_foreign_key "mrp_exceptions", "work_orders", column: "related_work_order_id"
+  add_foreign_key "mrp_runs", "mrp_runs", column: "previous_run_id"
+  add_foreign_key "mrp_runs", "organizations"
+  add_foreign_key "mrp_runs", "users", column: "approved_by_id"
+  add_foreign_key "mrp_runs", "users", column: "run_by_id"
+  add_foreign_key "mrp_supplies", "locations"
+  add_foreign_key "mrp_supplies", "mrp_runs"
+  add_foreign_key "mrp_supplies", "organizations"
+  add_foreign_key "mrp_supplies", "products"
+  add_foreign_key "mrp_supplies", "suppliers"
+  add_foreign_key "mrp_supplies", "warehouses"
+  add_foreign_key "organization_settings", "organizations"
+  add_foreign_key "planned_purchase_orders", "mrp_runs"
+  add_foreign_key "planned_purchase_orders", "organizations"
+  add_foreign_key "planned_purchase_orders", "products"
+  add_foreign_key "planned_purchase_orders", "rfqs"
+  add_foreign_key "planned_purchase_orders", "sales_forecasts"
+  add_foreign_key "planned_purchase_orders", "sales_orders"
+  add_foreign_key "planned_purchase_orders", "suppliers"
+  add_foreign_key "planned_purchase_orders", "unit_of_measures", column: "uom_id"
+  add_foreign_key "planned_purchase_orders", "users", column: "approved_by_id"
+  add_foreign_key "planned_purchase_orders", "users", column: "buyer_assigned_id"
+  add_foreign_key "planned_purchase_orders", "users", column: "created_by_id"
+  add_foreign_key "planned_purchase_orders", "users", column: "reviewed_by_id"
+  add_foreign_key "planned_purchase_orders", "work_orders"
+  add_foreign_key "planned_work_orders", "bill_of_materials", column: "bom_id"
+  add_foreign_key "planned_work_orders", "customers"
+  add_foreign_key "planned_work_orders", "mrp_runs"
+  add_foreign_key "planned_work_orders", "organizations"
+  add_foreign_key "planned_work_orders", "planned_work_orders", column: "parent_planned_wo_id"
+  add_foreign_key "planned_work_orders", "products"
+  add_foreign_key "planned_work_orders", "routings"
+  add_foreign_key "planned_work_orders", "sales_forecasts"
+  add_foreign_key "planned_work_orders", "sales_orders"
+  add_foreign_key "planned_work_orders", "unit_of_measures", column: "uom_id"
+  add_foreign_key "planned_work_orders", "users", column: "approved_by_id"
+  add_foreign_key "planned_work_orders", "users", column: "created_by_id"
+  add_foreign_key "planned_work_orders", "users", column: "production_planner_id"
+  add_foreign_key "planned_work_orders", "users", column: "reviewed_by_id"
+  add_foreign_key "planned_work_orders", "work_centers", column: "primary_work_center_id"
+  add_foreign_key "planned_work_orders", "work_orders"
+  add_foreign_key "planned_work_orders", "work_orders", column: "parent_work_order_id"
+  add_foreign_key "product_categories", "organizations"
+  add_foreign_key "product_suppliers", "organizations"
   add_foreign_key "product_suppliers", "products"
   add_foreign_key "product_suppliers", "suppliers"
   add_foreign_key "product_suppliers", "users", column: "created_by_id"
   add_foreign_key "product_suppliers", "users", column: "updated_by_id"
+  add_foreign_key "products", "organizations"
+  add_foreign_key "purchase_order_lines", "organizations"
   add_foreign_key "purchase_order_lines", "products"
   add_foreign_key "purchase_order_lines", "purchase_orders"
   add_foreign_key "purchase_order_lines", "rfq_items"
   add_foreign_key "purchase_order_lines", "tax_codes"
   add_foreign_key "purchase_order_lines", "unit_of_measures", column: "uom_id"
   add_foreign_key "purchase_order_lines", "vendor_quotes"
+  add_foreign_key "purchase_orders", "organizations"
   add_foreign_key "purchase_orders", "rfqs"
   add_foreign_key "purchase_orders", "suppliers"
   add_foreign_key "purchase_orders", "users", column: "closed_by_id"
   add_foreign_key "purchase_orders", "users", column: "confirmed_by_id"
   add_foreign_key "purchase_orders", "users", column: "created_by_id"
   add_foreign_key "purchase_orders", "warehouses"
+  add_foreign_key "rfq_items", "organizations"
   add_foreign_key "rfq_items", "products"
   add_foreign_key "rfq_items", "rfqs"
   add_foreign_key "rfq_items", "suppliers", column: "last_purchased_from_id"
   add_foreign_key "rfq_items", "suppliers", column: "selected_supplier_id"
   add_foreign_key "rfq_items", "users", column: "created_by_id"
   add_foreign_key "rfq_items", "users", column: "updated_by_id"
+  add_foreign_key "rfq_suppliers", "organizations"
   add_foreign_key "rfq_suppliers", "rfqs"
   add_foreign_key "rfq_suppliers", "supplier_contacts"
   add_foreign_key "rfq_suppliers", "suppliers"
   add_foreign_key "rfq_suppliers", "users", column: "invited_by_id"
+  add_foreign_key "rfqs", "organizations"
   add_foreign_key "rfqs", "suppliers", column: "awarded_supplier_id"
   add_foreign_key "rfqs", "suppliers", column: "recommended_supplier_id"
   add_foreign_key "rfqs", "users", column: "approver_id"
@@ -1983,76 +3010,104 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
   add_foreign_key "rfqs", "users", column: "deleted_by_id"
   add_foreign_key "rfqs", "users", column: "requester_id"
   add_foreign_key "rfqs", "users", column: "updated_by_id"
+  add_foreign_key "routing_operations", "organizations"
   add_foreign_key "routing_operations", "routings"
   add_foreign_key "routing_operations", "work_centers"
+  add_foreign_key "routings", "organizations"
   add_foreign_key "routings", "products"
   add_foreign_key "routings", "users", column: "created_by_id"
+  add_foreign_key "sales_forecasts", "customers"
+  add_foreign_key "sales_forecasts", "organizations"
+  add_foreign_key "sales_forecasts", "products"
+  add_foreign_key "sales_forecasts", "sales_forecasts", column: "superseded_by_id"
+  add_foreign_key "sales_forecasts", "users", column: "approved_by_id"
+  add_foreign_key "sales_forecasts", "users", column: "created_by_id"
   add_foreign_key "stock_adjustment_lines", "locations"
+  add_foreign_key "stock_adjustment_lines", "organizations"
   add_foreign_key "stock_adjustment_lines", "products"
   add_foreign_key "stock_adjustment_lines", "stock_adjustments"
   add_foreign_key "stock_adjustment_lines", "stock_batches", column: "batch_id"
   add_foreign_key "stock_adjustment_lines", "unit_of_measures", column: "uom_id"
+  add_foreign_key "stock_adjustments", "organizations"
   add_foreign_key "stock_adjustments", "users", column: "approved_by_id"
   add_foreign_key "stock_adjustments", "users", column: "created_by_id"
   add_foreign_key "stock_adjustments", "users", column: "posted_by_id"
   add_foreign_key "stock_adjustments", "warehouses"
+  add_foreign_key "stock_batches", "organizations"
   add_foreign_key "stock_batches", "products"
   add_foreign_key "stock_batches", "users", column: "created_by_id"
+  add_foreign_key "stock_issue_lines", "organizations"
   add_foreign_key "stock_issue_lines", "products"
   add_foreign_key "stock_issue_lines", "stock_batches"
   add_foreign_key "stock_issue_lines", "stock_issues"
+  add_foreign_key "stock_issues", "organizations"
   add_foreign_key "stock_issues", "warehouses"
   add_foreign_key "stock_levels", "locations"
+  add_foreign_key "stock_levels", "organizations"
   add_foreign_key "stock_levels", "products"
   add_foreign_key "stock_levels", "stock_batches", column: "batch_id"
   add_foreign_key "stock_transactions", "locations", column: "from_location_id"
   add_foreign_key "stock_transactions", "locations", column: "to_location_id"
+  add_foreign_key "stock_transactions", "organizations"
   add_foreign_key "stock_transactions", "products"
   add_foreign_key "stock_transactions", "stock_batches", column: "batch_id"
   add_foreign_key "stock_transactions", "unit_of_measures", column: "uom_id"
   add_foreign_key "stock_transactions", "users", column: "created_by_id"
   add_foreign_key "stock_transfer_lines", "locations", column: "from_location_id"
   add_foreign_key "stock_transfer_lines", "locations", column: "to_location_id"
+  add_foreign_key "stock_transfer_lines", "organizations"
   add_foreign_key "stock_transfer_lines", "products"
   add_foreign_key "stock_transfer_lines", "stock_batches", column: "batch_id"
   add_foreign_key "stock_transfer_lines", "stock_transfers"
   add_foreign_key "stock_transfer_lines", "unit_of_measures", column: "uom_id"
+  add_foreign_key "stock_transfers", "organizations"
   add_foreign_key "stock_transfers", "users", column: "approved_by_id"
   add_foreign_key "stock_transfers", "users", column: "created_by_id"
   add_foreign_key "stock_transfers", "users", column: "requested_by_id"
   add_foreign_key "stock_transfers", "warehouses", column: "from_warehouse_id"
   add_foreign_key "stock_transfers", "warehouses", column: "to_warehouse_id"
+  add_foreign_key "supplier_activities", "organizations"
   add_foreign_key "supplier_activities", "supplier_contacts"
   add_foreign_key "supplier_activities", "suppliers"
   add_foreign_key "supplier_activities", "users", column: "created_by_id"
   add_foreign_key "supplier_activities", "users", column: "related_user_id"
+  add_foreign_key "supplier_addresses", "organizations"
   add_foreign_key "supplier_addresses", "suppliers"
   add_foreign_key "supplier_addresses", "users", column: "created_by_id"
   add_foreign_key "supplier_addresses", "users", column: "updated_by_id"
+  add_foreign_key "supplier_contacts", "organizations"
   add_foreign_key "supplier_contacts", "suppliers"
   add_foreign_key "supplier_contacts", "users", column: "created_by_id"
   add_foreign_key "supplier_contacts", "users", column: "last_contacted_by_id"
   add_foreign_key "supplier_contacts", "users", column: "updated_by_id"
+  add_foreign_key "supplier_documents", "organizations"
   add_foreign_key "supplier_documents", "supplier_documents", column: "superseded_by_id"
   add_foreign_key "supplier_documents", "suppliers"
   add_foreign_key "supplier_documents", "users", column: "created_by_id"
   add_foreign_key "supplier_documents", "users", column: "uploaded_by_id"
+  add_foreign_key "supplier_performance_reviews", "organizations"
   add_foreign_key "supplier_performance_reviews", "suppliers"
   add_foreign_key "supplier_performance_reviews", "users", column: "approved_by_id"
   add_foreign_key "supplier_performance_reviews", "users", column: "created_by_id"
   add_foreign_key "supplier_performance_reviews", "users", column: "reviewed_by_id"
   add_foreign_key "supplier_performance_reviews", "users", column: "shared_by_id"
+  add_foreign_key "supplier_quality_issues", "organizations"
   add_foreign_key "supplier_quality_issues", "products"
   add_foreign_key "supplier_quality_issues", "supplier_quality_issues", column: "related_issue_id"
   add_foreign_key "supplier_quality_issues", "suppliers"
   add_foreign_key "supplier_quality_issues", "users", column: "assigned_to_id"
   add_foreign_key "supplier_quality_issues", "users", column: "created_by_id"
   add_foreign_key "supplier_quality_issues", "users", column: "reported_by_id"
+  add_foreign_key "suppliers", "organizations"
   add_foreign_key "suppliers", "users", column: "approved_by_id"
   add_foreign_key "suppliers", "users", column: "created_by_id"
   add_foreign_key "suppliers", "users", column: "default_buyer_id"
   add_foreign_key "suppliers", "users", column: "deleted_by_id"
   add_foreign_key "suppliers", "users", column: "updated_by_id"
+  add_foreign_key "tax_codes", "organizations"
+  add_foreign_key "unit_of_measures", "organizations"
+  add_foreign_key "users", "organizations"
+  add_foreign_key "vendor_quotes", "organizations"
   add_foreign_key "vendor_quotes", "rfq_items"
   add_foreign_key "vendor_quotes", "rfq_suppliers"
   add_foreign_key "vendor_quotes", "rfqs"
@@ -2062,22 +3117,27 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_25_142731) do
   add_foreign_key "vendor_quotes", "users", column: "selected_by_id"
   add_foreign_key "vendor_quotes", "users", column: "updated_by_id"
   add_foreign_key "vendor_quotes", "vendor_quotes", column: "superseded_by_id"
+  add_foreign_key "warehouses", "organizations"
   add_foreign_key "work_centers", "locations"
+  add_foreign_key "work_centers", "organizations"
   add_foreign_key "work_centers", "users", column: "created_by_id"
   add_foreign_key "work_centers", "warehouses"
   add_foreign_key "work_order_materials", "bom_items"
   add_foreign_key "work_order_materials", "locations"
+  add_foreign_key "work_order_materials", "organizations"
   add_foreign_key "work_order_materials", "products"
   add_foreign_key "work_order_materials", "stock_batches", column: "batch_id"
   add_foreign_key "work_order_materials", "unit_of_measures", column: "uom_id"
   add_foreign_key "work_order_materials", "users", column: "issued_by_id"
   add_foreign_key "work_order_materials", "work_orders"
+  add_foreign_key "work_order_operations", "organizations"
   add_foreign_key "work_order_operations", "routing_operations"
   add_foreign_key "work_order_operations", "users", column: "operator_id"
   add_foreign_key "work_order_operations", "work_centers"
   add_foreign_key "work_order_operations", "work_orders"
   add_foreign_key "work_orders", "bill_of_materials", column: "bom_id"
   add_foreign_key "work_orders", "customers"
+  add_foreign_key "work_orders", "organizations"
   add_foreign_key "work_orders", "products"
   add_foreign_key "work_orders", "routings"
   add_foreign_key "work_orders", "unit_of_measures", column: "uom_id"

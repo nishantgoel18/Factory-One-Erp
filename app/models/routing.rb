@@ -1,6 +1,7 @@
 # app/models/routing.rb
 
 class Routing < ApplicationRecord
+  include OrganizationScoped
   # ========================================
   # ASSOCIATIONS
   # ========================================

@@ -1,4 +1,5 @@
 class PurchaseOrder < ApplicationRecord
+  include OrganizationScoped
   # ===================================
   # ASSOCIATIONS
   # ===================================

@@ -1,0 +1,658 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">Organization MRP Configuration Details</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">View Organization MRP Configuration Details</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold mb-1">
+            <i class="bi bi-gear-fill text-primary"></i> MRP Configuration
+          </h2>
+          <p class="text-muted mb-0">Material Requirements Planning settings and defaults</p>
+        </div>
+        <%= link_to edit_settings_mrp_configuration_path, class: "btn btn-primary" do %>
+          <i class="bi bi-pencil"></i> Edit Configuration
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <ul class="nav nav-tabs mb-4" id="mrpTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="planning-tab" data-toggle="tab" data-target="#planning" type="button">
+        Planning Horizon
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lot-tab" data-toggle="tab" data-target="#lot" type="button">
+        Lot Sizing
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="safety-tab" data-toggle="tab" data-target="#safety" type="button">
+        Safety Stock
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="lead-tab" data-toggle="tab" data-target="#lead" type="button">
+        Lead Times
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="demand-tab" data-toggle="tab" data-target="#demand" type="button">
+        Demand/Supply
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="vendor-tab" data-toggle="tab" data-target="#vendor" type="button">
+        Vendor Selection
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="exceptions-tab" data-toggle="tab" data-target="#exceptions" type="button">
+        Exceptions
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="costing-tab" data-toggle="tab" data-target="#costing" type="button">
+        Costing
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content" id="mrpTabsContent">
+    <!-- Planning Horizon Tab -->
+    <div class="tab-pane fade show active" id="planning" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-calendar-range"></i> Planning Horizon Settings
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Planning Horizon</label>
+              <p class="mb-0 fs-5"><%= @mrp_config.planning_horizon_days %> days</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Short Term</label>
+              <p class="mb-0"><%= @mrp_config.short_term_horizon_days %> days</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Medium Term</label>
+              <p class="mb-0"><%= @mrp_config.medium_term_horizon_days %> days</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Long Term</label>
+              <p class="mb-0"><%= @mrp_config.long_term_horizon_days %> days</p>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="row">
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Replanning Frequency</label>
+              <p class="mb-0">
+                <span class="badge bg-info"><%= @mrp_config.mrp_replanning_frequency.humanize %></span>
+              </p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Auto Replan</label>
+              <p class="mb-0">
+                <% if @mrp_config.auto_replan_trigger_enabled? %>
+                  <span class="badge bg-success">Enabled</span>
+                <% else %>
+                  <span class="badge bg-secondary">Disabled</span>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Planning Time Fence</label>
+              <p class="mb-0"><%= @mrp_config.planning_time_fence_days %> days</p>
+            </div>
+            <div class="col-md-3 mb-3">
+              <label class="text-muted small fw-semibold">Frozen Zone</label>
+              <p class="mb-0">
+                <span class="badge bg-warning text-dark"><%= @mrp_config.frozen_zone_days %> days</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-info-circle"></i>
+            <strong>Planning End Date:</strong> <%= @mrp_config.planning_horizon_end_date.strftime('%B %d, %Y') %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lot Sizing Tab -->
+    <div class="tab-pane fade" id="lot" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-boxes"></i> Lot Sizing Rules
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Default Method</label>
+              <p class="mb-0 fs-5">
+                <span class="badge bg-success">
+                  <%= MrpConfiguration::LOT_SIZING_METHODS[@mrp_config.default_lot_sizing_method] %>
+                </span>
+              </p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Min Order Quantity</label>
+              <p class="mb-0"><%= @mrp_config.default_min_order_quantity || 'Not Set' %></p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Max Order Quantity</label>
+              <p class="mb-0"><%= @mrp_config.default_max_order_quantity || 'Not Set' %></p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Order Multiple</label>
+              <p class="mb-0"><%= @mrp_config.default_order_multiple %></p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Rounding Rule</label>
+              <p class="mb-0">
+                <span class="badge bg-secondary"><%= @mrp_config.lot_sizing_rounding_rule %></span>
+              </p>
+            </div>
+          </div>
+
+          <% if @mrp_config.default_lot_sizing_method == 'EOQ' %>
+            <hr>
+            <h6 class="fw-bold mb-3">EOQ Parameters</h6>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="text-muted small fw-semibold">Ordering Cost per Order</label>
+                <p class="mb-0"><%= number_to_currency(@mrp_config.eoq_ordering_cost) %></p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="text-muted small fw-semibold">Holding Cost Percentage</label>
+                <p class="mb-0"><%= @mrp_config.eoq_holding_cost_percent %>%</p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safety Stock Tab -->
+    <div class="tab-pane fade" id="safety" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-shield-check"></i> Safety Stock Policies
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Calculation Method</label>
+              <p class="mb-0 fs-5">
+                <span class="badge bg-warning text-dark">
+                  <%= MrpConfiguration::SAFETY_STOCK_METHODS[@mrp_config.safety_stock_calculation_method] %>
+                </span>
+              </p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Safety Stock Days</label>
+              <p class="mb-0 fs-5"><%= @mrp_config.safety_stock_days %> days</p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Service Level Target</label>
+              <p class="mb-0"><%= @mrp_config.service_level_target_percent %>%</p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Demand Variability Factor</label>
+              <p class="mb-0"><%= @mrp_config.demand_variability_factor %></p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Review Frequency</label>
+              <p class="mb-0">
+                <span class="badge bg-info"><%= @mrp_config.safety_stock_review_frequency.humanize %></span>
+              </p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Auto Adjust</label>
+              <p class="mb-0">
+                <% if @mrp_config.auto_adjust_safety_stock_enabled? %>
+                  <span class="badge bg-success">Enabled</span>
+                <% else %>
+                  <span class="badge bg-secondary">Disabled</span>
+                <% end %>
+              </p>
+            </div>
+          </div>
+
+          <hr>
+
+          <h6 class="fw-bold mb-3">Reorder Point Settings</h6>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Calculation Method</label>
+              <p class="mb-0">
+                <%= MrpConfiguration::REORDER_POINT_METHODS[@mrp_config.reorder_point_calculation_method] %>
+              </p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Buffer Percentage</label>
+              <p class="mb-0"><%= @mrp_config.reorder_point_buffer_percent %>%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lead Times Tab -->
+    <div class="tab-pane fade" id="lead" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-info text-white">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-clock-history"></i> Lead Time Settings
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <div class="border-start border-primary border-4 ps-3">
+                <label class="text-muted small fw-semibold">Default Purchase Lead Time</label>
+                <p class="mb-0 fs-3 fw-bold text-primary">
+                  <%= @mrp_config.default_purchase_lead_time %> days
+                </p>
+                <small class="text-muted">Time from PO creation to goods receipt</small>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="border-start border-success border-4 ps-3">
+                <label class="text-muted small fw-semibold">Default Manufacturing Lead Time</label>
+                <p class="mb-0 fs-3 fw-bold text-success">
+                  <%= @mrp_config.default_manufacturing_lead_time %> days
+                </p>
+                <small class="text-muted">Time from WO release to completion</small>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Lead Time Safety Buffer</label>
+              <p class="mb-0"><%= @mrp_config.lead_time_safety_buffer_days %> days</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Variability Factor</label>
+              <p class="mb-0"><%= @mrp_config.lead_time_variability_factor %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demand/Supply Tab -->
+    <div class="tab-pane fade" id="demand" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-header d-flex justify-content-start align-items-center bg-primary text-white">
+              <h5 class="mb-0 fw-bold">
+                <i class="bi bi-graph-up"></i> Demand Management
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="text-muted small fw-semibold">Include in MRP</label>
+                <div class="d-flex gap-3">
+                  <div>
+                    <% if @mrp_config.include_forecasts_in_mrp? %>
+                      <span class="badge bg-success">Forecasts ✓</span>
+                    <% else %>
+                      <span class="badge bg-secondary">Forecasts ✗</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <% if @mrp_config.include_sales_orders_in_mrp? %>
+                      <span class="badge bg-success">Sales Orders ✓</span>
+                    <% else %>
+                      <span class="badge bg-secondary">Sales Orders ✗</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="text-muted small fw-semibold">Forecast Consumption</label>
+                <p class="mb-0">
+                  <span class="badge bg-info"><%= @mrp_config.forecast_consumption_method %></span>
+                </p>
+              </div>
+
+              <div class="mb-3">
+                <label class="text-muted small fw-semibold">Demand Priority</label>
+                <p class="mb-0">
+                  <span class="badge bg-primary"><%= @mrp_config.demand_priority.humanize %></span>
+                </p>
+              </div>
+
+              <div class="mb-0">
+                <label class="text-muted small fw-semibold">Aggregation Level</label>
+                <p class="mb-0"><%= @mrp_config.demand_aggregation_level.humanize %></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+              <h5 class="mb-0 fw-bold">
+                <i class="bi bi-truck"></i> Supply Management
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="text-muted small fw-semibold">Include in MRP</label>
+                <div class="d-flex flex-column gap-2">
+                  <div>
+                    <% if @mrp_config.include_existing_pos_in_mrp? %>
+                      <span class="badge bg-success">Existing POs ✓</span>
+                    <% else %>
+                      <span class="badge bg-secondary">Existing POs ✗</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <% if @mrp_config.include_existing_wos_in_mrp? %>
+                      <span class="badge bg-success">Existing WOs ✓</span>
+                    <% else %>
+                      <span class="badge bg-secondary">Existing WOs ✗</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <% if @mrp_config.include_in_transit_inventory? %>
+                      <span class="badge bg-success">In-Transit Inventory ✓</span>
+                    <% else %>
+                      <span class="badge bg-secondary">In-Transit Inventory ✗</span>
+                    <% end %>
+                  </div>
+                  <div>
+                    <% if @mrp_config.include_reserved_inventory? %>
+                      <span class="badge bg-success">Reserved Inventory ✓</span>
+                    <% else %>
+                      <span class="badge bg-secondary">Reserved Inventory ✗</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-0">
+                <label class="text-muted small fw-semibold">Allocation Method</label>
+                <p class="mb-0">
+                  <span class="badge bg-info"><%= @mrp_config.inventory_allocation_method %></span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vendor Selection Tab -->
+    <div class="tab-pane fade" id="vendor" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-warning text-dark">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-people"></i> Vendor Selection & Procurement
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Auto Vendor Selection</label>
+              <p class="mb-0">
+                <% if @mrp_config.auto_vendor_selection_enabled? %>
+                  <span class="badge bg-success">Enabled</span>
+                <% else %>
+                  <span class="badge bg-secondary">Disabled</span>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Selection Criteria</label>
+              <p class="mb-0 fs-5">
+                <span class="badge bg-warning text-dark">
+                  <%= MrpConfiguration::VENDOR_SELECTION_CRITERIA[@mrp_config.vendor_selection_criteria] %>
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <% if @mrp_config.vendor_selection_criteria == 'BALANCED_SCORE' %>
+            <hr>
+            <h6 class="fw-bold mb-3">Vendor Scoring Weights</h6>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="text-muted small fw-semibold">Price Weight</label>
+                <div class="progress" style="height: 25px;">
+                  <div class="progress-bar bg-success" role="progressbar" 
+                       style="width: <%= @mrp_config.vendor_price_weight_percent %>%">
+                    <%= @mrp_config.vendor_price_weight_percent %>%
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="text-muted small fw-semibold">Quality Weight</label>
+                <div class="progress" style="height: 25px;">
+                  <div class="progress-bar bg-info" role="progressbar" 
+                       style="width: <%= @mrp_config.vendor_quality_weight_percent %>%">
+                    <%= @mrp_config.vendor_quality_weight_percent %>%
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="text-muted small fw-semibold">Delivery Weight</label>
+                <div class="progress" style="height: 25px;">
+                  <div class="progress-bar bg-warning" role="progressbar" 
+                       style="width: <%= @mrp_config.vendor_delivery_weight_percent %>%">
+                    <%= @mrp_config.vendor_delivery_weight_percent %>%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <% unless @mrp_config.vendor_weights_balanced? %>
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Warning:</strong> Vendor weights don't sum to 100%. Please adjust in settings.
+              </div>
+            <% end %>
+          <% end %>
+
+          <hr>
+
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Price Tolerance</label>
+              <p class="mb-0"><%= @mrp_config.price_tolerance_percent %>%</p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Min Vendors to Compare</label>
+              <p class="mb-0"><%= @mrp_config.minimum_vendors_to_compare %></p>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="text-muted small fw-semibold">Auto Create RFQ</label>
+              <p class="mb-0">
+                <% if @mrp_config.auto_create_rfq_for_planned_pos? %>
+                  <span class="badge bg-success">Yes</span>
+                <% else %>
+                  <span class="badge bg-secondary">No</span>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exceptions Tab -->
+    <div class="tab-pane fade" id="exceptions" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-danger text-white">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-exclamation-triangle"></i> Exception & Alert Management
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Exception Alerts</label>
+              <p class="mb-0">
+                <% if @mrp_config.exception_alerts_enabled? %>
+                  <span class="badge bg-success fs-6">Enabled</span>
+                <% else %>
+                  <span class="badge bg-secondary fs-6">Disabled</span>
+                <% end %>
+              </p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Alert Frequency</label>
+              <p class="mb-0">
+                <span class="badge bg-info"><%= @mrp_config.alert_frequency.humanize %></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold">Alert Recipients</label>
+            <p class="mb-0">
+              <% if @mrp_config.alert_recipients_emails.present? %>
+                <% @mrp_config.alert_recipients_array.each do |email| %>
+                  <span class="badge bg-light text-dark me-1"><%= email %></span>
+                <% end %>
+              <% else %>
+                <span class="text-muted">No recipients configured</span>
+              <% end %>
+            </p>
+          </div>
+
+          <hr>
+
+          <h6 class="fw-bold mb-3">Monitored Exception Types</h6>
+          <div class="row">
+            <% MrpConfiguration::EXCEPTION_TYPES.each do |exception_type| %>
+              <div class="col-md-6 mb-2">
+                <% if @mrp_config.exception_types_to_monitor.include?(exception_type) %>
+                  <span class="badge bg-success me-2">✓</span>
+                  <%= exception_type.humanize %>
+                <% else %>
+                  <span class="badge bg-light text-dark me-2">✗</span>
+                  <span class="text-muted"><%= exception_type.humanize %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Costing Tab -->
+    <div class="tab-pane fade" id="costing" role="tabpanel">
+      <div class="card shadow-sm border-0">
+        <div class="card-header d-flex justify-content-start align-items-center bg-success text-white">
+          <h5 class="mb-0 fw-bold">
+            <i class="bi bi-currency-dollar"></i> Costing & Financial Settings
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <div class="border-start border-success border-4 ps-3">
+                <label class="text-muted small fw-semibold">Default Costing Method</label>
+                <p class="mb-0 fs-4 fw-bold text-success">
+                  <%= MrpConfiguration::COSTING_METHODS[@mrp_config.default_costing_method] %>
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6 mb-4">
+              <div class="border-start border-info border-4 ps-3">
+                <label class="text-muted small fw-semibold">Overhead Allocation</label>
+                <p class="mb-0 fs-5">
+                  <span class="badge bg-info"><%= @mrp_config.overhead_allocation_method.humanize %></span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <h6 class="fw-bold mb-3">Overhead Rates</h6>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Material Overhead Rate</label>
+              <p class="mb-0 fs-5"><%= @mrp_config.material_overhead_rate_percent %>%</p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Labor Overhead Rate</label>
+              <p class="mb-0 fs-5"><%= @mrp_config.labor_overhead_rate_percent %>%</p>
+            </div>
+          </div>
+
+          <hr>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Cost Rolling Frequency</label>
+              <p class="mb-0">
+                <span class="badge bg-secondary"><%= @mrp_config.cost_rolling_frequency.humanize %></span>
+              </p>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="text-muted small fw-semibold">Variance Tolerance</label>
+              <p class="mb-0"><%= @mrp_config.cost_variance_tolerance_percent %>%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Enable Bootstrap tabs
+document.addEventListener('DOMContentLoaded', function() {
+  const triggerTabList = [].slice.call(document.querySelectorAll('#mrpTabs button'))
+  triggerTabList.forEach(function (triggerEl) {
+    const tabTrigger = new bootstrap.Tab(triggerEl)
+    
+    triggerEl.addEventListener('click', function (event) {
+      event.preventDefault()
+      tabTrigger.show()
+    })
+  })
+});
+</script>

@@ -1,4 +1,5 @@
 class SupplierContact < ApplicationRecord
+  include OrganizationScoped
   belongs_to :supplier
   belongs_to :last_contacted_by, class_name: 'User', optional: true
   belongs_to :created_by, class_name: 'User', optional: true

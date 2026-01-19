@@ -1,4 +1,5 @@
 class Warehouse < ApplicationRecord
+  include OrganizationScoped
   # Basic presence validations
   validates :name, presence: true, length: { minimum: 2, maximum: 100 }
   validates :code, presence: true, uniqueness: true, length: { minimum: 2, maximum: 20 }

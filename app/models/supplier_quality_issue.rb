@@ -1,4 +1,5 @@
 class SupplierQualityIssue < ApplicationRecord
+  include OrganizationScoped
   belongs_to :supplier
   belongs_to :product, optional: true
   belongs_to :reported_by, class_name: 'User', optional: true

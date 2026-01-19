@@ -1,4 +1,5 @@
 class Location < ApplicationRecord
+  include OrganizationScoped
   LOCATION_TYPES = %w[RAW_MATERIALS WIP FINISHED_GOODS QUARANTINE SCRAP STAGING GENERAL].freeze
 
   belongs_to :warehouse

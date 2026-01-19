@@ -5,15 +5,14 @@
 
 <div class="main-content">
   <%= render 'layouts/alerts' %>
-
   <div class="page-header">
-    <h2 class="header-title">New RFQ Conversion to Purchase Order</h2>
+    <h2 class="header-title">RFQ Conversion to PO</h2>
     <div class="header-sub-title">
       <nav class="breadcrumb breadcrumb-dash">
         <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
         <a class="breadcrumb-item" href="/rfqs">RFQs</a>
         <a class="breadcrumb-item" href="<%= rfq_path(@rfq) %>">RFQ</a>
-        <span class="breadcrumb-item active">New RFQ Conversion to Purchase Order</span>
+        <span class="breadcrumb-item active">RFQ Conversion to PO</span>
       </nav>
     </div>
   </div>
@@ -38,12 +37,14 @@
   </div>
 
   <%= form_with url: create_rfq_conversion_path(@rfq), method: :post, local: true, class: "needs-validation", novalidate: true do |f| %>
-    
+    <%= render 'layouts/error_messages', object: @rfq %>
+  <p><%= @error %></p>
+
     <!-- Conversion Settings Card -->
     <div class="row mb-4">
       <div class="col-lg-8">
         <div class="card shadow-sm">
-          <div class="card-header bg-light">
+          <div class="card-header bg-primary d-flex justify-content-start align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-gear"></i> Purchase Order Settings
             </h5>
@@ -57,7 +58,7 @@
                 </label>
                 <%= select_tag :warehouse_id, 
                     options_from_collection_for_select(@warehouses, :id, :name), 
-                    class: "form-select", 
+                    class: "form-control", 
                     required: true %>
                 <div class="form-text">Where materials will be received</div>
               </div>
@@ -69,7 +70,7 @@
                 </label>
                 <%= select_tag :payment_terms,
                     options_for_select(PurchaseOrder::PAYMENT_TERMS, @rfq.payment_terms),
-                    { include_blank: "Use Supplier Default", class: "form-select" } %>
+                    { include_blank: "Use Supplier Default", class: "form-control" } %>
                 <div class="form-text">Leave blank to use supplier's default terms</div>
               </div>
 
@@ -102,7 +103,7 @@
       <!-- Summary Card -->
       <div class="col-lg-4">
         <div class="card shadow-sm border-primary">
-          <div class="card-header bg-primary text-white">
+          <div class="card-header bg-primary text-white d-flex justify-content-start align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-clipboard-check"></i> Conversion Summary
             </h5>
@@ -287,12 +288,7 @@
                 <%= link_to rfq_path(@rfq), class: "btn btn-outline-secondary me-2" do %>
                   <i class="bi bi-x-circle"></i> Cancel
                 <% end %>
-                
-                <%= button_tag type: :submit, class: "btn btn-primary btn-lg", 
-                    data: { confirm: "Create #{@conversion_preview[:total_pos_to_create]} Purchase Order(s) from this RFQ?" } do %>
-                  <i class="bi bi-check-circle"></i>
-                  Create Purchase Order<%= @conversion_preview[:total_pos_to_create] > 1 ? 's' : '' %>
-                <% end %>
+                <%= submit_tag "Create Purchase Order#{ @conversion_preview[:total_pos_to_create] > 1 ? 's' : ''}", class: 'btn btn-primary' %>
               </div>
             </div>
           </div>

@@ -1,0 +1,223 @@
+<div class="main-content">
+  <%= render 'layouts/alerts' %>
+
+  <div class="page-header">
+    <h2 class="header-title">View Organization User</h2>
+    <div class="header-sub-title">
+      <nav class="breadcrumb breadcrumb-dash">
+        <a href="/" class="breadcrumb-item"><i class="anticon anticon-home m-r-5"></i>Home</a>
+        <span class="breadcrumb-item active">View Organization User</span>
+      </nav>
+    </div>
+  </div>
+  <!-- Back Button -->
+  <div class="mb-3">
+    <%= link_to settings_users_path, class: "text-decoration-none" do %>
+      <i class="bi bi-arrow-left"></i> Back to Users
+    <% end %>
+  </div>
+
+  <div class="row">
+    <!-- User Profile Card -->
+    <div class="col-lg-4 mb-4">
+      <div class="card">
+        <div class="card-body text-center p-4">
+          <!-- Avatar -->
+          <div class="avatar bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+               style="width: 100px; height: 100px; font-size: 40px;">
+            <%= @user.full_name.first.upcase %>
+          </div>
+
+          <h4 class="fw-bold mb-1"><%= @user.full_name %></h4>
+          <p class="text-muted mb-3"><%= @user.email %></p>
+
+          <!-- Role Badge -->
+          <div class="mb-3">
+            <span class="badge bg-<%= @user.role_badge_class %> fs-6">
+              <%= @user.role_name %>
+            </span>
+          </div>
+
+          <!-- Status Badge -->
+          <div class="mb-3">
+            <% if @user.deleted? %>
+              <span class="badge bg-danger">Inactive</span>
+            <% else %>
+              <span class="badge bg-success">Active</span>
+            <% end %>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-grid gap-2">
+            <%= link_to edit_settings_user_path(@user), class: "btn btn-primary" do %>
+              <i class="bi bi-pencil"></i> Edit User
+            <% end %>
+            
+            <% unless @user == current_user %>
+              <% if @user.deleted? %>
+                <%= link_to toggle_active_settings_user_path(@user), 
+                    method: :patch,
+                    class: "btn btn-success" do %>
+                  <i class="bi bi-check-circle"></i> Activate
+                <% end %>
+              <% else %>
+                <%= link_to toggle_active_settings_user_path(@user), 
+                    method: :patch,
+                    data: { confirm: "Deactivate this user?" },
+                    class: "btn btn-warning" do %>
+                  <i class="bi bi-pause-circle"></i> Deactivate
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details Card -->
+      <div class="card mt-4">
+        <div class="card-header bg-primary d-flex justify-content-start align-items-center border-bottom">
+          <h6 class="mb-0 fw-bold">Details</h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold">Phone Number</label>
+            <p class="mb-0"><%= @user.phone_number.presence || '-' %></p>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold">Member Since</label>
+            <p class="mb-0"><%= @user.created_at.strftime('%B %d, %Y') %></p>
+          </div>
+
+          <div class="mb-3">
+            <label class="text-muted small fw-semibold">Last Sign In</label>
+            <p class="mb-0">
+              <%= @user.last_sign_in_at ? time_ago_in_words(@user.last_sign_in_at) + ' ago' : 'Never' %>
+            </p>
+          </div>
+
+          <div class="mb-0">
+            <label class="text-muted small fw-semibold">Sign In Count</label>
+            <p class="mb-0"><%= @user.sign_in_count || 0 %> times</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity & Stats -->
+    <div class="col-lg-8 mb-4">
+      <!-- Activity Stats -->
+      <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="text-muted mb-2">Work Orders Created</h6>
+              <h3 class="fw-bold mb-0"><%= @activities.count %></h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <div class="card h-100">
+            <div class="card-body">
+              <h6 class="text-muted mb-2">Days Active</h6>
+              <h3 class="fw-bold mb-0">
+                <%= ((Time.current - @user.created_at) / 1.day).to_i %>
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-header bg-primary d-flex justify-content-start align-items-center border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">
+            <i class="bi bi-clock-history"></i> Recent Activity
+          </h5>
+        </div>
+        <div class="card-body">
+          <% if @activities.any? %>
+            <div class="list-group list-group-flush">
+              <% @activities.each do |activity| %>
+                <div class="list-group-item px-0">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">
+                      <i class="bi bi-file-earmark-text text-primary"></i>
+                      <%= link_to "Work Order ##{activity.work_order_number}", work_order_path(activity) %>
+                    </h6>
+                    <small class="text-muted"><%= time_ago_in_words(activity.created_at) %> ago</small>
+                  </div>
+                  <p class="mb-1 small text-muted">
+                    <%= activity.product.name %> - Qty: <%= activity.quantity_to_produce %>
+                  </p>
+                  <small class="badge bg-<%= activity.status == 'COMPLETED' ? 'success' : 'warning' %>">
+                    <%= activity.status %>
+                  </small>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-5">
+              <i class="bi bi-inbox display-1 text-muted"></i>
+              <p class="text-muted mt-3">No recent activity</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Permissions Card -->
+      <div class="card mt-4">
+        <div class="card-header bg-primary d-flex justify-content-start align-items-center border-bottom">
+          <h5 class="mb-0 fw-bold" style="color: white;">
+            <i class="bi bi-shield-check"></i> Role Permissions
+          </h5>
+        </div>
+        <div class="card-body">
+          <h6 class="fw-bold mb-3">As <%= @user.role_name %>, this user can:</h6>
+          
+          <ul class="list-unstyled">
+            <% case @user.role %>
+            <% when 'org_owner' %>
+              <li class="mb-2"><i class="anticon anticon-clock-circle text-success me-2"></i> Full system access</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage organization settings</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage all users</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Configure MRP settings</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Access all modules</li>
+            <% when 'org_admin' %>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage users</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Approve work orders & POs</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Access all reports</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage production</li>
+              <li class="mb-2"><i class="anticon anticon-x-circle text-danger me-2"></i> Cannot modify organization settings</li>
+            <% when 'manager' %>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage production</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Approve work orders</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> View department reports</li>
+              <li class="mb-2"><i class="anticon anticon-x-circle text-danger me-2"></i> Cannot manage users</li>
+            <% when 'planner' %>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Create MRP plans</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage BOMs & routings</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Create work orders</li>
+              <li class="mb-2"><i class="anticon anticon-x-circle text-danger me-2"></i> Cannot approve orders</li>
+            <% when 'buyer' %>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Create RFQs & POs</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Manage suppliers</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> View procurement reports</li>
+              <li class="mb-2"><i class="anticon anticon-x-circle text-danger me-2"></i> Cannot manage production</li>
+            <% when 'operator' %>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> View assigned work orders</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Clock in/out</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Record production</li>
+              <li class="mb-2"><i class="anticon anticon-x-circle text-danger me-2"></i> Cannot create orders</li>
+            <% when 'viewer' %>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> View all data</li>
+              <li class="mb-2"><i class="anticon anticon-check-circle text-success me-2"></i> Access reports</li>
+              <li class="mb-2"><i class="anticon anticon-x-circle text-danger me-2"></i> Cannot create or modify records</li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

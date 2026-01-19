@@ -1,6 +1,29 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: {
+    sessions: 'users/sessions',
+    registrations: 'users/registrations'
+  }
 
+  resource :setup_wizard, only: [:show] do
+    patch :update_company
+    patch :update_fiscal
+    patch :update_mrp
+    post :complete
+    get :skip
+  end
+
+  namespace :settings do
+    resource :organization, only: [:show, :edit, :update]
+    resource :mrp_configuration, only: [:show, :edit, :update]
+    
+    resources :users do
+      member do
+        patch :change_role
+        patch :toggle_active
+      end
+    end
+  end
+  
   resources :accounts do
     member do
       get '/delete', to: 'accounts#destroy', as: :delete
@@ -188,7 +211,7 @@ Rails.application.routes.draw do
   end
 
   get '/rfqs/:rfq_id/conversions', to: 'rfq_conversions#new', as: :new_rfq_conversion
-  post '/rfqs/:rfq_id/conversions', to: 'rfq_conversions#new', as: :create_rfq_conversion
+  post '/rfqs/:rfq_id/conversions/create', to: 'rfq_conversions#create', as: :create_rfq_conversion
 
 
   resources :work_centers do

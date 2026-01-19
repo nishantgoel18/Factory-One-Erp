@@ -29,9 +29,9 @@
           <% po = PurchaseOrder.find_by(po_number: po_num.strip) %>
           <% if po %>
             <%= link_to po_num.strip, inventory_purchase_order_path(po), 
-                class: "badge bg-white text-success text-decoration-none" %>
+                class: "badge text-success text-decoration-none", style: 'color: green !important;' %>
           <% else %>
-            <span class="badge bg-white text-success"><%= po_num.strip %></span>
+            <span class="badge  text-success"><%= po_num.strip %></span>
           <% end %>
         <% end %>
       <% end %>

@@ -1,0 +1,2 @@
+class PlannedPurchaseOrder < ApplicationRecord
+end
